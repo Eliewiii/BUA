@@ -9,7 +9,7 @@ name_tool_folder = "Building_urban_analysis"
 # Get Appdata\local folder
 local_appdata = os.environ['LOCALAPPDATA']
 # Name  and path to the tool folder
-name_tool_folder = "Building_urban_analysis"
+name_tool_folder = "BUA"
 path_tool = os.path.join(local_appdata, name_tool_folder)
 # Path of the different folders in the tool
 path_scripts_tool_folder = os.path.join(path_tool, "Scripts")
