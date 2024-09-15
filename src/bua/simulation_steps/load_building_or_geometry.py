@@ -6,7 +6,7 @@ import os
 import logging
 import json
 
-from bua.utils.utils_default_values_user_parameters import default_path_gis, default_unit_gis, \
+from ..config.config_default_values_user_parameters import default_path_gis, default_unit_gis, \
     default_building_id_key_gis
 
 user_logger = logging.getLogger("user")  

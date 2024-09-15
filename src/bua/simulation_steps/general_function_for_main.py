@@ -6,8 +6,8 @@ import os
 import shutil
 import logging
 
-from bua.urban_canopy.urban_canopy import UrbanCanopy
-from bua.utils.utils_configuration import path_simulation_temp_folder, name_gh_components_logs_folder, \
+from ..urban_canopy.urban_canopy import UrbanCanopy
+from ..config.bua_config_structure import path_simulation_temp_folder, name_gh_components_logs_folder, \
     name_temporary_files_folder
 
 user_logger = logging.getLogger("user")  

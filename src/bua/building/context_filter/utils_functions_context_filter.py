@@ -4,8 +4,6 @@ todo @Elie
 import numpy as np
 import pyvista as pv
 
-from math import sqrt, atan, log, pi
-
 from ladybug_geometry.geometry3d.face import Face3D
 from ladybug_geometry.geometry3d.polyface import Polyface3D
 from honeybee.face import Face

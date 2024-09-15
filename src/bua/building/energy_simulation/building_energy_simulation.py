@@ -33,7 +33,7 @@ class BuildingEnergySimulation:
     dictionary.
     """
 
-    def __init__(self, building_id):
+    def __init__(self, building_id: str):
         """
         Initialize the BuildingEnergySimulation class.
         :param building_id: str, id of the building the object belongs to
@@ -51,7 +51,7 @@ class BuildingEnergySimulation:
         # Simulation tracking
         self.sim_duration = None
 
-    def re_initialize(self, keep_idf=False, keep_run=False):
+    def re_initialize(self, keep_idf:bool=False, keep_run:bool=False):
         """
         Re-initialize the values of the attributes of the BuildingEnergySimulation object.
         """
@@ -66,7 +66,7 @@ class BuildingEnergySimulation:
         # Results
         self.bes_results_dict = None
 
-    def set_cop(self, cop_heating, cop_cooling):
+    def set_cop(self, cop_heating:float, cop_cooling:float):
         """
         Set the coefficient of performance of the heating and cooling systems.
         :param cop_heating: float, coefficient of performance of the heating system
@@ -91,8 +91,8 @@ class BuildingEnergySimulation:
             "sim_duration": self.sim_duration
         }
 
-    def generate_idf_with_openstudio(self, path_building_bes_temp_folder, path_epw_file,
-                                     path_hbjson_simulation_parameters, hb_model_obj: Model, silent=False):
+    def generate_idf_with_openstudio(self, path_building_bes_temp_folder:str, path_epw_file:str,
+                                     path_hbjson_simulation_parameters:str, hb_model_obj: Model, silent:bool=False):
         """
         Generate the idf file using OpenStudio.
         :param path_building_bes_temp_folder: str, path to the folder where the idf file will be saved
@@ -123,7 +123,7 @@ class BuildingEnergySimulation:
 
         self.idf_generated = True
 
-    def run_idf_with_energyplus(self, path_building_bes_temp_folder, path_epw_file, silent=False):
+    def run_idf_with_energyplus(self, path_building_bes_temp_folder:str, path_epw_file:str, silent:bool=False):
         """
         Run the energy simulation of the building.
         :param path_building_bes_temp_folder: str, path to the folder where the idf file will be saved
@@ -141,8 +141,8 @@ class BuildingEnergySimulation:
 
         self.has_run = True
 
-    def move_result_files_from_temp_to_result_folder(self, path_ubes_temp_sim_folder,
-                                                     path_ubes_sim_result_folder):
+    def move_result_files_from_temp_to_result_folder(self, path_ubes_temp_sim_folder:str,
+                                                     path_ubes_sim_result_folder:str):
         """
         Move the result files from the temporary folder to the result folder.
         :param path_ubes_temp_sim_folder: str, path to the temporary folder
@@ -184,7 +184,7 @@ class BuildingEnergySimulation:
             # Delete the temp folder
             shutil.rmtree(path_bes_temp_folder, ignore_errors=True)
 
-    def extract_total_energy_use(self, path_ubes_sim_result_folder):
+    def extract_total_energy_use(self, path_ubes_sim_result_folder:str):
         """
         Extract the energy use intensity at the building scale from the result files.
         :param path_ubes_sim_result_folder: str, path to the result folder
@@ -224,7 +224,7 @@ class BuildingEnergySimulation:
                                                         # self.bes_results_dict["ventilation"]["yearly"],
                                                         self.bes_results_dict["lighting"]["yearly"]])
 
-    def to_csv(self, path_ubes_sim_result_folder):
+    def to_csv(self, path_ubes_sim_result_folder:str):
         """
         Export the results to a csv file.
         :param path_ubes_sim_result_folder: str, path to the result folder
@@ -254,8 +254,8 @@ class BuildingEnergySimulation:
         return self.bes_results_dict["total"]["yearly"]
 
 
-def from_hbjson_to_idf(dir_to_write_idf_in, path_hbjson_file, path_epw_file,
-                       path_hbjson_simulation_parameters, silent=False):
+def from_hbjson_to_idf(dir_to_write_idf_in:str, path_hbjson_file:str, path_epw_file:str,
+                       path_hbjson_simulation_parameters:str, silent=False):
     """
     Convert a hbjson file to an idf file (input for EnergyPlus)
     """
@@ -268,7 +268,7 @@ def from_hbjson_to_idf(dir_to_write_idf_in, path_hbjson_file, path_epw_file,
     (path_osm, path_idf) = run_osw(osw, silent=silent)
 
 
-def bes_result_dict_to_csv(bes_results_dict, path_csv_file):
+def bes_result_dict_to_csv(bes_results_dict:dict, path_csv_file:str):
     """
     Export the results to a csv file.
     :param bes_results_dict: dict, results of the building energy simulation
@@ -297,7 +297,7 @@ def bes_result_dict_to_csv(bes_results_dict, path_csv_file):
             f.write(f"{value['yearly']},")
 
 
-def clean_directory(path):
+def clean_directory(path:str):
     """
 
     """

@@ -2,7 +2,7 @@
 Class to load the arguments from the command line to the main script with the values sent from Grasshopper
 """
 
-from bua.utils.utils_default_values_user_parameters import *
+from ..config.config_default_values_user_parameters import *
 
 
 class LoadArguments:

@@ -6,8 +6,7 @@ from math import sqrt
 from ladybug_geometry.geometry3d.pointvector import Point3D
 from ladybug_geometry.geometry3d.face import Face3D
 
-from bua.utils.utils_constants import TOLERANCE_LBT
-
+from ....config.config_constants import TOLERANCE_LBT
 # tolerance for the remove_redundant_vertices function
 tolerance_redundant_vertices = 0.5
 

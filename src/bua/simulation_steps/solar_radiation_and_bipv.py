@@ -5,13 +5,13 @@ import logging
 
 from bua.urban_canopy.urban_canopy import UrbanCanopy
 
-from bua.utils.utils_default_values_user_parameters import default_path_simulation_folder, \
+from ..config.config_default_values_user_parameters import default_path_simulation_folder, \
     default_path_weather_file
 
-from bua.utils.utils_default_values_user_parameters import default_roof_grid_size_x, default_facades_grid_size_x, \
+from ..config.config_default_values_user_parameters import default_roof_grid_size_x, default_facades_grid_size_x, \
     default_roof_grid_size_y, default_facades_grid_size_y, default_offset_dist
 
-from bua.utils.utils_default_values_user_parameters import default_id_pv_tech_roof, \
+from ..config.config_default_values_user_parameters import default_id_pv_tech_roof, \
     default_id_pv_tech_facades, default_roof_transport_id, default_facades_transport_id, \
     default_roof_inverter_id, default_facades_inverter_id, default_roof_inverter_sizing_ratio, \
     default_facades_inverter_sizing_ratio, default_minimum_panel_eroi, default_start_year, default_end_year, \

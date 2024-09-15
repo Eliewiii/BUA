@@ -10,13 +10,13 @@ from ladybug_geometry.geometry3d.pointvector import Vector3D
 from ladybug_geometry.geometry3d.polyface import Polyface3D
 from honeybee.room import Room
 
-from bua.building.utils_buildings.lbt_obj_methods.lb_face_addons import make_LB_polyface3D_oriented_bounding_box_from_LB_face3D_footprint, \
+from .utils_buildings.lbt_obj_methods.lb_face_addons import make_LB_polyface3D_oriented_bounding_box_from_LB_face3D_footprint, \
     LB_face_footprint_to_lB_polyface3D_extruded_footprint
-from bua.building.utils_buildings.lbt_obj_methods.hb_rooms_addons import RoomsAddons
-from bua.building.utils_buildings.lbt_obj_methods.function_for_gis_extraction_to_sort import polygon_to_LB_footprint, \
+from .utils_buildings.lbt_obj_methods.hb_rooms_addons import RoomsAddons
+from .utils_buildings.lbt_obj_methods.function_for_gis_extraction_to_sort import polygon_to_LB_footprint, \
     add_additional_attribute_keys_to_dict
 
-from bua.building.geometry.prepare_lb_polyface3d import LBPolyface3dAddons
+from .geometry.prepare_lb_polyface3d import LBPolyface3dAddons
 
 user_logger = logging.getLogger("user")  
 dev_logger = logging.getLogger("dev")  

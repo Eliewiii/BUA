@@ -5,7 +5,7 @@
 import os
 from datetime import datetime
 
-from bua.utils.utils_configuration import path_tool, path_simulation_temp_folder, path_libraries_tool_folder
+from .bua_config_structure import path_tool, path_simulation_temp_folder, path_libraries_tool_folder
 
 # Default path to the simulation folder
 default_path_simulation_folder = path_simulation_temp_folder

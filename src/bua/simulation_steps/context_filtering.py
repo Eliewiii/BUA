@@ -5,7 +5,7 @@ For both shading and LWR.
 
 from time import time
 
-from bua.utils.utils_default_values_user_parameters import default_mvfc_context_shading_selection, \
+from ..config.config_default_values_user_parameters import default_mvfc_context_shading_selection, \
     default_shading_number_of_rays_context_filter_second_pass, \
     default_automatic_floor_subdivision_for_new_BuildingModeled, \
     default_use_layout_from_typology_for_new_BuildingModeled, \

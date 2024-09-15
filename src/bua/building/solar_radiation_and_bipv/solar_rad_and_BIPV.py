@@ -13,17 +13,17 @@ from time import time
 from honeybee_radiance.sensorgrid import SensorGrid
 from ladybug_geometry.geometry3d.face import Face3D
 
-from bua.building.solar_radiation_and_bipv.utils_sensorgrid import generate_sensor_grid_for_hb_model
-from bua.building.solar_radiation_and_bipv.utils_solar_radiation import \
+from .utils_sensorgrid import generate_sensor_grid_for_hb_model
+from .utils_solar_radiation import \
     run_hb_model_annual_irradiance_simulation, move_annual_irr_hb_radiance_results, \
     get_hourly_irradiance_table
-from bua.building.solar_radiation_and_bipv.utils_bipv import init_bipv_on_sensor_grid, \
+from .utils_bipv import init_bipv_on_sensor_grid, \
     simulate_bipv_yearly_energy_harvesting, compute_lca_and_cost_for_gtg, \
     compute_lca_cost_and_dmfa_for_recycling, \
     compute_lca_and_cost_for_transportation, \
     compute_lca_and_cost_for_inverter, compute_lca_and_cost_for_maintenance
 
-from bua.utils.utils_configuration import name_temporary_files_folder, name_radiation_simulation_folder
+from ...config.bua_config_structure import name_temporary_files_folder, name_radiation_simulation_folder
 
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")

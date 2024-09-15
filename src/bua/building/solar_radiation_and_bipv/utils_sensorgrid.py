@@ -8,8 +8,7 @@ from ladybug_geometry.geometry3d.mesh import Mesh3D
 from ladybug_geometry.geometry2d.mesh import Mesh2D
 from ladybug_geometry.geometry2d.polygon import Polygon2D
 from ladybug_geometry.geometry2d.pointvector import Vector2D, Point2D
-from ladybug_geometry.geometry2d.ray import Ray2D
-from ladybug_geometry.intersection2d import does_intersection_exist_line2d
+
 from honeybee.model import Model
 from honeybee.boundarycondition import Outdoors
 from honeybee.facetype import Wall, RoofCeiling

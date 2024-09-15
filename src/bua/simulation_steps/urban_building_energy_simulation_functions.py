@@ -6,9 +6,9 @@ import logging
 
 from time import time
 
-from bua.urban_canopy.urban_canopy import UrbanCanopy
+from ..urban_canopy.urban_canopy import UrbanCanopy
 
-from bua.utils.utils_default_values_user_parameters import default_path_simulation_folder, \
+from ..config.config_default_values_user_parameters import default_path_simulation_folder, \
     default_path_weather_file, \
     default_path_hbjson_simulation_parameter_file, default_cop_heating, default_cop_cooling
 

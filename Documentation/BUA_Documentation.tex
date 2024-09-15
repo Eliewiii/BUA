@@ -1,0 +1,451 @@
+\documentclass[a4paper,12pt]{article} %article ou book,
+
+\usepackage[T1]{fontenc} %accents jolis
+\usepackage[utf8]{inputenc} %accents
+\usepackage[french]{babel} %règles orthographes
+\usepackage{amsmath}
+\usepackage[a4paper,left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{libertine}
+\usepackage{graphicx}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{sectsty}
+\usepackage{float}
+\usepackage{wrapfig}
+
+\usepackage[acronym,toc]{glossaries}
+
+
+
+% Glossary
+
+\newglossaryentry{SimFolder}{
+    name=\textit{simulation folder},
+    description={Folder where the simulation is run and the results are saved. It is defined by the user when creating a new simulation.
+    The simualtion folder is run by defalut in the \textbackslash Building\_urban\_analysis\textbackslash Simulation\_temp folder.}
+}
+
+\newglossaryentry{UrbanCanopy}{
+    name=\textit{Urban Canopy},
+    description={Object representing a simulation in the software. It contains all the buildings, the simulation parameters as well as all the results of the simulation.
+    All the simulations are run through an instance of the UrbanCanopy class.}
+}
+
+\newglossaryentry{BuildingBasic}{
+    name=\textit{BuildingBasic},
+    description={Object representing a building with basic attributes in the software. It contains the information about the building, such as its footprint, and if available its heigh, envelop, age, typology... No simulation can be run with a BuildingBasic object, it needs to be converted to a BuildingModeled object first.}
+}
+
+\newglossaryentry{BuildingModeled}{
+    name=\textit{BuildingModeled},
+    description={Object representing a building with a detailed modeling (a Honeybee Model).
+    It contains the information about the building, such as its geometry, construction materials, internal subdivision...
+    Simulations can be run on BuildingModeled objects that are labeled as target buildings.}
+}
+
+\newglossaryentry{TargetBuilding}{
+    name=\textit{target building},
+    plural=\textit{target buildings},
+    description={Building that is the subject of the simulation. It is necessarily a BuildingModeled object.
+    Buildings that are not target buildings are used as context for the simulation, for instance for the shading computation.}
+}
+
+
+% Redefine the glossary name to be empty
+\renewcommand{\glossaryname}{Glossary}
+
+\makeglossaries
+
+\setlength{\glsdescwidth}{0.9\hsize}
+
+
+% Page formnatting
+\setlength{\parindent}{0cm}
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+\newcommand{\hsp}{\hspace{20pt}}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\renewcommand{\headrulewidth}{1pt}
+%\fancyhead[C]{\textbf{page \thepage}}
+\fancyhead[L]{}
+\fancyhead[R]{BUA Documentation}
+
+\renewcommand{\footrulewidth}{1pt}
+\fancyfoot[C]{\textbf{Page \thepage}}
+\fancyfoot[R]{ }
+\fancyfoot[L]{}
+%\fancyfoot[R]{\leftmark}
+
+\fancypagestyle{plain}{\renewcommand{\headrulewidth}{1pt}
+\fancyhead[L]{}
+\fancyhead[R]{BUA Documentation}
+\renewcommand{\footrulewidth}{1pt}
+\fancyfoot[C]{\textbf{Page \thepage}}
+\fancyfoot[R]{}
+\fancyfoot[L]{}}
+
+
+\begin{document}
+    \begin{titlepage}
+        \begin{sffamily}
+            \begin{center}
+                % Upper part of the page. The '~' is needed because \\
+                % only works if a paragraph has started.
+                % Title
+                \HRule \\[0.4cm]
+                { \huge \bfseries Building Urban Analysis Documentation \\[0.4cm] }
+                \nopagebreak
+                \large
+                Version 1.1.0
+                \HRule \\[1cm]
+
+                \bigbreak
+                \bigbreak
+
+
+                \bigbreak
+                \bigbreak
+
+                % \begin{center}
+                % \captionsetup{justification=centering} % centre la légende
+                % \centerline{\includegraphics[width=20cm]{cellule}}% image
+                % \captionof{figure}{Dispositif expérimental} % légende
+                % \end{center}
+
+                % Author and supervisor
+
+                \Large
+                Elie MEDIONI \\
+                \bigbreak
+
+                \medbreak
+                {\centerline{\large $26^{th}$ of May 2024}}
+                \bigbreak
+                {Prospective and Early-Stage LCA Laboratory}\\
+                {\&}\\
+                {Climate and Environment Laboratory in Architecture}
+                \smallbreak
+                \bigbreak
+                {Technion - Israel Institute of Technology}
+                \bigbreak
+
+
+                % Bottom of the page
+
+            \end{center}
+        \end{sffamily}
+    \end{titlepage}
+
+    \newpage
+%	\fancyfoot[C]{}
+
+    \renewcommand{\contentsname}{Table of contents}
+    \tableofcontents
+
+
+
+    \newpage
+%	\fancyfoot[C]{\textbf{Page \thepage}}
+%	\setcounter{page}{1}
+
+% Glossary
+\printglossary[title=Glossary, toctitle=Glossary,style = long, nonumberlist,nopostdot]
+
+
+\newpage
+
+\section{Introduction}
+\label{sec:introduction}
+
+    \subsection{Overview}
+    \label{subsec:overview}
+% Briefly describe what your software does, its main features, and its purpose.
+    The Building Urban Analysis (BUA) tool is a software designed to analyze the energy performance of buildings at the \textbf{urban scale}.
+    It provides a comprehensive set of tools for simulating the thermal behavior of buildings, assessing their energy consumption, and optimizing their design for energy efficiency.
+    Its design emphasize on the coupling among buildings and the urban environment, allowing users to evaluate the impact of urban form and layout on energy performance.
+
+    \smallbreak
+    It includes a wide range of features, such as:
+    \begin{itemize}
+        \item Loading various building and urban models from Honeybee (Ladybug Tools), GIS, and other sources;
+        \item Computing electricity consumption with EnergyPlus, using functions from teh Ladybug Tools SDK;
+        \item Advanced selection of context for shading computation;
+        \item Simulation of Building Integrated Photovoltaics (BIPV) and key performance indicators (KPIs), including energy, environmental (using Life cycle assessment), and economic metrics.
+    \end{itemize}
+
+    Some other interesting features under development are:
+    \begin{itemize}
+        \item Automatic identification of the typology/archetype of buildings, using machine learning algorithms;
+        \item Automatic generation of building models from their determined typology and attributes (especially from GIS) for more accurate description of the urban environment;
+        \item Automatic generation of local weather files for EnergyPlus simulations using the Urban Weather Generator (UWG) tool with Dragonfly (LBT).
+    \end{itemize}
+    \smallbreak
+    The tool is intended for architects, engineers, and researchers working in the field of sustainable building design and urban planning.
+    It can be used through Python only, using macro functions and classes, or through a graphical user interface (GUI) in Grasshopper (Rhinoceros 3D) for a more user-friendly experience.
+    While the Grasshopper interface offers the plotting capabilities of Rhino, the Python version is more flexible and can allow advanced automations for optimization purposes or performing large numbers of simulations in a row.
+    For users at ease with Python, it is recommended to run the simulations in Python and use the Grasshopper interface for visualization and post-processing.
+
+    \subsection{Prerequisites}
+    \label{subsec:prerequisites}
+% List any prerequisites or dependencies required to use the software.
+    As of today (version 1.1.0), the tool is only available for Windows (10-11) operating systems.
+    The prerequisites are:
+    \begin{itemize}
+        \item Rhinoceros 3D version 7 or 8 (if you want to use the Grasshopper interface);
+        \item Polination for Grasshopper that can be downloaded from \href{https://www.pollination.cloud/grasshopper-plugin}{here}, (required even if you use the Python version only);
+        \item Knoledge of the Ladybug Tools or access to Honeybee Models of the target buildings to simulate.
+    \end{itemize}
+    The tool comes an installer that takes care of all the installation automatically.
+    It generates the necessary folder, download the data and python scripts, install the required version of Python (if not already installed), and create a dedicated Python virtual environment with the required packages for the tool.
+
+
+\section{Getting Started}
+\label{sec:getting-started}
+
+    \subsection{Installation}
+    \label{subsec:installation}
+% Provide step-by-step instructions for installing the software on different platforms.
+    To install the software, follow these steps:
+    \begin{enumerate}
+        \item Open the page of the last release of Building\_Urban\_Analysis in GitHub (\href{https://github.com/Eliewiii/Building_Urban_Analysis}{here})
+        \item Download the \textit{BUA\_installer.bat}
+        \item run the \textit{BUA\_installer.bat}
+    \end{enumerate}
+
+    The tool install itself inside the user/appdata/local/building\_urban\_analysis folder in your computer.
+
+    To update the package you can run the \textit{BUA\_updater.bat}.
+    This will download the last version of the package and install it.
+
+    This file is available in the last release of the tool in GitHub.
+
+    \subsection{Quick Start Guide}
+    \label{subsec:quick-start-guide}
+
+
+    \subsubsection{Grasshopper}
+    \label{subsubsec:quick-start-guide-grasshopper}
+    After installing the software, you can start using it in Grasshopper by following these steps:
+    \begin{enumerate}
+        \item Open Rhinoceros 3D;
+        \item Open Grasshopper;
+        \item Create a new Grasshopper file or use one the examples provided in the last github release of the tool \href{https://github.com/Eliewiii/Building_Urban_Analysis/releases/latest/download/BUA_Grasshopper_example_files.zip}{here};
+        \item Drag and drop the components from the BUA tab that you need;
+        \item Set the inputs of the component;
+        \item Run the components:
+        \item Display the results using the adequate components provided in the BUA tab.
+    \end{enumerate}
+
+    \subsubsection{Python}
+    \label{subsubsec:quick-start-guide-python}
+    After installing the software, you can start using it in Python by following these steps:
+    \begin{enumerate}
+        \item Open a Python editor (PyCharm, etc.);
+        \item Set the Python interpreter to the one installed by the BUA installer;
+        \item Create a new script and use the structure in the examples provided in the unit\_tests folder;
+        \item Set the user inputs in the script;
+        \item Run the script:
+        \item Get the results from the generated files (depending on the simulation run) or directly from the script/objects with the debugger.
+    \end{enumerate}
+
+
+    \section{Object Model}
+    \label{sec:object-model}
+% Describe the object model of the software from a high-level perspective.
+    The software is based on an object-oriented model, with classes representing different elements of the building and urban environment.
+
+    \begin{center}
+        \captionsetup{justification=centering} % centre la légende
+        \includegraphics[width=15cm]{Figures/Objects.png}% image
+        \captionof{figure}{Objects Hierarchy} % légende
+        \label{fig SimulationObj}
+    \end{center}
+
+    \subsection{Urban Canopy}
+    \label{subsec:urban-canopy}
+    Each simulation is represented by an instance of the \texttt{UrbanCanopy} class, which contains all the necessary information for running the simulation, such as the building model, weather data, simulation parameters and results once the simulation has run.
+    The \gls{UrbanCanopy} drives the whole simulation process, from loading the building and urban models to running the simulation and analyzing the results.
+    Once one/multiple simulation steps have been run, the \texttt{UrbanCanopy} object is saved as $.pkl$ file (binary file to save objects) in the user defined \gls{SimFolder}.
+    It can be reloaded later to perform additional simulations steps or analyze the results.
+    A $.json$ file of the urban canopy is also saved in the \gls{SimFolder}.
+    It contains all the information a user would want to access to and can be open by Grasshopper to display information or results.
+
+    \subsection{Buildings}
+    \label{subsec:buildings}
+    The \gls{UrbanCanopy} contains one or multiple buildings.
+    The buildings are represented by instances of the \texttt{BuildingBasic} and \texttt{BuildingModeled} classes.
+    They need to have unique identifier keys.
+
+    \subsubsection{BuildingBasic}
+    \label{subsubsec:building-basic}
+    The \gls{BuildingBasic} class represents a building with basic attributes, such as its footprint, height, envelope, age, typology, etc.
+    They do not have a detailed modeling (detailed geometry, apartment subdivision, construction materials, etc.) and no simulation can be performed on them.
+    They are used as context for the \gls{BuildingModeled} objects, for instance for the shading surface computation.
+
+    \subsubsection{BuildingModeled}
+    \label{subsubsec:building-modeled}
+    The \gls{BuildingModeled} class represents a building with a detailed modeling, in the form of a Honeybee Model object, including its geometry, construction materials, internal subdivision, etc.
+    \gls{BuildingModeled} is a subclass of \gls{BuildingBasic} and thus inherits all its attributes.
+    Simulation can be run on \gls{BuildingModeled} objects that are labeled as \glspl{TargetBuilding}.
+
+
+\section{Usage}
+\label{sec:usage}
+    Before jumping into the details, it is very imnportant to use only english letters for any input in the software.
+    It includes the name of the inputs, the folders, the files, the attributes of the buildings, etc.
+    Using other alphabet can lead to errors in the software.
+
+    \subsection{General Usage Instructions}
+    \label{subsec:general-usage-instructions}
+    The simulations must be run in a \gls{SimFolder}.
+    This \gls{SimFolder} can be created by the user.
+    If no \gls{SimFolder} is provided, the simulation will be run in the \textbackslash Building\_urban\_analysis\textbackslash Simulation\_temp folder.
+    The $.pkl$ and $.json$ files, the saved inputs for EnergyPlus and Radiance, as well as all the results files (especially $.csv$) are saved in the \gls{SimFolder}.
+    If a simulation is run in a \gls{SimFolder} that already contains files from a previous simulation, the files will not be overwritten, the state of the \gls{UrbanCanopy} object will be loaded and the simulation will continue from there.
+
+    In order to overwrite a simulation, it is necessary to delete the content of the user defined \gls{SimFolder} by hand, to avoid automatic deletion of import folders if the selected folder was not set properly.
+
+    The simulation folder can be located anywhere on the computer, but it is recommended to keep it in the same folder as the script or the Grasshopper file for easier access.
+
+    Note that due to logic of the tool, it is not possible to undo a simulation step, as running a simulation step will overwrite the previous \gls{UrbanCanopy}.
+    Running a new simulation step does not affect the previously computed results/actions on the buildings.
+    It is possible to save the state of an \gls{UrbanCanopy} object, for backup or to test different alternatives, by duplicating the \gls{SimFolder}.
+
+    \subsection{Usage in Grasshopper}
+    \label{subsec:usage-in-grasshopper}
+
+    The Grasshopper interface is designed to be user-friendly and intuitive.
+    The components are organized in tabs, with each tab corresponding to a specific type of action or analysis.
+
+    \subsubsection{Components types}
+    \label{subsubsec:components-types}
+    There are 5 types of components in the Grasshopper interface:
+    \paragraph{Simulation components:} These components are used to run a simulation step.
+    They need to be activated by a button component.
+    They need to be activated one at a time as they overwrite the previous state of the \gls{UrbanCanopy}.
+    They generally do not have outputs beside \textit{report} and \textit{path\_simulation\_folder}.
+    Contrary to Honeybee components, outputs cannot be objects that can be displayed in the Rhino viewport.
+    All the data is saved in the \gls{UrbanCanopy} $.pkl$ and $.json$ files in the \gls{SimFolder}.
+    In order to display information about the \gls{UrbanCanopy}, the buildings, or the results, the display type components need to be used.
+
+    \paragraph{Simulation parameter components:} These components are used to set the simulation parameters.
+    They work the same way as parameter components in Honeybee.
+    Some of them require a boolean toggle to be activated, as they perform a check in the $.json$ file of the \gls{UrbanCanopy}.
+
+    \paragraph{Option list components:} These components are possible values for certain parameters.
+    They work the same way as option list components in Honeybee.
+
+    \paragraph{Display components:} These components are meant to display information about the \gls{UrbanCanopy}, the buildings, or the results.
+    They do not run any simulation step in Python.
+    They need to be activated by a boolean toggle.
+    They can return text, tables, Honeybee/Ladybug objects, or Rhino geometry that can be displayed in the Rhino viewport.
+
+    \paragraph{Utility components:} These components are used to perform specific actions, such as erasing the content of the default simulation folder, or giving sample values for the EPW, GIS, or Honeybee Models.
+
+    \subsection{Usage in Python}
+    \label{subsec:usage-in-python}
+    No documentation is available yet for the Python usage of the software.
+    Please contact the author for more information.
+    The contact mail address is provided in the \ref{Contact Information} section.
+
+\section{Simulation Steps}
+\label{sec:simulation-steps}
+The tool is meant to be used in a step-by-step process, with each step corresponding to a specific action or analysis.
+These steps correspond to components in Grasshopper and "macro functions" in Python.
+Note that Grasshopper only calls Python for it to execute these "macro functions", Grasshopper act as an API for the Python code.
+
+In general, the simulations steps should be executed as follows:
+\begin{enumerate}
+    \item Create or empty the \gls{SimFolder};
+    \item Load \gls{BuildingBasic} from GIS file if there is any;
+    \item Load \gls{BuildingBasic} from files containing 3D geometries if there is any, the available format for now are closed Brep, and closed Ladybug Polyface3D;
+    \item Load \gls{BuildingModeled} from Honeybee Models (directly or through $.hbjson$ files);
+    \item Run merging of coplanar building surfaces;
+    \item Run shading context selection;
+    \item Run the urban building energy simulation (if relevant);
+    \item Run the BIPV simulation (if relevant), consisting in:
+        \subitem Genererating sensor grids on building roof and/or facades;
+        \subitem Running the solar radiation simulation;
+        \subitem Running the BIPV panels and energy harvesting simulation;
+    \item Run the KPIs computation.
+\end{enumerate}
+
+All the steps are not necessary for all simulations, and the tool has a high flexibility to allow complex scenarios, such as adding new building through the BIPV simulation to account for gradual construction, or updating the BIPV technologies used to simulate an evolution of the properties through time.
+However, some steps are interdependent, and need to be executed in a specific order.
+Very advance use of the tool, such as the one described above, require a very good understanding of the tool and the simulation process, and are not recommended for beginners.
+Do not hesitate to contact the author for more information.
+
+This section explains in details the different steps, their user parameters, and best practices to use them.
+However, the detail about the modeling methods, technical details, as well as the data used in the simulation will be provided in seperate documents or publications.
+
+    \subsection{Load Buildings}
+    \label{subsec:load-buildings}
+
+        \subsubsection{From GIS}
+        \label{subsubsec:from-gis}
+        GIS can be used to load \gls{BuildingBasic} objects.
+        GIS is composed of multiple files.
+        the input required by this step is a path to the folder containing the GIS files.
+
+        The buildings represented in the GIS must contain the following attributes:
+        \begin{itemize}
+            \item A 2D geometry representing the building footprint (apriori a given for any GIS);
+            \item A unique identifier for the building;
+            \item A height (optionnal but necessary for descent representation of the building in the simulation);
+            \item An elevation (optionnal but necessary for descent representation of the building in the simulation);
+        \end{itemize}
+
+        The key to access these attributes can be custom, An additionnal component is available to set the key to access the attributes.
+        Only use english letters to name the attributes.
+        Eventually change the name of the attributes in a software such as QGIS.
+
+        Pay atention to the unit of the GIS.
+        It can be in meter or degree.
+        Set the \textit{unit} input accordingly, using the wrong unit will make the tool crash.
+
+        Keep also in ming that GIS maps are geolocated, and can be thus located very far away from the origin of the Rhino sofware, and thus very far from the locations of your other type of geometries.
+        It is thus recommended to use the \textit{move to origin} input that will automatically move the GIS geometries to the origin of the Rhino software, according to the center of the GIS.
+        It is possible to load multiple GIS one after the other.
+        The buildings of the first GIS will be moved back, then a new center will be computed for the combined GIS, and the buildings of the second GIS will be moved to the new center.
+        Due to this process, it is mandatory to load the GISs before any other type of geometry as these geometries need to be placed according to the position of the GIS buildings once moved.
+
+        \subsubsection{From 3D geometries}
+        \label{subsubsec:from-3d-geometries}
+
+
+        \subsubsection{From Honeybee Models}
+        \label{subsubsec:from-honeybee-models}
+
+    \subsection{Other steps}
+    Explanations about the other steps will be added in future releases.
+
+\section{Resources}
+\label{sec:resources}
+To be added in future releases.
+
+\section{Contact Information}
+\label{sec:Contact Information}
+In case of any questions, issues, or suggestions, please contact Elie MEDIONI at \href{mailto:elie-medioni@campus.technion.ac.il}{here}.
+
+\section{Credits}
+\label{sec:Credits}
+
+This tool was created by Elie Medioni as part of his PhD
+research at the Technion - Israel Institute of Technology, under the
+supervision of Prof. Sabrina Spatari and Ass. Prof. Abraham Yezioro.
+
+The project was funded by the Israeli Ministry of Energy in order to develop methods and guidance for BIPV deployments
+in new or existing residential neighborhood in urban areas.
+
+Thank you to Hilany Yelloz and Julius Jandl for their contribution to the project.
+
+
+\section{Appendices}
+\label{sec:Appendices}
+To be added in future releases.
+
+
+\end{document}

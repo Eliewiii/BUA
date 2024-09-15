@@ -8,20 +8,21 @@ import logging
 import shutil
 from typing import List
 
-from bua.building.context_filter.building_lwr_context import BuildingLWRContextFilter
+
 from ladybug_geometry.geometry3d import Vector3D, Polyface3D
 from honeybee.model import Model
 from honeybee.room import Room
 
-from bua.building.building_basic import BuildingBasic
+from .building_basic import BuildingBasic
 
-from bua.building.context_filter.building_shading_context import BuildingShadingContextFilter
+from .context_filter.building_shading_context import BuildingShadingContextFilter
+from .context_filter.building_lwr_context import BuildingLWRContextFilter
 # from building.context_filter.building_lwr_context import BuildingLWRContext  # Useful later
-from bua.building.merge_hb_model_faces.merge_hb_model_faces import merge_facades_and_roof_faces_in_hb_model
-from bua.building.energy_simulation.building_energy_simulation import BuildingEnergySimulation
-from bua.building.solar_radiation_and_bipv.solar_rad_and_BIPV import SolarRadAndBipvSimulation
+from .merge_hb_model_faces.merge_hb_model_faces import merge_facades_and_roof_faces_in_hb_model
+from .energy_simulation.building_energy_simulation import BuildingEnergySimulation
+from .solar_radiation_and_bipv.solar_rad_and_BIPV import SolarRadAndBipvSimulation
 
-from bua.building.utils_buildings.lbt_obj_methods.hb_model_addons import HbAddons
+from .utils_buildings.lbt_obj_methods.hb_model_addons import HbAddons
 
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")

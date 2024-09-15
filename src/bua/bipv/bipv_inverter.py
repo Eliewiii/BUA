@@ -5,6 +5,7 @@ import os
 import json
 import random
 
+from typing import List
 from math import log, ceil
 
 
@@ -51,7 +52,8 @@ class BipvInverter:
         self.primary_energy_offset = None  # in kWh
 
     @classmethod
-    def load_bipv_inverter_obj_from_json_to_dictionary(cls, inverter_obj_dict, path_json_folder):
+    def load_bipv_inverter_obj_from_json_to_dictionary(cls, inverter_obj_dict: 'BipvInverter',
+                                                       path_json_folder: str) -> 'BipvInverter':
         """
         Create the BipvInverter objects from json file and save them in a dictionary.
         :param inverter_obj_dict: dictionary of the inverters
@@ -94,7 +96,7 @@ class BipvInverter:
                                              f"it must have been duplicated in the json file")
         return inverter_obj_dict
 
-    def linear_ghg_emission(self, capacity):
+    def linear_ghg_emission(self, capacity:float):
         """
         Calculate the ghg emission using a linear function
         :param capacity: capacity in Wp
@@ -104,10 +106,10 @@ class BipvInverter:
             raise ValueError("The capacity must be positive")
         if capacity == 0:
             return 0
-        ghg = self.ghg_coefficient * capacity/1000. + self.ghg_offset
+        ghg = self.ghg_coefficient * capacity / 1000. + self.ghg_offset
         return ghg
 
-    def linear_primary_energy(self, capacity):
+    def linear_primary_energy(self, capacity:float):
         """
         Calculate the primary energy using a linear function
         :param capacity: capacity in kWp
@@ -117,10 +119,10 @@ class BipvInverter:
             raise ValueError("The capacity must be positive")
         if capacity == 0:
             return 0
-        primary_energy = self.primary_energy_coefficient * capacity/1000. + self.primary_energy_offset
+        primary_energy = self.primary_energy_coefficient * capacity / 1000. + self.primary_energy_offset
         return primary_energy
 
-    def get_primary_energy_ghg_and_cost_for_capacity_list(self, capacity_list):
+    def get_primary_energy_ghg_and_cost_for_capacity_list(self, capacity_list:List[float]):
         """
         Return the primary energy, ghg emission and cost for a list of capacities
         :param capacity_list: list of float: list of capacities in kWp
@@ -133,7 +135,7 @@ class BipvInverter:
         cost = sum([self.capacity_vs_cost[capacity] for capacity in capacity_list])
         return primary_energy, ghg_emission, cost
 
-    def size_inverter(self, peak_power, sizing_ratio):
+    def size_inverter(self, peak_power:float, sizing_ratio:float):
         """
         Calculate the size of the inverter according to the peak power of the panels and a sizing ratio
         :param peak_power: float: peak power of the panels in Wp

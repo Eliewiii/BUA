@@ -17,10 +17,10 @@ from honeybee.boundarycondition import Outdoors
 import dragonfly
 from dragonfly.building import Building
 
-from bua.utils.utils_constants import TOLERANCE_LBT
+from ....config.config_constants import TOLERANCE_LBT
 
-default_elevation = 0.
-default_height = 9.
+DEFAULT_ELEVATION = 0.
+DEFAULT_HEIGHT = 9.
 
 dev_logger = logging.getLogger("dev")
 user_logger = logging.getLogger("user")
@@ -47,8 +47,8 @@ def make_LB_face_from_shapely_polygon(polygon, tolerance=TOLERANCE_LBT):
     return lb_face_footprint
 
 
-def LB_face_footprint_to_lB_polyface3D_extruded_footprint(lb_face_footprint, height=default_height,
-                                                          elevation=default_elevation):
+def LB_face_footprint_to_lB_polyface3D_extruded_footprint(lb_face_footprint, height=DEFAULT_HEIGHT,
+                                                          elevation=DEFAULT_ELEVATION):
     """
     Extrude a ladybug geometry footprint to obtain the room envelop
     :param lb_face_footprint: ladybug geometry footprint
@@ -63,8 +63,8 @@ def LB_face_footprint_to_lB_polyface3D_extruded_footprint(lb_face_footprint, hei
     return extruded_face
 
 
-def make_LB_polyface3D_oriented_bounding_box_from_LB_face3D_footprint(lb_face_footprint, height=default_height,
-                                                                      elevation=default_elevation):
+def make_LB_polyface3D_oriented_bounding_box_from_LB_face3D_footprint(lb_face_footprint, height=DEFAULT_HEIGHT,
+                                                                      elevation=DEFAULT_ELEVATION):
     """ Make Ladybug Polyface3D oriented bounding box from a Ladybug Face3D (mostly from the footprint of buildings)
     :param lb_face_footprint: Ladybug Face3D
     :param height: float : height of the building
