@@ -26,8 +26,7 @@ class ShadeManager:
     def __init__(self):
         # Parameter
         self.shade_construction_dict = {}
-        # todo : make sure this can be pickeled, otherwise convert it to dict and unpack it at the end in the function
-        #  in the urban canopy
+
 
     def prepare_for_pkl(self):
         """ Prepare the object for pickling """
@@ -83,7 +82,8 @@ class ShadeManager:
 
         return hb_shade
 
-    def get_solar_and_visible_reflectance(self, hb_or_lb_object):
+    @staticmethod
+    def get_solar_and_visible_reflectance(hb_or_lb_object):
         """
         Get the solar and visible reflectance of the HB object
         :param hb_or_lb_object: HB object, can be a HB Face or an Aperture (window)
@@ -133,7 +133,8 @@ class ShadeManager:
 
         return solar_reflectance, visible_reflectance, is_specular
 
-    def create_shade_construction(self, solar_reflectance, visible_reflectance, is_specular):
+    @staticmethod
+    def create_shade_construction(solar_reflectance, visible_reflectance, is_specular):
         """ Create a shade construction with the solar and visible reflectance"""
         # Create the shade construction
         hb_shade_construction = ShadeConstruction(

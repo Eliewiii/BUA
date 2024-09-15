@@ -1,7 +1,10 @@
 import os
+import sys
 import shutil
+import argparse
 import platform
-
+import urllib.request
+from zipfile import ZipFile
 
 
 def ensure_directory_exists(directory,overwrite=False):
@@ -13,6 +16,19 @@ def ensure_directory_exists(directory,overwrite=False):
         os.makedirs(directory)
         print(f"Created directory: {directory}")
 
+def download_file(url, destination):
+    print(f"Downloading from {url} to {destination}...")
+    try:
+        urllib.request.urlretrieve(url, destination)
+        print(f"Downloaded to {destination}")
+    except Exception as e:
+        print(f"Failed to download file. Error: {e}")
+
+def unzip_file(zip_path, extract_to):
+    print(f"Unzipping {zip_path} to {extract_to}...")
+    with ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_to)
+    print(f"Extraction complete. Contents extracted to {extract_to}")
 
 def get_root_and_user_folders(package_name:str, overwrite_root:bool=False,overwrite_user:bool=False)->(str,str):
     """Return the root and user folders for the package's additional data based on the operating system."""
@@ -38,10 +54,11 @@ def get_root_and_user_folders(package_name:str, overwrite_root:bool=False,overwr
     return root_folder, user_folder
 
 
+
 # Name of the toll folder
 tool_name = "BUA"
 
-# Define paths using the root folder
+# Define path of the root and user folders
 root_folder, user_folder = get_root_and_user_folders(package_name=tool_name)
 
 # -------------------------------
@@ -76,13 +93,32 @@ path_folder_user_bipv_parameters = os.path.join(path_folder_bipv_library, "user"
 name_ubes_epw_file = "uc_epw_ubes.epw"
 name_ubes_hbjson_simulation_parameters_file = "uc_ubes_hb_simulation_parameters.json"
 
-# -------------------------------
-# User specific folders
-# -------------------------------
-path_user_data = os.path.join(user_folder,tool_name)
+
+### Functions to for the package setup
+def setup_package(version_tag):
+    """
+
+    :return:
+    """
+    ensure_directory_exists(directory=path_libraries_tool_folder, overwrite=True)
+    ensure_directory_exists(directory=path_simulation_temp_folder, overwrite=True)
+    ensure_directory_exists(directory=os.path.join(path_libraries_tool_folder,version_tag), overwrite=True)
+
 
 # Example usage within the module (for debugging or setup)
 if __name__ == "__main__":
     print("Configuration settings:")
     print(f"Root folder: {root_folder}")
     print(f"User folder: {user_folder}")
+    parser = argparse.ArgumentParser(description="Setup and configuration script.")
+    parser.add_argument('--version', required=True, help="Version tag for the data to download.")
+    parser.add_argument('--setup', required=True, help="tell if to setup.")
+    args = parser.parse_args()
+    version = args.version
+    is_setup = args.setup
+    if is_setup:
+        setup_package(version_tag=version)
+
+        print("Configuration settings:")
+        print(f"Root folder: {root_folder}")
+        print(f"User folder: {user_folder}")

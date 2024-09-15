@@ -6,7 +6,7 @@ import os
 
 from copy import deepcopy
 
-from bua.building.solar_radiation_and_bipv.solar_rad_and_BIPV import empty_bipv_results_dict, \
+from ..building.solar_radiation_and_bipv.solar_rad_and_BIPV import empty_bipv_results_dict, \
     sum_bipv_results_dicts_with_different_years, bipv_results_to_csv
 
 from bua.urban_canopy.kpis.urban_canopy_kpis import UrbanCanopyKPIs

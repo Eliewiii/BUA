@@ -46,6 +46,10 @@ def setup_package():
     download_file(zip_url, zip_file_path)
     unzip_file(zip_file_path, target_directory)
 
+
+def setup_package():
+    print("zob zob")
+
 if __name__ == "__main__":
-    if 'setup' in sys.argv:
-        setup_package()
+    setup_package()
+    # if 'setup' in sys.argv:

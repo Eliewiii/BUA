@@ -8,9 +8,9 @@ import json
 
 from copy import deepcopy
 
-from bua.utils.utils_configuration import name_ubes_epw_file, name_ubes_hbjson_simulation_parameters_file
-from bua.urban_canopy.ubes.check_simulation_parameter import check_simulation_parameters
-from bua.building.energy_simulation.building_energy_simulation import empty_bes_results_dict,bes_result_dict_to_csv
+from ...config.bua_config_structure import name_ubes_epw_file, name_ubes_hbjson_simulation_parameters_file
+from .check_simulation_parameter import check_simulation_parameters
+from ...building.energy_simulation.building_energy_simulation import empty_bes_results_dict,bes_result_dict_to_csv
 
 
 user_logger = logging.getLogger("user")
