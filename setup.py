@@ -29,7 +29,7 @@ import os
 
 
 def run_setup_script_and_get_version():
-    version_tag = "v1.0.0"  # Default version tag or fetch from another source
+    version_tag = "0.0.0"  # Default version tag or fetch from another source
     # os.makedirs(r"C:\Users\eliem\AppData\Local\BUA", exist_ok=True)
     setup_dot_py_dir = os.path.dirname(__file__)
     # Define the path to the post-installation script
@@ -44,8 +44,5 @@ def run_setup_script_and_get_version():
 version_tag = run_setup_script_and_get_version()
 
 setup(
-    # cmdclass={
-    #     'install': InstallCommand,
-    # },
     version=version_tag
 )

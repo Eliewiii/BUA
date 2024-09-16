@@ -18,6 +18,7 @@ def ensure_directory_exists(directory,overwrite=False):
 
 def download_file(url, destination):
     print(f"Downloading from {url} to {destination}...")
+    url = url.replace("\\", "/")
     try:
         urllib.request.urlretrieve(url, destination)
         print(f"Downloaded to {destination}")

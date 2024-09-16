@@ -3,7 +3,7 @@ Functions to be run by the main to perform the different steps of teh solar radi
 """
 import logging
 
-from bua.urban_canopy.urban_canopy import UrbanCanopy
+from ..urban_canopy import UrbanCanopy
 
 from ..config.config_default_values_user_parameters import default_path_simulation_folder, \
     default_path_weather_file

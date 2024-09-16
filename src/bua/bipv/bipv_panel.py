@@ -2,7 +2,7 @@
 Panel class, modeling solar panels, to track the age and energy production of panels on buildings
 """
 
-from bua.bipv.bipv_technology import BipvTechnology
+from .bipv_technology import BipvTechnology
 
 
 class BipvPanel:

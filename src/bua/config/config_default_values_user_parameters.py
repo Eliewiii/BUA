@@ -5,7 +5,7 @@
 import os
 from datetime import datetime
 
-from .bua_config_structure import path_tool, path_simulation_temp_folder, path_libraries_tool_folder
+from .bua_config_structure import root_folder, path_simulation_temp_folder, path_libraries_tool_folder
 
 # Default path to the simulation folder
 default_path_simulation_folder = path_simulation_temp_folder
@@ -21,7 +21,7 @@ default_unit_gis = "m"
 default_path_hbjson = os.path.join(path_libraries_tool_folder, "Samples","hb_models", "sample_building.hbjson")
 
 # EPW weather file
-default_path_weather_file = os.path.join(path_tool, "Libraries", "EPW", "IS_5280_A_Haifa.epw")
+default_path_weather_file = os.path.join(root_folder, "Libraries", "EPW", "IS_5280_A_Haifa.epw")
 
 # Building Energy Simulation
 default_path_hbjson_simulation_parameter_file = os.path.join(path_libraries_tool_folder, "Simulation_parameters",

@@ -5,6 +5,3 @@ from .building.building_modeled import BuildingModeled
 
 from .urban_canopy.urban_canopy import UrbanCanopy
 
-import simulation_steps
-
-import config

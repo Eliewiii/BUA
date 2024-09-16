@@ -9,7 +9,6 @@ import shutil
 
 from datetime import datetime
 
-from bua.building.merge_hb_model_faces.merge_hb_model_faces import merge_facades_and_roof_faces_in_hb_model
 from honeybee.model import Model
 
 from .export_to_json import ExportUrbanCanopyToJson

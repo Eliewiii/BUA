@@ -14,7 +14,7 @@ from honeybee.model import Model
 from honeybee.boundarycondition import Outdoors, Ground
 from honeybee.facetype import Wall, RoofCeiling
 
-from ...config import TOLERANCE_LBT
+from ...config.config_constants import TOLERANCE_LBT
 
 
 def merge_facades_and_roof_faces_in_hb_model(hb_model_obj, orient_roof_mesh_to_according_to_building_orientation=True,
