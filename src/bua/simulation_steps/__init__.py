@@ -3,7 +3,7 @@
 #            "typology_identification", "urban_building_energy_simulation_functions"]
 
 from .building_manipulation_function_for_main import SimulationBuildingManipulationFunctions
-from .context_selection import SimulationContextSelection
+from .context_selection import ContextSelection
 from .general_function_for_main import SimulationCommonMethods
 from .load_bat_file_arguments import LoadArguments
 from .load_building_or_geometry import SimulationLoadBuildingOrGeometry

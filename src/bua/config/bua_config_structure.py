@@ -1,6 +1,6 @@
 """
 File containing all the configuration settings for the BUA package, for the folder structure and the data paths.
-It also take take care of the setup of the package during installation, installing the data libraries.
+It also take care of the setup of the package during installation, installing the data libraries.
 """
 import os
 import sys
