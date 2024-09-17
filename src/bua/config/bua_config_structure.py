@@ -1,3 +1,7 @@
+"""
+File containing all the configuration settings for the BUA package, for the folder structure and the data paths.
+It also take take care of the setup of the package during installation, installing the data libraries.
+"""
 import os
 import sys
 import shutil
@@ -7,7 +11,7 @@ import urllib.request
 from zipfile import ZipFile
 
 
-def ensure_directory_exists(directory,overwrite=False):
+def ensure_directory_exists(directory, overwrite=False):
     """Ensure that the specified directory exists. Create it if it does not."""
     if os.path.exists(directory) and overwrite:
         shutil.rmtree(directory)
@@ -15,6 +19,7 @@ def ensure_directory_exists(directory,overwrite=False):
     if not os.path.exists(directory):
         os.makedirs(directory)
         print(f"Created directory: {directory}")
+
 
 def download_file(url, destination):
     print(f"Downloading from {url} to {destination}...")
@@ -24,6 +29,7 @@ def download_file(url, destination):
         print(f"Downloaded to {destination}")
     except Exception as e:
         print(f"Failed to download file. Error: {e}")
+
 
 def unzip_file(zip_path, extract_to):
     # Create the folder if it does not exist
@@ -36,7 +42,9 @@ def unzip_file(zip_path, extract_to):
     os.remove(zip_path)
     print(f"Extraction complete. Contents extracted to {extract_to}")
 
-def get_root_and_user_folders(package_name:str, overwrite_root:bool=False,overwrite_user:bool=False)->(str,str):
+
+def get_root_and_user_folders(package_name: str, overwrite_root: bool = False,
+                              overwrite_user: bool = False) -> (str, str):
     """Return the root and user folders for the package's additional data based on the operating system."""
     os_name = platform.system().lower()
 
@@ -46,7 +54,8 @@ def get_root_and_user_folders(package_name:str, overwrite_root:bool=False,overwr
     elif os_name == "linux":
         root_folder = os.path.join(os.getenv('XDG_DATA_HOME', os.path.expanduser("~/.local/share")),
                                    package_name)
-        user_folder = os.path.join(os.getenv('XDG_CONFIG_HOME', os.path.expanduser("~/.config")), package_name)
+        user_folder = os.path.join(os.getenv('XDG_CONFIG_HOME', os.path.expanduser("~/.config")),
+                                   package_name)
     elif os_name == "darwin":
         root_folder = os.path.join(os.path.expanduser("~"), 'Library', 'Application Support', package_name)
         user_folder = os.path.join(os.path.expanduser("~"), 'Library', 'Preferences', package_name)
@@ -60,7 +69,6 @@ def get_root_and_user_folders(package_name:str, overwrite_root:bool=False,overwr
     return root_folder, user_folder
 
 
-
 # Name of the toll folder
 tool_name = "BUA"
 
@@ -70,7 +78,6 @@ tool_name = "BUA"
 url_github_repo = r"https://github.com/Eliewiii/BUA"
 url_downloads = os.path.join(url_github_repo, "releases", "download")
 library_zip_file_name = "bua_library.zip"
-
 
 r"https://github.com/Eliewiii/Building_Urban_Analysis/releases/download/V1.2.1/Libraries_tool.zip"
 
@@ -110,13 +117,11 @@ name_ubes_hbjson_simulation_parameters_file = "uc_ubes_hb_simulation_parameters.
 # Typology
 name_typology_folder = "typology"
 
-
 # -------------------------------
 # User specific folders
 # -------------------------------
 # name user library folder
 name_user_library_folder = "user_library"
-
 
 
 ### Functions to for the package setup
@@ -142,7 +147,10 @@ def setup_package(version_tag):
     # todo: When properly implemented, check deprecated structure of the user library folder
     ensure_directory_exists(directory=os.path.join(user_folder, name_user_library_folder), overwrite=False)
     # Create the user library sub_folder
-    ensure_directory_exists(directory=os.path.join(user_folder, name_user_library_folder, name_bipv_library_folder), overwrite=False)
+    ensure_directory_exists(
+        directory=os.path.join(user_folder, name_user_library_folder, name_bipv_library_folder),
+        overwrite=False)
+
 
 "https://github.com/Eliewiii/BUA/releases/download/v1.0.0/bua_library.zip"
 

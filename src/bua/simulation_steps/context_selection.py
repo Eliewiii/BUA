@@ -12,7 +12,7 @@ from ..config.config_default_values_user_parameters import default_mvfc_context_
     default_use_properties_from_typology_for_new_BuildingModeled, default_make_new_BuildingModeled_simulated
 
 
-class SimulationContextFiltering:
+class SimulationContextSelection:
     """ todo   """
 
     @classmethod
