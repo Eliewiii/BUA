@@ -8,10 +8,11 @@ import logging
 import shutil
 from typing import List
 
-
 from ladybug_geometry.geometry3d import Vector3D, Polyface3D
 from honeybee.model import Model
 from honeybee.room import Room
+
+from radiance_comp_vf import RadiativeSurface
 
 from .building_basic import BuildingBasic
 
@@ -433,41 +434,69 @@ class BuildingModeled(BuildingBasic):
         # Return the list of context buildings
         return selected_context_building_id_list, duration
 
-    def generate_radiative_surface_objects_for_lwr_computation(self,overwrite:bool=False):
+    def generate_radiative_surface_objects_for_lwr_computation(self):
         """
-
+        # todo: temporary method to generate the radiative surface objects for the LWR computation
         """
-        if overwrite:
-            self.lwr_context_obj.overwrite_radiative_surfaces()
+        from honeybee.boundarycondition import Outdoors
+        from honeybee.facetype import Wall, RoofCeiling
 
-        self.lwr_context_obj.generate_radiative_surface_objects_from_hb_model(hb_model=self.hb_model)
+        def is_outdoor_surface(hb_face):
+            """
+            Check if the hb_face is an exterior wall
+            :param hb_face: Honeybee Face3D
+            :return: True if the face is an exterior wall, False otherwise
+            """
+            return ((isinstance(hb_face.type, Wall) or isinstance(hb_face.type, RoofCeiling)) and isinstance(
+                hb_face.boundary_condition, Outdoors))
 
+        def from_point3d_list_to_vertex_list(point3d_list):
+            return [list(point.to_array()) for point in point3d_list]
 
-    def perform_second_pass_lwr_context(self,
-                                        building_surfaces_dict: dict,
-                                        urban_canopy_pyvista_mesh: object,
-                                        ray_arg=None):
-        """
-        Perform the second pass of the context filtering algorithm on the building.
-        """
-        # Check if the first pass was done, if not second pass cannot be performed
-        if not self.shading_context_obj.first_pass_done:
-            dev_logger.info(
-                f"The first pass of the context filtering was not done for the building {self.id}, it will be ignored")
-            user_logger.info(
-                f"The first pass of the context filtering was not done for the building {self.id}, it will be ignored")
-            return
+        list_of_outdoor_faces = []
+        for room in self.hb_model_obj.rooms:
+            for face in room.faces:
+                if is_outdoor_surface(face):
+                    list_of_outdoor_faces.append(face)
+        radiative_surfaces_list = []
+        for outdoor_face in list_of_outdoor_faces:
+            outdoor_face_vertex_list = from_point3d_list_to_vertex_list(outdoor_face.punched_vertices)
+            radiative_surfaces_list.append(
+                RadiativeSurface.from_vertex_list(identifier=outdoor_face.identifier,
+                                                  vertex_list=outdoor_face_vertex_list))
+            for aperture in outdoor_face.apertures:
+                aperture_vertex_list = from_point3d_list_to_vertex_list(aperture.vertices)
+                radiative_surfaces_list.append(
+                    RadiativeSurface.from_vertex_list(identifier=aperture.identifier,
+                                                      vertex_list=aperture_vertex_list))
 
-        # check that the
+        return radiative_surfaces_list
 
-        # overwrite context filtering object if needed
-        if overwrite:
-            self.shading_context_obj.overwrite_filtering(overwrite_second_pass=True)
-        if not self.shading_context_obj.second_pass_done:
-            # Perform the first pass of the context filtering algorithm
-            nb_context_faces, duration = self.shading_context_obj.select_non_obstructed_context_faces_with_ray_tracing(
-                building_surfaces_dict=building_surfaces_dict,
-                urban_canopy_pyvista_mesh=urban_canopy_pyvista_mesh)
+    # def perform_second_pass_lwr_context(self,
+    #                                     building_surfaces_dict: dict,
+    #                                     urban_canopy_pyvista_mesh: object,
+    #                                     ray_arg=None):
+    #     """
+    #     Perform the second pass of the context filtering algorithm on the building.
+    #     """
+    #     # Check if the first pass was done, if not second pass cannot be performed
+    #     if not self.shading_context_obj.first_pass_done:
+    #         dev_logger.info(
+    #             f"The first pass of the context filtering was not done for the building {self.id}, it will be ignored")
+    #         user_logger.info(
+    #             f"The first pass of the context filtering was not done for the building {self.id}, it will be ignored")
+    #         return
+    #
+    #     # check that the
+    #
+    #     # overwrite context filtering object if needed
+    #     if overwrite:
+    #         self.shading_context_obj.overwrite_filtering(overwrite_second_pass=True)
+    #     if not self.shading_context_obj.second_pass_done:
+    #         # Perform the first pass of the context filtering algorithm
+    #         nb_context_faces, duration = self.shading_context_obj.select_non_obstructed_context_faces_with_ray_tracing(
+    #             building_surfaces_dict=building_surfaces_dict,
+    #             urban_canopy_pyvista_mesh=urban_canopy_pyvista_mesh)
 
     ####################################################################################################################
     # Solar radiation and BIPV methods
@@ -673,14 +702,16 @@ class BuildingModeled(BuildingBasic):
             path_weather_file=path_weather_file, overwrite=overwrite,
             north_angle=north_angle, silent=silent)
 
-    def building_run_bipv_panel_simulation(self, path_simulation_folder, path_radiation_and_bipv_result_folder,
+    def building_run_bipv_panel_simulation(self, path_simulation_folder,
+                                           path_radiation_and_bipv_result_folder,
                                            roof_pv_tech_obj, facades_pv_tech_obj,
                                            roof_transport_obj,
                                            facades_transport_obj, roof_inverter_obj, facades_inverter_obj,
                                            roof_inverter_sizing_ratio,
                                            facades_inverter_sizing_ratio,
                                            uc_start_year,
-                                           uc_current_year, uc_end_year, efficiency_computation_method="yearly",
+                                           uc_current_year, uc_end_year,
+                                           efficiency_computation_method="yearly",
                                            minimum_panel_eroi=1.2,
                                            replacement_scenario="replace_failed_panels_every_X_years",
                                            continue_simulation=False,
@@ -712,7 +743,8 @@ class BuildingModeled(BuildingBasic):
         # todo, replace simulation folder by radiation and BIPV result folder
         # Run the simulation
         self.solar_radiation_and_bipv_simulation_obj.run_bipv_panel_simulation(
-            path_simulation_folder=path_simulation_folder, building_id=self.id, roof_pv_tech_obj=roof_pv_tech_obj,
+            path_simulation_folder=path_simulation_folder, building_id=self.id,
+            roof_pv_tech_obj=roof_pv_tech_obj,
             facades_pv_tech_obj=facades_pv_tech_obj,
             roof_inverter_tech_obj=roof_inverter_obj,
             facades_inverter_tech_obj=facades_inverter_obj,

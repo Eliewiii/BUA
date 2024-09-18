@@ -11,6 +11,8 @@ from datetime import datetime
 
 from honeybee.model import Model
 
+from radiance_comp_vf import RadiativeSurfaceManager, RadiativeSurface
+
 from .export_to_json import ExportUrbanCanopyToJson
 from .bipv_scenario_urban_canopy import BipvScenario
 from .uc_context_filter.shade_manager import ShadeManager
@@ -27,7 +29,8 @@ from ..bipv.bipv_technology import BipvTechnology
 from ..bipv.bipv_inverter import BipvInverter
 from ..bipv.bipv_transportation import BipvTransportation
 
-from ..config.bua_config_structure import name_urban_canopy_export_file_pkl, name_urban_canopy_export_file_json, \
+from ..config.bua_config_structure import name_urban_canopy_export_file_pkl, \
+    name_urban_canopy_export_file_json, \
     name_radiation_simulation_folder, name_temporary_files_folder, name_ubes_temp_simulation_folder, \
     name_ubes_simulation_result_folder, name_ubes_epw_file, \
     path_folder_default_bipv_parameters, \
@@ -59,6 +62,9 @@ class UrbanCanopy:
 
         # BIPV simulation
         self.bipv_scenario_dict = {}  # dictionary of the BIPV scenarios
+
+        # Longwave radiation computation
+        self.lwr_radiative_surface_manager = RadiativeSurfaceManager()  # Radiative surface manager for longwave radiation
 
     def __len__(self):
         """ Return the number of buildings in the urban canopy """
@@ -645,88 +651,112 @@ class UrbanCanopy:
         self.full_context_pyvista_mesh = make_pyvista_polydata_from_list_of_hb_model_and_lb_polyface3d(
             hb_model_and_lb_polyface3d_list=hb_model_and_lb_polyface3d_list)
 
-    def perform_surface_selection_for_lwr_computation(self, min_cf_criterion, context_building_generation_options=None,
-                                                      overwrite=False):
+    # def perform_surface_selection_for_lwr_computation(self, min_cf_criterion,
+    #                                                   context_building_generation_options=None,
+    #                                                   overwrite=False):
+    #     """
+    #     Perform the selection of the couple of surfaces to use for for the longwave radiation computation.
+    #     :param min_cf_criterion: float, the minimum form factor criterion for the selection of the surfaces.
+    #     :param context_building_generation_options: todo option for the generation of HB models of the context buildings
+    #     :param overwrite: bool, if True, the existing selected surfaces will be overwritten.
+    #     """
+    #
+    #     # todo @Elie: to be implemented, check the following steps,
+    #     building_id_list_to_convert_to_building_modeled = []
+    #     uc_building_id_list = list(self.building_dict.keys())
+    #     uc_building_bounding_box_list = [building_obj.lb_polyface3d_oriented_bounding_box for
+    #                                      building_obj in self.building_dict.values()]
+    #     # Selection of the buildings to use for the LWR using the min VF criterion (the same as the first pass context selection)
+    #     for building_id, building_obj in self.building_dict.items():
+    #         if (isinstance(building_obj, BuildingModeled) and building_obj.is_target):
+    #             selected_building_id_list, duration = building_obj.perform_first_pass_lwr_context_filtering(
+    #                 uc_building_id_list=uc_building_id_list,
+    #                 uc_building_bounding_box_list=uc_building_bounding_box_list,
+    #                 min_vf_criterion=min_vf_criterion, overwrite=overwrite)
+    #             building_id_list_to_convert_to_building_modeled.extend(selected_building_id_list)
+    #
+    #     # Generate the HB model/convert to BuildingModeled the buildings to use for the LWR computation if they are not already and set is_simulated to True for them
+    #     # todo: @Elie: correct this function and make it so that it ignores buildings that are already BuildingModeled (to thus ignore duplicated building from the list)
+    #     self.transform_buildingbasic_into_building_model(
+    #         building_id_list=building_id_list_to_convert_to_building_modeled,
+    #         are_simulated=True, use_typology=True,
+    #         typology_identification=False, autozoner=True,
+    #         use_layout_from_typology=True,
+    #         use_properties_from_typology=True,
+    #         merge_facades_and_roof_faces_in_hb_model=False
+    #     )
+    #     # Perform this first pass context filtering for these is_simulated buildings that were just created
+    #     target_and_simulated_building_id_list = [building_id for building_id, building_obj in
+    #                                              self.building_dict.items()
+    #                                              if self.included_in_lwr_computation(building_obj)]
+    #     for building_id, building_obj in self.building_dict.items():
+    #         if self.included_in_lwr_computation(building_obj):
+    #             selected_building_id_list, duration = building_obj.perform_first_pass_lwr_context_filtering(
+    #                 uc_building_id_list=target_and_simulated_building_id_list,
+    #                 # No need to put the other buildings, they will not be used in the LWR computation
+    #                 uc_building_bounding_box_list=uc_building_bounding_box_list,
+    #                 min_vf_criterion=min_vf_criterion, overwrite=overwrite)
+    #
+    #     # Generate the Pyvista mesh including all the buildings in the urban canopy or just the one within target and simulated
+    #     self.make_pyvista_polydata_mesh_of_all_buildings(target_and_simulated_only=True)
+    #     # Generate surfaces objects for all outside surfaces of the buildings to use for the LWR computation (preprocess center, normal, area, and the edges)
+    #     for building_id, building_obj in self.building_dict.items():
+    #         if self.included_in_lwr_computation(building_obj):
+    #             building_obj.generate_radiative_surface_objects_for_lwr_computation(overwrite=overwrite)
+    #     # Gather akk the surfaces to use for the LWR computation
+    #     lwr_surfaces_dict = {}  # todo: @Elie: to be implemented, create a dict with {building_id: [surfaces_obj]}
+    #     for building_id, building_obj in self.building_dict.items():
+    #         if self.included_in_lwr_computation(building_obj):
+    #             lwr_surfaces_dict[building_id] = building_obj.lwr_surfaces_dict
+    #     # Perform an adjusted version second pass context filtering on the buildings to use for the LWR computation
+    #     for building_id, building_obj in self.building_dict.items():
+    #         if self.included_in_lwr_computation(building_obj):
+    #             building_obj.perform_second_pass_lwr_context(
+    #                 building_surfaces_dict=lwr_surfaces_dict,
+    #                 urban_canopy_pyvista_mesh=self.full_context_pyvista_mesh,
+    #                 ray_arg=None
+    #             )
+    #     # Add special surfaces for ground and sky according the location of the urban canopy
+    #
+    #     # Make self.radiative_surface_manager
+    #
+    # @staticmethod
+    # def included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
+    #     """
+    #     Condition to check if the building is included in the LWR computation to simplify the code.
+    #     :param building_obj: Building object
+    #     :return: bool
+    #     """
+    #     return isinstance(building_obj, BuildingModeled) and (
+    #             building_obj.is_simulated or building_obj.is_target)
+    #
+    # def perform_view_factor_computation_for_lwr(self, overwrite: bool = False):
+    #     """
+    #     Perform the view factor computation for the longwave radiation.
+    #     """
+    #     # todo: @Elie: to be implemented
+
+    # --------------------------------------------------------------------------------------------------------
+    # Longwave Radiation Simulation
+    # --------------------------------------------------------------------------------------------------------
+
+    def init_radiative_surface_manager_temp(self):
         """
-        Perform the selection of the couple of surfaces to use for for the longwave radiation computation.
-        :param min_cf_criterion: float, the minimum form factor criterion for the selection of the surfaces.
-        :param context_building_generation_options: todo option for the generation of HB models of the context buildings
-        :param overwrite: bool, if True, the existing selected surfaces will be overwritten.
+        Initialize the radiative surface manager for the longwave radiation simulation.
+        todo: To be completely replaced in the future, here it will only consider the target buildings
         """
 
-        # todo @Elie: to be implemented, check the following steps,
-        building_id_list_to_convert_to_building_modeled = []
-        uc_building_id_list = list(self.building_dict.keys())
-        uc_building_bounding_box_list = [building_obj.lb_polyface3d_oriented_bounding_box for
-                                         building_obj in self.building_dict.values()]
-        # Selection of the buildings to use for the LWR using the min VF criterion (the same as the first pass context selection)
-        for building_id, building_obj in self.building_dict.items():
-            if (isinstance(building_obj, BuildingModeled) and building_obj.is_target):
-                selected_building_id_list, duration = building_obj.perform_first_pass_lwr_context_filtering(
-                    uc_building_id_list=uc_building_id_list,
-                    uc_building_bounding_box_list=uc_building_bounding_box_list,
-                    min_vf_criterion=min_vf_criterion, overwrite=overwrite)
-                building_id_list_to_convert_to_building_modeled.extend(selected_building_id_list)
+        # Add the surfaces of the target buildings
+        for building_obj in self.building_dict.values():
+            if building_obj.is_target:
+                list_radiative_surfaces = building_obj.generate_radiative_surface_objects_for_lwr_computation()
+                self.radiative_surface_manager.add_surfaces_from_building(building_obj)
 
-        # Generate the HB model/convert to BuildingModeled the buildings to use for the LWR computation if they are not already and set is_simulated to True for them
-        # todo: @Elie: correct this function and make it so that it ignores buildings that are already BuildingModeled (to thus ignore duplicated building from the list)
-        self.transform_buildingbasic_into_building_model(
-            building_id_list=building_id_list_to_convert_to_building_modeled,
-            are_simulated=True, use_typology=True,
-            typology_identification=False, autozoner=True,
-            use_layout_from_typology=True,
-            use_properties_from_typology=True,
-            merge_facades_and_roof_faces_in_hb_model=False
-        )
-        # Perform this first pass context filtering for these is_simulated buildings that were just created
-        target_and_simulated_building_id_list = [building_id for building_id, building_obj in self.building_dict.items()
-                                                 if self.included_in_lwr_computation(building_obj)]
-        for building_id, building_obj in self.building_dict.items():
-            if self.included_in_lwr_computation(building_obj):
-                selected_building_id_list, duration = building_obj.perform_first_pass_lwr_context_filtering(
-                    uc_building_id_list=target_and_simulated_building_id_list,
-                    # No need to put the other buildings, they will not be used in the LWR computation
-                    uc_building_bounding_box_list=uc_building_bounding_box_list,
-                    min_vf_criterion=min_vf_criterion, overwrite=overwrite)
 
-        # Generate the Pyvista mesh including all the buildings in the urban canopy or just the one within target and simulated
-        self.make_pyvista_polydata_mesh_of_all_buildings(target_and_simulated_only=True)
-        # Generate surfaces objects for all outside surfaces of the buildings to use for the LWR computation (preprocess center, normal, area, and the edges)
-        for building_id, building_obj in self.building_dict.items():
-            if self.included_in_lwr_computation(building_obj):
-                building_obj.generate_radiative_surface_objects_for_lwr_computation(overwrite=overwrite)
-        # Gather akk the surfaces to use for the LWR computation
-        lwr_surfaces_dict = {}  # todo: @Elie: to be implemented, create a dict with {building_id: [surfaces_obj]}
-        for building_id, building_obj in self.building_dict.items():
-            if self.included_in_lwr_computation(building_obj):
-                lwr_surfaces_dict[building_id] = building_obj.lwr_surfaces_dict
-        # Perform an adjusted version second pass context filtering on the buildings to use for the LWR computation
-        for building_id, building_obj in self.building_dict.items():
-            if self.included_in_lwr_computation(building_obj):
-                building_obj.perform_second_pass_lwr_context(
-                    building_surfaces_dict=lwr_surfaces_dict,
-                    urban_canopy_pyvista_mesh=self.full_context_pyvista_mesh,
-                    ray_arg=None
-                )
-        # Add special surfaces for ground and sky according the location of the urban canopy
 
-        # Make self.radiative_surface_manager
-
-    @staticmethod
-    def included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
-        """
-        Condition to check if the building is included in the LWR computation to simplify the code.
-        :param building_obj: Building object
-        :return: bool
-        """
-        retrun(isinstance(building_obj, BuildingModeled) and (building_obj.is_simulated or building_obj.is_target))
-
-    def perform_the_view_factor_computation_for_lwr(self, overwrite: bool = False):
-        """
-        Perform the view factor computation for the longwave radiation.
-        """
-        # todo: @Elie: to be implemented
-
+    # --------------------------------------------------------------------------------------------------------
+    # Urban Building Energy Simulation
+    # --------------------------------------------------------------------------------------------------------
     def load_epw_and_hb_simulation_parameters_for_ubes(self, path_simulation_folder,
                                                        path_hbjson_simulation_parameter_file,
                                                        path_weather_file, ddy_file=None,
