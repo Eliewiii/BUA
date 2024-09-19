@@ -30,6 +30,12 @@ import os
 
 def run_setup_script_and_get_version():
     version_tag = "0.0.0"  # Default version tag or fetch from another source
+
+    # Check for an environment variable to skip the setup script
+    if os.getenv("SKIP_SETUP_SCRIPT", "false").lower() == "true":
+        print("Skipping pre-installation setup script.")
+        return version_tag
+
     # os.makedirs(r"C:\Users\eliem\AppData\Local\BUA", exist_ok=True)
     setup_dot_py_dir = os.path.dirname(__file__)
     # Define the path to the post-installation script
