@@ -5,6 +5,8 @@ For both shading and LWR.
 
 from time import time
 
+from ..urban_canopy import UrbanCanopy
+
 from ..config.config_default_values_user_parameters import default_mvfc_context_shading_selection, \
     default_shading_number_of_rays_context_filter_second_pass, \
     default_automatic_floor_subdivision_for_new_BuildingModeled, \
@@ -62,7 +64,7 @@ class ContextSelection:
         cls.perform_second_pass_of_context_filtering_on_buildings(urban_canopy_object)
 
     @staticmethod
-    def perform_first_pass_of_context_filtering_on_buildings(urban_canopy_object,
+    def perform_first_pass_of_context_filtering_on_buildings(urban_canopy_object: UrbanCanopy,
                                                              building_id_list=None,
                                                              on_building_to_simulate=False,
                                                              min_vf_criterion=default_mvfc_context_shading_selection,
@@ -91,7 +93,7 @@ class ContextSelection:
         return context_building_id_list, tot_duration, sim_duration_dict
 
     @staticmethod
-    def perform_second_pass_of_context_filtering_on_buildings(urban_canopy_object,
+    def perform_second_pass_of_context_filtering_on_buildings(urban_canopy_object: UrbanCanopy,
                                                               building_id_list=None,
                                                               number_of_rays=default_shading_number_of_rays_context_filter_second_pass,
                                                               on_building_to_simulate=False,
