@@ -13,9 +13,10 @@ user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")
 
 
-def init_bipv_on_sensor_grid(sensor_grid: SensorGrid, pv_technology_obj, bipv_transportation_obj,
+def init_bipv_on_sensor_grid(sensor_grid: SensorGrid, pv_technology_obj: BipvTechnology,
+                             bipv_transportation_obj,
                              annual_panel_irradiance_list,
-                             minimum_panel_eroi):
+                             minimum_panel_eroi, minimum_economic_roi=0, electricity_sell_price=0.14):
     """
     Initialize the bipvs on the sensor_grid and return a list of the bipvs.
     The function will check if the area of the faces of the sensor_grid is big enough to contain the bipvs
@@ -37,6 +38,20 @@ def init_bipv_on_sensor_grid(sensor_grid: SensorGrid, pv_technology_obj, bipv_tr
     # Initialize the flags
     area_flag_warning = False
     eroi_flag_warning = False
+    economic_roi_flag_warning = False
+
+    # Compute the primary energy for the panel
+    gtg_transportation_dict, recycling_dict = pv_technology_obj.compute_transportation_lca_and_cost(
+        bipv_transportation_obj=bipv_transportation_obj)
+    primary_energy_transportation = gtg_transportation_dict["primary_energy"]
+    primary_energy_recycling = recycling_dict["primary_energy"]
+    primary_energy_inverter_estimated = pv_technology_obj.estimated_primary_energy_inverter
+
+    primary_energy_per_panel = \
+        pv_technology_obj.primary_energy_manufacturing + primary_energy_transportation + primary_energy_recycling + \
+        primary_energy_inverter_estimated
+    # Compute the cost of the panel
+    panel_cost = pv_technology_obj.evaluate_net_cost()
 
     for face_index, face in enumerate(lb_mesh_obj.faces):
         # Calculate the energy harvested by the panel
@@ -57,16 +72,8 @@ def init_bipv_on_sensor_grid(sensor_grid: SensorGrid, pv_technology_obj, bipv_tr
                     efficiency_function=BipvTechnology.constant_efficiency) for
                     year in range(pv_technology_obj.weibull_law_failure_parameters["lifetime"])])
 
-        gtg_transportation_dict, recycling_dict = pv_technology_obj.compute_transportation_lca_and_cost(
-            bipv_transportation_obj=bipv_transportation_obj)
-        primary_energy_transportation = gtg_transportation_dict["primary_energy"]
-        primary_energy_recycling = recycling_dict["primary_energy"]
-        primary_energy_inverter_estimated = pv_technology_obj.estimated_primary_energy_inverter
-
-        primary_energy = \
-            pv_technology_obj.primary_energy_manufacturing + primary_energy_transportation + primary_energy_recycling + \
-            primary_energy_inverter_estimated
-        panel_eroi = energy_harvested / primary_energy
+        panel_economic_roi = energy_harvested * electricity_sell_price / panel_cost
+        panel_eroi = energy_harvested / primary_energy_per_panel
         """
         Note that it is not exactly the reql eroi thqt is computed here, we assume that the panel will last for 
         the average lifetime of the weibull law.
@@ -77,6 +84,8 @@ def init_bipv_on_sensor_grid(sensor_grid: SensorGrid, pv_technology_obj, bipv_tr
         # Check if the eroi of teh panel is above the threshold
         elif panel_eroi <= minimum_panel_eroi:
             eroi_flag_warning = True
+        elif panel_economic_roi <= minimum_economic_roi:
+            economic_roi_flag_warning = True
         else:
             new_panel = BipvPanel(face_index, pv_technology_obj)
             new_panel.initialize_or_replace_panel()
@@ -92,6 +101,11 @@ def init_bipv_on_sensor_grid(sensor_grid: SensorGrid, pv_technology_obj, bipv_tr
             "Some PV panels have an eroi below the threshold, no panel will be initialized in those faces")
         dev_logger.warning(
             "Some PV panels have an eroi below the threshold, no panel will be initialized in those faces")
+    if economic_roi_flag_warning:
+        user_logger.warning(
+            "Some PV panels have economic return on investment below the threshold, no panel will be initialized in those faces")
+        user_logger.warning(
+            "Some PV panels have economic return on investment below the threshold, no panel will be initialized in those faces")
 
     return panel_obj_list
 

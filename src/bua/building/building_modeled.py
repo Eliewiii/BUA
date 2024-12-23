@@ -682,6 +682,7 @@ class BuildingModeled(BuildingBasic):
                                            uc_start_year,
                                            uc_current_year, uc_end_year, efficiency_computation_method="yearly",
                                            minimum_panel_eroi=1.2,
+                                           minimum_economic_roi=0, electricity_sell_price=0.14,
                                            replacement_scenario="replace_failed_panels_every_X_years",
                                            continue_simulation=False,
                                            **kwargs):
@@ -722,7 +723,10 @@ class BuildingModeled(BuildingBasic):
             facades_transport_obj=facades_transport_obj,
             uc_end_year=uc_end_year, uc_start_year=uc_start_year,
             uc_current_year=uc_current_year, efficiency_computation_method=efficiency_computation_method,
-            minimum_panel_eroi=minimum_panel_eroi, replacement_scenario=replacement_scenario,
+            minimum_panel_eroi=minimum_panel_eroi,
+            minimum_economic_roi=minimum_economic_roi,
+            electricity_sell_price=electricity_sell_price,
+            replacement_scenario=replacement_scenario,
             continue_simulation=continue_simulation, **kwargs)
         # Write the results in a csv file
         if "no_csv" not in kwargs or not kwargs["no_csv"]:

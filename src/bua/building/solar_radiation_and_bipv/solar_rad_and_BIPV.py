@@ -423,6 +423,7 @@ class SolarRadAndBipvSimulation:
                                   uc_end_year, uc_start_year, uc_current_year,
                                   efficiency_computation_method="yearly",
                                   minimum_panel_eroi=1.2,
+                                  minimum_economic_roi=0, electricity_sell_price=0.14,
                                   replacement_scenario="replace_failed_panels_every_X_years",
                                   continue_simulation=False, **kwargs):
         """
@@ -444,6 +445,8 @@ class SolarRadAndBipvSimulation:
                                                                              uc_current_year=uc_current_year,
                                                                              efficiency_computation_method=efficiency_computation_method,
                                                                              minimum_panel_eroi=minimum_panel_eroi,
+                                                                             minimum_economic_roi=minimum_economic_roi,
+                                                                             electricity_sell_price=electricity_sell_price,
                                                                              replacement_scenario=replacement_scenario,
                                                                              continue_simulation=continue_simulation,
                                                                              **kwargs)
@@ -463,6 +466,8 @@ class SolarRadAndBipvSimulation:
                                                                                 uc_current_year=uc_current_year,
                                                                                 efficiency_computation_method=efficiency_computation_method,
                                                                                 minimum_panel_eroi=minimum_panel_eroi,
+                                                                                minimum_economic_roi=0,
+                                                                                electricity_sell_price=0.14,
                                                                                 replacement_scenario=replacement_scenario,
                                                                                 continue_simulation=continue_simulation,
                                                                                 **kwargs)
@@ -499,6 +504,7 @@ class SolarRadAndBipvSimulation:
                                                      uc_current_year, efficiency_computation_method,
                                                      minimum_panel_eroi,
                                                      replacement_scenario, continue_simulation=False,
+                                                     minimum_economic_roi=0, electricity_sell_price=0.14,
                                                      **kwargs):
         """
 
@@ -525,7 +531,9 @@ class SolarRadAndBipvSimulation:
                                                       pv_technology_obj=pv_tech_obj,
                                                       bipv_transportation_obj=transport_obj,
                                                       annual_panel_irradiance_list=annual_panel_irradiance_list,
-                                                      minimum_panel_eroi=minimum_panel_eroi)
+                                                      minimum_panel_eroi=minimum_panel_eroi,
+                                                      minimum_economic_roi=minimum_economic_roi, electricity_sell_price=electricity_sell_price
+                                                      )
 
                 # Size the inverters capacity
                 peak_power = pv_tech_obj.max_power_output * len(panel_list)

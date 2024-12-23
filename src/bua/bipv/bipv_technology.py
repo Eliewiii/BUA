@@ -130,8 +130,10 @@ class BipvTechnology:
         self.estimated_primary_energy_inverter = None  # In kWh per panel
         self.estimated_cost_inverter = None  # In USD per panel
         # Transport, gate to gate and recycling, if included in manufacturing or recycling
-        self.gtg_transportation = {"ghg_included": None, "primary_energy_included": None, "cost_included": None}
-        self.recycling_transportation = {"ghg_included": None, "primary_energy_included": None, "cost_included": None}
+        self.gtg_transportation = {"ghg_included": None, "primary_energy_included": None,
+                                   "cost_included": None}
+        self.recycling_transportation = {"ghg_included": None, "primary_energy_included": None,
+                                         "cost_included": None}
 
     @classmethod
     def load_pv_technologies_from_json_to_dictionary(cls, bipv_technology_obj_dict, path_json_folder):
@@ -179,12 +181,15 @@ class BipvTechnology:
                         pv_tech_obj.primary_energy_recycling = value["lca_primary_energy_use"][
                             "end_of_life_in_kWh_per_panel"]
                         # Load LCA greenhouse gas emission parameters
-                        pv_tech_obj.ghg_manufacturing = value["lca_ghg_emission"]["manufacturing_in_kgCO2eq_per_panel"]
-                        pv_tech_obj.ghg_recycling = value["lca_ghg_emission"]["end_of_life_in_kgCO2eq_per_panel"]
+                        pv_tech_obj.ghg_manufacturing = value["lca_ghg_emission"][
+                            "manufacturing_in_kgCO2eq_per_panel"]
+                        pv_tech_obj.ghg_recycling = value["lca_ghg_emission"][
+                            "end_of_life_in_kgCO2eq_per_panel"]
                         # Load economical parameters
                         pv_tech_obj.cost_investment = value["economic_parameters"]["costs"][
                             "total_investment_in_USD_per_panel"]
-                        pv_tech_obj.cost_recycling = value["economic_parameters"]["costs"]["recycling_in_USD_per_panel"]
+                        pv_tech_obj.cost_recycling = value["economic_parameters"]["costs"][
+                            "recycling_in_USD_per_panel"]
                         pv_tech_obj.revenue_substituted_construction_material_roof = \
                             value["economic_parameters"]["revenues"][
                                 "substituted_construction_material_roof_in_USD_per_panel"]
@@ -198,7 +203,8 @@ class BipvTechnology:
                             "primary_energy_use_in_kWh_per_panel"]
                         pv_tech_obj.ghg_annual_maintenance = value["annual_maintenance"][
                             "ghg_emission_in_kgCO2eq_per_panel"]
-                        pv_tech_obj.cost_annual_maintenance = value["annual_maintenance"]["cost_in_USD_per_panel"]
+                        pv_tech_obj.cost_annual_maintenance = value["annual_maintenance"][
+                            "cost_in_USD_per_panel"]
                         # Load inverter estimation parameters
                         pv_tech_obj.estimated_ghg_inverter = value["inverter"][
                                                                  "estimated_ghg_emission_in_fraction_of_manufacturing"] * pv_tech_obj.ghg_manufacturing
@@ -211,20 +217,24 @@ class BipvTechnology:
                             "included_in_ghg_emission"]
                         pv_tech_obj.gtg_transportation["primary_energy_included"] = \
                             value["gate_to_gate_transportation"]["included_in_primary_energy_use"]
-                        pv_tech_obj.gtg_transportation["cost_included"] = value["gate_to_gate_transportation"][
-                            "included_in_investements"]
-                        pv_tech_obj.recycling_transportation["ghg_included"] = value["recycling_transportation"][
-                            "included_in_ghg_emission"]
+                        pv_tech_obj.gtg_transportation["cost_included"] = \
+                            value["gate_to_gate_transportation"][
+                                "included_in_investements"]
+                        pv_tech_obj.recycling_transportation["ghg_included"] = \
+                            value["recycling_transportation"][
+                                "included_in_ghg_emission"]
                         pv_tech_obj.recycling_transportation["primary_energy_included"] = \
                             value["recycling_transportation"]["included_in_primary_energy_use"]
-                        pv_tech_obj.recycling_transportation["cost_included"] = value["recycling_transportation"][
-                            "included_in_investements"]
+                        pv_tech_obj.recycling_transportation["cost_included"] = \
+                            value["recycling_transportation"][
+                                "included_in_investements"]
                         # Save the object in the dictionary if it does not exist
                         if pv_tech_obj.identifier not in bipv_technology_obj_dict:
                             bipv_technology_obj_dict[identifier] = pv_tech_obj
                         else:
-                            raise ValueError(f"The pv technology object{identifier} already exists, it must have "
-                                             f"been duplicated in the json file")
+                            raise ValueError(
+                                f"The pv technology object{identifier} already exists, it must have "
+                                f"been duplicated in the json file")
 
         return bipv_technology_obj_dict
 
@@ -252,6 +262,26 @@ class BipvTechnology:
             recycling_dict["cost"] = bipv_transportation_obj.recycling["cost"]
 
         return gtg_transportation_dict, recycling_dict
+
+    def evaluate_net_cost(self):
+        """
+        Evaluate the cost of the panel
+        :return cost: cost of the panel
+        """
+        cost = self.cost_investment + self.cost_recycling + self.estimated_cost_inverter + \
+               self.weibull_law_failure_parameters[
+                   "lifetime"] * self.cost_annual_maintenance - self.revenue_material_recovery
+        if self.pv_type == "roof":
+            cost -= self.revenue_substituted_construction_material_roof
+        elif self.pv_type == "facade":
+            cost -= self.revenue_substituted_construction_material_facades
+
+        if cost < 0:
+            raise ValueError("The panels net cost (ignoring the the electricity production) is negative. "
+                             "it means just installing panels on the building is profitable, which does not "
+                             "make sense, plese check the data")
+
+        return cost
 
     def get_life_expectancy_of_a_panel(self):
         """
@@ -313,10 +343,11 @@ class BipvTechnology:
             efficiency_function = getattr(self, kwargs["efficiency_function"])
             efficiency = efficiency_function(age=age, hourly_irradiance_list=hourly_irradiance_list, **kwargs)
         else:
-            efficiency = self.efficiency_function(age=age, hourly_irradiance_list=hourly_irradiance_list, **kwargs)
+            efficiency = self.efficiency_function(age=age, hourly_irradiance_list=hourly_irradiance_list,
+                                                  **kwargs)
 
         # Compute the irradiance that would generate the maximum output power of the panel
-        max_irradiance = self.max_power_output / self.panel_area / efficiency / self.infrastructure_performance_ratio
+        max_irradiance = self.max_power_output / self.panel_area / efficiency  # / self.infrastructure_performance_ratio
         # Initialize energy harvested
         hourly_power_generation_list = []
         for hourly_irradiance in hourly_irradiance_list:
