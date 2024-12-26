@@ -466,8 +466,8 @@ class SolarRadAndBipvSimulation:
                                                                                 uc_current_year=uc_current_year,
                                                                                 efficiency_computation_method=efficiency_computation_method,
                                                                                 minimum_panel_eroi=minimum_panel_eroi,
-                                                                                minimum_economic_roi=0,
-                                                                                electricity_sell_price=0.14,
+                                                                                minimum_economic_roi=minimum_economic_roi,
+                                                                                electricity_sell_price=electricity_sell_price,
                                                                                 replacement_scenario=replacement_scenario,
                                                                                 continue_simulation=continue_simulation,
                                                                                 **kwargs)

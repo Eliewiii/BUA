@@ -24,7 +24,7 @@ def init_bipv_on_sensor_grid(sensor_grid: SensorGrid, pv_technology_obj: BipvTec
     If the area is not big enough, it will raise a warning and the bipvs will not be initialized in those face of the mesh.
     :param sensor_grid: Honeybee SensorGrid object
     :param pv_technology_obj: PVPanelTechnology object
-    :param annual_panel_irradiance_list: list of floats: annual irradiance on each face of the sensor_grid
+    :param annual_panel_irradiance_list: list of floats: annual irradiance on each face of the sensor_grid in KWh/m2/year
     :param minimum_panel_eroi: float: minimum energy return on investment of the PV, (Default=1.2)
     electricity for the grid (Default=1.)
 
@@ -52,7 +52,6 @@ def init_bipv_on_sensor_grid(sensor_grid: SensorGrid, pv_technology_obj: BipvTec
         primary_energy_inverter_estimated
     # Compute the cost of the panel
     panel_cost = pv_technology_obj.evaluate_net_cost()
-
     for face_index, face in enumerate(lb_mesh_obj.faces):
         # Calculate the energy harvested by the panel
         """ We need to differentiate the different cases of efficiency functions, this part is just 
@@ -72,8 +71,12 @@ def init_bipv_on_sensor_grid(sensor_grid: SensorGrid, pv_technology_obj: BipvTec
                     efficiency_function=BipvTechnology.constant_efficiency) for
                     year in range(pv_technology_obj.weibull_law_failure_parameters["lifetime"])])
 
+
         panel_economic_roi = energy_harvested * electricity_sell_price / panel_cost
         panel_eroi = energy_harvested / primary_energy_per_panel
+        # print(f"panel_economic_roi: {panel_economic_roi}, panel_eroi: {panel_eroi}")
+
+
         """
         Note that it is not exactly the reql eroi thqt is computed here, we assume that the panel will last for 
         the average lifetime of the weibull law.
@@ -148,9 +151,13 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
                 "The replacement frequency in years is not given, please provide the replacement frequency in years")
             raise ValueError("The replacement frequency in years is not given")
 
+    num_panels = len(pv_panel_obj_list)
     # Initialize the lists
     energy_production_per_year_list = []
     nb_of_panels_installed_per_year_list = []
+    nb_panel_failed_per_year_list = []
+    num_active_panel_yearly_list = []
+
     # Loop over the years
     iteration_start_year = start_year + current_study_duration_in_years
 
@@ -160,6 +167,8 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
             # initialize
             annual_energy_harvested = 0.
             nb_of_new_panels = 0
+            num_failed_panels = 0
+
             if "infrastructure_replacement_last_year" in kwargs \
                     and year - start_year > kwargs["infrastructure_replacement_last_year"]:
                 None
@@ -205,6 +214,10 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
             elif replacement_scenario == "no_replacement":
                 pass
 
+            # Get number of active panels after initialization or replacement
+            num_active_panel_yearly_list.append(
+                sum([1 if panel_obj.is_panel_working() else 0 for panel_obj in pv_panel_obj_list]))
+
             # Loop over all the sun hours
             nb_of_sun_hours = len(
                 hourly_solar_irradiance_table[0])  # Number of sun hours in the year, same for all faces
@@ -220,12 +233,16 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
                 # Energy in kWh/h is power in kW * 1h
                 annual_energy_harvested += total_power
             for panel_obj in pv_panel_obj_list:
-                panel_obj.increment_age_by_one_year()
+                failed=panel_obj.increment_age_by_one_year()
+                if failed:
+                    num_failed_panels += 1
+
 
             energy_production_per_year_list.append(annual_energy_harvested / 1000)  # convert Wh to kWh
             nb_of_panels_installed_per_year_list.append(nb_of_new_panels)
+            nb_panel_failed_per_year_list.append(num_failed_panels)
 
-    return energy_production_per_year_list, nb_of_panels_installed_per_year_list
+    return energy_production_per_year_list, nb_of_panels_installed_per_year_list #, num_active_panel_yearly_list, nb_panel_failed_per_year_list
 
 
 def compute_lca_and_cost_for_gtg(nb_of_panels_installed_yearly_list, pv_tech_obj, roof_or_facades):

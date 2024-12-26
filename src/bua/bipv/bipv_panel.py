@@ -61,6 +61,7 @@ class BipvPanel:
         self.age = None
         self.life_expectancy = None
 
+
     def get_hourly_power_generation_over_a_year(self, hourly_irradiance_list, **kwargs):
         """
         Return the hourly power generation of a panel over a year.
@@ -84,3 +85,5 @@ class BipvPanel:
             self.age += 1
             if self.age is self.life_expectancy:
                 self.panel_failed()
+                return False
+            return True
