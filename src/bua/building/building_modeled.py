@@ -8,7 +8,6 @@ import logging
 import shutil
 from typing import List
 
-
 from ladybug_geometry.geometry3d import Vector3D, Polyface3D
 from honeybee.model import Model
 from honeybee.room import Room
@@ -43,6 +42,7 @@ class BuildingModeled(BuildingBasic):
         self.hb_model_dict = None
         self.merged_faces_hb_model_dict = None  # todo @Elie IMPORTANT, move this obj as well
         # Status of the building
+        self.to_simulate_lwr = False
         self.to_simulate = False
         self.is_target = False
         # Shading computation
@@ -390,9 +390,9 @@ class BuildingModeled(BuildingBasic):
         nb_context_faces = len(self.shading_context_obj.context_shading_hb_shade_list)
         return nb_context_faces, self.shading_context_obj.second_pass_duration, flag_use_envelop
 
-    ####################################################################################################################
-    # Long Wave Radiation methods
-    ####################################################################################################################
+    # ----------------------------------------------------------
+    # LWR Simulation
+    # ----------------------------------------------------------
 
     def perform_first_pass_lwr_context_filtering(self, uc_building_id_list: List[str],
                                                  uc_building_bounding_box_list: List[Polyface3D],
@@ -433,15 +433,17 @@ class BuildingModeled(BuildingBasic):
         # Return the list of context buildings
         return selected_context_building_id_list, duration
 
-    def generate_radiative_surface_objects_for_lwr_computation(self,overwrite:bool=False):
+
+
+    def generate_radiative_surface_objects_for_lwr_computation(self,include_windows:bool=True)->List[object]:
         """
 
         """
-        if overwrite:
-            self.lwr_context_obj.overwrite_radiative_surfaces()
 
-        self.lwr_context_obj.generate_radiative_surface_objects_from_hb_model(hb_model=self.hb_model)
+        radiative_surface_object_list = self.lwr_context_obj.generate_radiative_surface_objects_from_hb_model(
+            hb_model=self.hb_model_obj, include_windows=include_windows)
 
+        return radiative_surface_object_list
 
     def perform_second_pass_lwr_context(self,
                                         building_surfaces_dict: dict,
@@ -673,14 +675,16 @@ class BuildingModeled(BuildingBasic):
             path_weather_file=path_weather_file, overwrite=overwrite,
             north_angle=north_angle, silent=silent)
 
-    def building_run_bipv_panel_simulation(self, path_simulation_folder, path_radiation_and_bipv_result_folder,
+    def building_run_bipv_panel_simulation(self, path_simulation_folder,
+                                           path_radiation_and_bipv_result_folder,
                                            roof_pv_tech_obj, facades_pv_tech_obj,
                                            roof_transport_obj,
                                            facades_transport_obj, roof_inverter_obj, facades_inverter_obj,
                                            roof_inverter_sizing_ratio,
                                            facades_inverter_sizing_ratio,
                                            uc_start_year,
-                                           uc_current_year, uc_end_year, efficiency_computation_method="yearly",
+                                           uc_current_year, uc_end_year,
+                                           efficiency_computation_method="yearly",
                                            minimum_panel_eroi=1.2,
                                            minimum_economic_roi=0, electricity_sell_price=0.14,
                                            replacement_scenario="replace_failed_panels_every_X_years",
@@ -713,7 +717,8 @@ class BuildingModeled(BuildingBasic):
         # todo, replace simulation folder by radiation and BIPV result folder
         # Run the simulation
         self.solar_radiation_and_bipv_simulation_obj.run_bipv_panel_simulation(
-            path_simulation_folder=path_simulation_folder, building_id=self.id, roof_pv_tech_obj=roof_pv_tech_obj,
+            path_simulation_folder=path_simulation_folder, building_id=self.id,
+            roof_pv_tech_obj=roof_pv_tech_obj,
             facades_pv_tech_obj=facades_pv_tech_obj,
             roof_inverter_tech_obj=roof_inverter_obj,
             facades_inverter_tech_obj=facades_inverter_obj,

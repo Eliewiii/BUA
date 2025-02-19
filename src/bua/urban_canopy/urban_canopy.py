@@ -6,10 +6,14 @@ import pickle
 import json
 import logging
 import shutil
+import subprocess
+import sys
 
 from datetime import datetime
 
 from honeybee.model import Model
+
+from radiance_comp_vf import RadiativeSurfaceManager
 
 from .export_to_json import ExportUrbanCanopyToJson
 from .bipv_scenario_urban_canopy import BipvScenario
@@ -27,7 +31,8 @@ from ..bipv.bipv_technology import BipvTechnology
 from ..bipv.bipv_inverter import BipvInverter
 from ..bipv.bipv_transportation import BipvTransportation
 
-from ..config.bua_config_structure import name_urban_canopy_export_file_pkl, name_urban_canopy_export_file_json, \
+from ..config.bua_config_structure import name_urban_canopy_export_file_pkl, \
+    name_urban_canopy_export_file_json, \
     name_radiation_simulation_folder, name_temporary_files_folder, name_ubes_temp_simulation_folder, \
     name_ubes_simulation_result_folder, name_ubes_epw_file, \
     path_folder_default_bipv_parameters, \
@@ -51,8 +56,10 @@ class UrbanCanopy:
 
         # Context filtering
         self.full_context_pyvista_mesh = None  # pyvista mesh of all the buildings within the urban canopy
-        self.lwr_context_pyvista_mesh = None  # pyvista mesh of all the buildings within the urban canopy
         self.shade_manager = ShadeManager()  # Shade manager object
+        # LWR
+        self.lwr_context_pyvista_mesh = None  # pyvista mesh of all the buildings within the urban canopy
+        self.lwr_radiative_surface_manager = RadiativeSurfaceManager()  # Radiative surface manager object
 
         # UBES
         self.ubes_obj = UrbanBuildingEnergySimulation()  # Urban Building Energy Simulation object
@@ -672,8 +679,6 @@ class UrbanCanopy:
         self.full_context_pyvista_mesh = make_pyvista_polydata_from_list_of_hb_model_and_lb_polyface3d(
             hb_model_and_lb_polyface3d_list=hb_model_and_lb_polyface3d_list)
 
-
-
     # ----------------------------------------------------------
     # UBES
     # ----------------------------------------------------------
@@ -1131,7 +1136,6 @@ class UrbanCanopy:
         return (condition_1 and condition_2) or (
                 condition_2 and condition_3 and continue_simulation)
 
-
     def compute_bipv_kpis_at_urban_scale(self, path_simulation_folder, bipv_scenario_identifier,
                                          grid_ghg_intensity, grid_energy_intensity,
                                          grid_electricity_sell_price, zone_area):
@@ -1207,13 +1211,11 @@ class UrbanCanopy:
 
         return conditioned_area
 
-
-
-
     # ----------------------------------------------------------
     # LWR Simulation
     # ----------------------------------------------------------
-    def perform_surface_selection_for_lwr_computation(self, min_cf_criterion, context_building_generation_options=None,
+    def perform_surface_selection_for_lwr_computation(self, min_cf_criterion,
+                                                      context_building_generation_options=None,
                                                       overwrite=False):
         """
         Perform the selection of the couple of surfaces to use for for the longwave radiation computation.
@@ -1247,7 +1249,8 @@ class UrbanCanopy:
             merge_facades_and_roof_faces_in_hb_model=False
         )
         # Perform this first pass context filtering for these is_simulated buildings that were just created
-        target_and_simulated_building_id_list = [building_id for building_id, building_obj in self.building_dict.items()
+        target_and_simulated_building_id_list = [building_id for building_id, building_obj in
+                                                 self.building_dict.items()
                                                  if self.included_in_lwr_computation(building_obj)]
         for building_id, building_obj in self.building_dict.items():
             if self.included_in_lwr_computation(building_obj):
@@ -1259,7 +1262,6 @@ class UrbanCanopy:
 
         # Generate the Pyvista mesh including all the buildings in the urban canopy or just the one within target and simulated
         self.make_pyvista_polydata_mesh_of_all_buildings(target_and_simulated_only=True)
-
 
         # Perform an adjusted version second pass context filtering on the buildings to use for the LWR computation
         for building_id, building_obj in self.building_dict.items():
@@ -1283,36 +1285,67 @@ class UrbanCanopy:
 
         # Make self.radiative_surface_manager
 
+    def _generate_radiative_surface_manager_for_lwr_computation(self, overwrite=False,
+                                                               include_windows: bool = True):
+        """
+        Generate the radiative surface manager for the longwave radiation computation.
+        """
+        if overwrite or self.lwr_radiative_surface_manager.is_empty:
+            self.lwr_radiative_surface_manager.reset()
+
+        for building_id, building_obj in self.building_dict.items():
+            if self._included_in_lwr_computation(building_obj):
+                radiative_surface_list = building_obj.generate_radiative_surface_objects_for_lwr_computation(
+                    include_windows=include_windows
+                )
+                self.lwr_radiative_surface_manager.add_radiative_surface(radiative_surface_list)
+
+    def _perform_vf_computation(self, num_workers: int = 0,
+                                 mvfc_check: bool = True,
+                                 mvfc: float = None,
+                                 ray_traced_check: bool = True,
+                                 ray_tracing_among_all_all_corners: bool = False):
+        """
+        Perform the visibility check among surfaces for the longwave radiation computation.
+        :param num_workers: int, number of workers to use for the visibility check.
+        :param mvfc_check: bool, if True, the MVFC check will be performed.
+        :param mvfc: float, the MVFC value to use for the check.
+        :param ray_traced_check: bool, if True, the ray tracing check will be performed.
+        :param ray_tracing_among_all_all_corners: bool, if True, the ray tracing will be performed among
+            all the corners of the surfaces.
+        """
+
+        # Path to the temporary folder of the LWR simulation files
+
+        # Path for the result VF matrix
+
+        # Check if there are surfaces to perform the computation
+        if self.lwr_radiative_surface_manager.is_empty:
+            user_logger.warning("The radiative surface manager is empty, the visibility check cannot be performed.")
+            return
+
+        self.lwr_radiative_surface_manager.run_view_factor_computation_in_subprocess()
+        # Check if the simulation succeeded
+
+        # Delete the temporary files
+
+
+
     @staticmethod
-    def included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
+    def _included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
         """
         Condition to check if the building is included in the LWR computation to simplify the code.
         :param building_obj: Building object
         :return: bool
         """
-        return(isinstance(building_obj, BuildingModeled) and (building_obj.is_simulated or building_obj.is_target))
+        return isinstance(building_obj, BuildingModeled) and (
+                    building_obj.to_simulate_lwr or building_obj.is_target)
 
     def perform_the_view_factor_computation_for_lwr(self, overwrite: bool = False):
         """
         Perform the view factor computation for the longwave radiation.
         """
         # todo: @Elie: to be implemented
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     # def plot_graphs_buildings(self, path_simulation_folder, study_duration_years, country_ghe_cost):
     #     for building in self.building_dict.values():

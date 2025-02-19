@@ -35,7 +35,7 @@ class BuildingLWRContextFilter(BuildingContextFilter):
         """ todo """
 
     @staticmethod
-    def _generate_radiative_surface_objects_from_hb_model(hb_model: Model, include_windows):
+    def generate_radiative_surface_objects_from_hb_model(hb_model: Model, include_windows:bool=True)->List[RadiativeSurface]:
         """ todo """
 
         def _get_hb_model_outdoor_surfaces(hb_model: Model) -> List[Face]:
@@ -107,4 +107,3 @@ class BuildingLWRContextFilter(BuildingContextFilter):
 
         return radiative_surface_object_list
 
-    radiative_surface_list = []
