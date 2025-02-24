@@ -73,7 +73,7 @@ class BuildingLWRContextFilter(BuildingContextFilter):
             :return:
             todo: to move to seperate module
             """
-            emissivity = hb_face_or_aperture.energy.property.construction.outside_emissivity
+            emissivity = hb_face_or_aperture.properties.energy.construction.outside_emissivity
             reflectance = 1 - emissivity
 
             return emissivity, reflectance
@@ -102,7 +102,7 @@ class BuildingLWRContextFilter(BuildingContextFilter):
             radiative_surface_object = RadiativeSurface.from_vertex_list_with_radiative_properties(
                 identifier=surface.identifier,
                 vertex_list=vertex_list, emissivity=emissivity,
-                reflectance=reflectance, transmittance=0)
+                reflectance=reflectance, transmittance=0.)
             radiative_surface_object_list.append(radiative_surface_object)
 
         return radiative_surface_object_list

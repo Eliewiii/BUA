@@ -1298,7 +1298,7 @@ class UrbanCanopy:
                 radiative_surface_list = building_obj.generate_radiative_surface_objects_for_lwr_computation(
                     include_windows=include_windows
                 )
-                self.lwr_radiative_surface_manager.add_radiative_surface(radiative_surface_list)
+                self.lwr_radiative_surface_manager.add_radiative_surfaces(radiative_surface_list)
 
     def _perform_vf_computation(self, num_workers: int = 0,
                                  mvfc_check: bool = True,

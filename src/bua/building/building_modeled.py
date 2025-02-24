@@ -433,9 +433,8 @@ class BuildingModeled(BuildingBasic):
         # Return the list of context buildings
         return selected_context_building_id_list, duration
 
-
-
-    def generate_radiative_surface_objects_for_lwr_computation(self,include_windows:bool=True)->List[object]:
+    def generate_radiative_surface_objects_for_lwr_computation(self, include_windows: bool = True) -> List[
+        object]:
         """
 
         """
@@ -592,6 +591,10 @@ class BuildingModeled(BuildingBasic):
         Re-initialize the values of the attributes of the BuildingEnergySimulation object if it had run.
         """
         self.bes_obj.re_initialize()
+
+    # ----------------------------------------------------------
+    # BIPV Simulation
+    # ----------------------------------------------------------
 
     def generate_sensor_grid(self, bipv_on_roof=True, bipv_on_facades=True,
                              roof_grid_size_x=1, facades_grid_size_x=1, roof_grid_size_y=1,
