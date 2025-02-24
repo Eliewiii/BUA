@@ -23,7 +23,7 @@ print(f"path_test_lb_polyface3d_context: {path_test_lb_polyface3d_context}")
 
 
 @pytest.fixture(scope='function')
-def init_urban_canopy_with_one_buildingmodel()->UrbanCanopy:
+def init_urban_canopy_with_one_buildingmodel() -> UrbanCanopy:
     """
     Generate an UrbanCanopy object with 2 BuildingModeled and BuildingBasic objects
     """
@@ -42,5 +42,33 @@ def init_urban_canopy_with_one_buildingmodel()->UrbanCanopy:
         are_buildings_targets=True,
         keep_context_from_hbjson=False)
 
+    return urban_canopy_object
+
+
+@pytest.fixture(scope='function')
+def init_urban_canopy_with_two_buildingmodels() -> UrbanCanopy:
+    """
+    Generate an UrbanCanopy object with 2 BuildingModeled and BuildingBasic objects
+    """
+    # Clear simulation temp folder
+    SimulationCommonMethods.clear_simulation_temp_folder()
+    # Create simulation folder
+    SimulationCommonMethods.make_simulation_folder(path_simulation_folder=default_path_simulation_folder)
+    # Create an UrabanCanopy object
+    urban_canopy_object = SimulationCommonMethods.create_or_load_urban_canopy_object(
+        path_simulation_folder=default_path_simulation_folder)
+    # Load HBJSONs
+    SimulationLoadBuildingOrGeometry.add_buildings_from_hbjson_to_urban_canopy(
+        urban_canopy_object=urban_canopy_object,
+        path_folder_hbjson=None,
+        path_file_hbjson=path_test_building_hbjson_0,
+        are_buildings_targets=True,
+        keep_context_from_hbjson=False)
+    SimulationLoadBuildingOrGeometry.add_buildings_from_hbjson_to_urban_canopy(
+        urban_canopy_object=urban_canopy_object,
+        path_folder_hbjson=None,
+        path_file_hbjson=path_test_building_hbjson_1,
+        are_buildings_targets=True,
+        keep_context_from_hbjson=False)
 
     return urban_canopy_object
