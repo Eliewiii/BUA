@@ -36,7 +36,7 @@ from ..config.bua_config_structure import name_urban_canopy_export_file_pkl, \
     name_radiation_simulation_folder, name_temporary_files_folder, name_ubes_temp_simulation_folder, \
     name_ubes_simulation_result_folder, name_ubes_epw_file, \
     path_folder_default_bipv_parameters, \
-    path_folder_user_bipv_parameters
+    path_folder_user_bipv_parameters, path_simulation_temp_folder, name_lwr_simulation_result_folder
 from ..config.config_constants import TOLERANCE_LBT
 
 from ..config.config_default_values_user_parameters import default_path_weather_file
@@ -1285,8 +1285,8 @@ class UrbanCanopy:
 
         # Make self.radiative_surface_manager
 
-    def _generate_radiative_surface_manager_for_lwr_computation(self, overwrite=False,
-                                                               include_windows: bool = True):
+    def generate_radiative_surface_manager_for_lwr_computation(self, overwrite=False,
+                                                                include_windows: bool = True):
         """
         Generate the radiative surface manager for the longwave radiation computation.
         """
@@ -1300,36 +1300,44 @@ class UrbanCanopy:
                 )
                 self.lwr_radiative_surface_manager.add_radiative_surfaces(radiative_surface_list)
 
-    def _perform_vf_computation(self, num_workers: int = 0,
-                                 mvfc_check: bool = True,
-                                 mvfc: float = None,
-                                 ray_traced_check: bool = True,
-                                 ray_tracing_among_all_all_corners: bool = False):
+    def perform_lwr_vf_computation(self, path_simulation_folder: str, overwrite: bool = False, **kwargs):
         """
         Perform the visibility check among surfaces for the longwave radiation computation.
-        :param num_workers: int, number of workers to use for the visibility check.
-        :param mvfc_check: bool, if True, the MVFC check will be performed.
-        :param mvfc: float, the MVFC value to use for the check.
-        :param ray_traced_check: bool, if True, the ray tracing check will be performed.
-        :param ray_tracing_among_all_all_corners: bool, if True, the ray tracing will be performed among
-            all the corners of the surfaces.
+        :param path_simulation_folder:
+        :param overwrite:
+        todo: list of possible arguments for kwargs
+
         """
-
-        # Path to the temporary folder of the LWR simulation files
-
-        # Path for the result VF matrix
 
         # Check if there are surfaces to perform the computation
         if self.lwr_radiative_surface_manager.is_empty:
-            user_logger.warning("The radiative surface manager is empty, the visibility check cannot be performed.")
+            user_logger.warning(
+                "The radiative surface manager is empty, the visibility check cannot be performed.")
             return
-
-        self.lwr_radiative_surface_manager.run_view_factor_computation_in_subprocess()
+        # Path to the temporary folder of the LWR simulation files
+        path_vf_computation_temp_dir = os.path.join(path_simulation_folder, name_temporary_files_folder, "vf")
+        # Path result folder for LWR
+        path_lwr_result_dir = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder)
+        # Create the temp simulation folder
+        if os.path.exists(path_vf_computation_temp_dir):
+            shutil.rmtree(path_vf_computation_temp_dir)
+        os.makedirs(path_vf_computation_temp_dir)
+        # make the result folder if it does not exist
+        if os.path.exists(path_lwr_result_dir):
+            if overwrite:
+                shutil.rmtree(path_lwr_result_dir)
+            elif os.listdir(path_lwr_result_dir):
+                raise FileExistsError(
+                    "There are already resulst for the VF or LWR computation, please for the computaion"
+                    "with overwrite if you still want to run the simulation")
+        os.makedirs(path_lwr_result_dir)
+        # Run the simulation
+        self.lwr_radiative_surface_manager.run_view_factor_computation_in_subprocess(
+            path_simulation_folder=path_vf_computation_temp_dir,
+            path_result_folder=path_lwr_result_dir,**kwargs)
         # Check if the simulation succeeded
 
         # Delete the temporary files
-
-
 
     @staticmethod
     def _included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
@@ -1339,7 +1347,7 @@ class UrbanCanopy:
         :return: bool
         """
         return isinstance(building_obj, BuildingModeled) and (
-                    building_obj.to_simulate_lwr or building_obj.is_target)
+                building_obj.to_simulate_lwr or building_obj.is_target)
 
     def perform_the_view_factor_computation_for_lwr(self, overwrite: bool = False):
         """

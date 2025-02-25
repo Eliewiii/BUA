@@ -10,3 +10,4 @@ from .load_building_or_geometry import SimulationLoadBuildingOrGeometry
 from .solar_radiation_and_bipv import SimFunSolarRadAndBipv
 from .typology_identification import TypologyIdentificationFunctions
 from .urban_building_energy_simulation_functions import UrbanBuildingEnergySimulationFunctions
+from .lwr_simulation import SimulationLWR

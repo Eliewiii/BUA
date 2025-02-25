@@ -3,10 +3,16 @@
 """
 
 import pytest
+import logging
+
+import time
 
 from honeybee.boundarycondition import Outdoors
 
-from tests.urban_canopy.uc_test_utils import init_urban_canopy_with_one_buildingmodel,init_urban_canopy_with_two_buildingmodels
+from src.bua.simulation_steps import SimulationLWR
+
+from tests.urban_canopy.uc_test_utils import init_urban_canopy_with_one_buildingmodel, \
+    init_urban_canopy_with_two_buildingmodels, init_urban_canopy_with_all_buildingmodels
 
 
 class TestUrbCanRadSurMan:
@@ -45,12 +51,12 @@ class TestUrbCanRadSurMan:
         tot_surfaces = num_outdoor_surfaces + num_windows
 
         # Check without windows
-        urban_canopy_object._generate_radiative_surface_manager_for_lwr_computation(include_windows=False)
+        urban_canopy_object.generate_radiative_surface_manager_for_lwr_computation(include_windows=False)
         assert urban_canopy_object.lwr_radiative_surface_manager.num_surface == num_outdoor_surfaces
 
         # Check with windows
-        urban_canopy_object._generate_radiative_surface_manager_for_lwr_computation(overwrite=True,
-                                                                                    include_windows=True)
+        urban_canopy_object.generate_radiative_surface_manager_for_lwr_computation(overwrite=True,
+                                                                                   include_windows=True)
         assert urban_canopy_object.lwr_radiative_surface_manager.num_surface == tot_surfaces
 
     def test_include_surfaces_in_rsm_two_buildings(self, init_urban_canopy_with_two_buildingmodels):
@@ -75,10 +81,70 @@ class TestUrbCanRadSurMan:
         tot_surfaces = num_outdoor_surfaces + num_windows
 
         # Check without windows
-        urban_canopy_object._generate_radiative_surface_manager_for_lwr_computation(include_windows=False)
+        urban_canopy_object.generate_radiative_surface_manager_for_lwr_computation(include_windows=False)
         assert urban_canopy_object.lwr_radiative_surface_manager.num_surface == num_outdoor_surfaces
 
         # Check with windows
-        urban_canopy_object._generate_radiative_surface_manager_for_lwr_computation(overwrite=True,
-                                                                                    include_windows=True)
+        urban_canopy_object.generate_radiative_surface_manager_for_lwr_computation(overwrite=True,
+                                                                                   include_windows=True)
         assert urban_canopy_object.lwr_radiative_surface_manager.num_surface == tot_surfaces
+
+    def test_visibility_check(self, init_urban_canopy_with_two_buildingmodels):
+        """
+
+        """
+
+        # Set up logging
+        logging.basicConfig(
+            level=logging.INFO,  # Set the minimum logging level (DEBUG, INFO, WARNING, etc.)
+            format="%(asctime)s - %(message)s"  # Customize your log message format
+        )
+
+        urban_canopy_object = init_urban_canopy_with_two_buildingmodels
+        SimulationLWR.generate_radiative_surface_manager_for_lwr_computation(urban_canopy_object,
+                                                                             overwrite=True,
+                                                                             include_windows=False)
+
+        radiative_surface_manager_obj = urban_canopy_object.lwr_radiative_surface_manager
+
+
+        print(f"num surface in rsm: {radiative_surface_manager_obj.num_surface}")
+
+        dur = time.time()
+        radiative_surface_manager_obj.check_surface_visibility()
+
+        print(f"\n Duration: {time.time() - dur}")
+
+    def test_visibility_check_all_buildings(self, init_urban_canopy_with_all_buildingmodels):
+        """
+
+        """
+
+        # Set up logging
+        logging.basicConfig(
+            level=logging.INFO,  # Set the minimum logging level (DEBUG, INFO, WARNING, etc.)
+            format="%(asctime)s - %(message)s"  # Customize your log message format
+        )
+
+        urban_canopy_object = init_urban_canopy_with_all_buildingmodels
+        SimulationLWR.generate_radiative_surface_manager_for_lwr_computation(urban_canopy_object,
+                                                                             overwrite=True,
+                                                                             include_windows=True)
+        radiative_surface_manager_obj = urban_canopy_object.lwr_radiative_surface_manager
+        print(f"num surface in rsm: {radiative_surface_manager_obj.num_surface}")
+
+        radiative_surface_manager_obj = urban_canopy_object.lwr_radiative_surface_manager
+        dur = time.time()
+        radiative_surface_manager_obj.check_surface_visibility()
+
+        print(f"\n Duration: {time.time() - dur}")
+
+    def test_run_vf_comp_from_subprocess(self, init_urban_canopy_with_all_buildingmodels):
+        """
+
+        """
+        urban_canopy_object = init_urban_canopy_with_all_buildingmodels
+        SimulationLWR.generate_radiative_surface_manager_for_lwr_computation(urban_canopy_object,
+                                                                             overwrite=True,
+                                                                             include_windows=True)
+        SimulationLWR.perform_lwr_vf_computation(urban_canopy_object, overwrite=True)
