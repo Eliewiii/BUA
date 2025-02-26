@@ -1,6 +1,6 @@
 
 
-import os
+import time
 
 from src.bua.urban_canopy import UrbanCanopy
 from src.bua.simulation_steps import *
@@ -40,6 +40,36 @@ def init_urban_canopy_with_all_buildingmodels() -> UrbanCanopy:
         keep_context_from_hbjson=False)
 
     return urban_canopy_object
+
+
+
+def init_urban_canopy_with_x_buildingmodels(num_buildings) -> UrbanCanopy:
+    """
+    Generate an UrbanCanopy object with 2 BuildingModeled and BuildingBasic objects
+    """
+    path_hbjson_folder= os.path.join(test_data_dir, "test_hbjsons")
+    list_hbjson_files = os.listdir(path_hbjson_folder)
+    if num_buildings > len(list_hbjson_files):
+        raise ValueError("num_buildings should be less than the number of HBJSON files in the folder")
+    # Clear simulation temp folder
+    SimulationCommonMethods.clear_simulation_temp_folder()
+    # Create simulation folder
+    SimulationCommonMethods.make_simulation_folder(path_simulation_folder=default_path_simulation_folder)
+    # Create an UrabanCanopy object
+    urban_canopy_object = SimulationCommonMethods.create_or_load_urban_canopy_object(
+        path_simulation_folder=default_path_simulation_folder)
+
+    for i in range(num_buildings):
+        path_hbjson = os.path.join(path_hbjson_folder, list_hbjson_files[i])
+        SimulationLoadBuildingOrGeometry.add_buildings_from_hbjson_to_urban_canopy(
+            urban_canopy_object=urban_canopy_object,
+            path_folder_hbjson=None,
+            path_file_hbjson=path_hbjson,
+            are_buildings_targets=True,
+            keep_context_from_hbjson=False)
+
+    return urban_canopy_object
+
 
 def init_urban_canopy_with_two_buildingmodels() -> UrbanCanopy:
     """
@@ -81,9 +111,23 @@ def run_vf_comp_from_subprocess(urban_canopy_obj,include_windows=True):
 
 
 if __name__ == "__main__":
-    # include_windows = True
-    include_windows = False
-    urban_canopy_obj = init_urban_canopy_with_all_buildingmodels()
-    # urban_canopy_obj = init_urban_canopy_with_two_buildingmodels()
 
-    run_vf_comp_from_subprocess(urban_canopy_obj)
+    include_windows = False
+    # include_windows = True
+
+    max_num_buildings = 2
+
+    duration_list = []
+
+    for i in range(1, max_num_buildings+1):
+        dur= time.time()
+        print(f"Running for {i} buildings")
+        urban_canopy_obj = init_urban_canopy_with_x_buildingmodels(i)
+        run_vf_comp_from_subprocess(urban_canopy_obj, include_windows)
+        duration_list.append(time.time()-dur)
+
+    print("\n\n\n")
+
+    for i in range(max_num_buildings):
+        print(f"Duration for {i+1} buildings: {duration_list[i]}")
+
