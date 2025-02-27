@@ -105,29 +105,31 @@ def run_vf_comp_from_subprocess(urban_canopy_obj,include_windows=True):
     """
     SimulationLWR.generate_radiative_surface_manager_for_lwr_computation(urban_canopy_obj,
                                                                          overwrite=True,
-                                                                         include_windows=True)
+                                                                         include_windows=include_windows)
 
     SimulationLWR.perform_lwr_vf_computation(urban_canopy_obj, overwrite=True, save_to_pkl= True)
 
 
 if __name__ == "__main__":
 
-    include_windows = False
-    # include_windows = True
+    #include_windows = False
+    include_windows = True
 
-    max_num_buildings = 2
+    max_num_buildings = 11
 
     duration_list = []
+    num_surfaces=[]
 
     for i in range(1, max_num_buildings+1):
         dur= time.time()
         print(f"Running for {i} buildings")
         urban_canopy_obj = init_urban_canopy_with_x_buildingmodels(i)
         run_vf_comp_from_subprocess(urban_canopy_obj, include_windows)
+        num_surfaces.append(urban_canopy_obj.lwr_radiative_surface_manager.num_surface)
         duration_list.append(time.time()-dur)
 
     print("\n\n\n")
 
     for i in range(max_num_buildings):
-        print(f"Duration for {i+1} buildings: {duration_list[i]}")
+        print(f"Duration for {i+1} buildings & num_surface {num_surfaces[i]}: {duration_list[i]}")
 
