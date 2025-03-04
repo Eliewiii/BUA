@@ -112,15 +112,17 @@ def run_vf_comp_from_subprocess(urban_canopy_obj,include_windows=True):
 
 if __name__ == "__main__":
 
-    #include_windows = False
-    include_windows = True
+    include_windows = False
+    # include_windows = True
 
-    max_num_buildings = 11
+    min_num_buildings = 2
+
+    max_num_buildings = 2
 
     duration_list = []
     num_surfaces=[]
 
-    for i in range(1, max_num_buildings+1):
+    for i in range(min_num_buildings, max_num_buildings+1):
         dur= time.time()
         print(f"Running for {i} buildings")
         urban_canopy_obj = init_urban_canopy_with_x_buildingmodels(i)
@@ -130,6 +132,6 @@ if __name__ == "__main__":
 
     print("\n\n\n")
 
-    for i in range(max_num_buildings):
-        print(f"Duration for {i+1} buildings & num_surface {num_surfaces[i]}: {duration_list[i]}")
+    for i, num_buildings in enumerate(range(min_num_buildings,max_num_buildings+1)):
+        print(f"Duration for {num_buildings} buildings & num_surface {num_surfaces[i]}: {duration_list[i]}")
 
