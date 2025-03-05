@@ -604,6 +604,11 @@ class SolarRadAndBipvSimulation:
                 replacement_scenario=replacement_scenario,
                 pv_tech_obj=pv_tech_obj, **kwargs)
 
+            # Check if final year to add the impact of EOL for remaining panels
+            flag_last_year =False
+            if uc_end_year = final_year:
+                flag_last_year =True
+
             # LCA and economic for the gate to gate processes for the panels except transportation
             gtg_result_dict = compute_lca_and_cost_for_gtg(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,

@@ -1006,7 +1006,9 @@ class UrbanCanopy:
                                                start_year=datetime.now().year,
                                                end_year=datetime.now().year + 50,
                                                replacement_scenario="replace_failed_panels_every_X_years",
-                                               continue_simulation=False, **kwargs):
+                                               continue_simulation: bool = False,
+                                               final_year: int = datetime.now().year + 50,
+                                               **kwargs):
         """
         Run the panels simulation on the urban canopy
         :param path_simulation_folder: path to the simulation folder
@@ -1027,6 +1029,7 @@ class UrbanCanopy:
         :param end_year: int: end year of the simulation, default = datetime.now().year + 50
         :param replacement_scenario: string: scenario of replacements for the panels, default = 'yearly'
         :param continue_simulation: bool: if True, continue the simulation, default = False
+        :param final_year: int: final year of the simulation, default = datetime.now().year + 50
         :param kwargs: dict: additional arguments to be passed to the run_bipv_panel_simulation method of the
             BuildingModeled object
 

@@ -591,6 +591,9 @@ class BuildingModeled(BuildingBasic):
         """
         self.bes_obj.re_initialize()
 
+
+
+
     def generate_sensor_grid(self, bipv_on_roof=True, bipv_on_facades=True,
                              roof_grid_size_x=1, facades_grid_size_x=1, roof_grid_size_y=1,
                              facades_grid_size_y=1, offset_dist=0.1, overwrite=False):

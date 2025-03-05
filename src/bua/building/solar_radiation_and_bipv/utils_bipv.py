@@ -226,6 +226,7 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
                 in
                 pv_panel_obj_list]
             for i in range(nb_of_sun_hours):
+                # todo : change the name to hourly_total_power and save it to a list to output
                 total_power = sum(
                     [hourly_power_generation_by_panels_table[j][i] for j in range(len(pv_panel_obj_list))])
                 if total_power > inverter_capacity:
@@ -236,6 +237,8 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
                 failed=panel_obj.increment_age_by_one_year()
                 if failed:
                     num_failed_panels += 1
+
+            # todo: add dictionary to track the number of replaced panel by "previous" (not th one of the new panel installed if different) technology
 
 
             energy_production_per_year_list.append(annual_energy_harvested / 1000)  # convert Wh to kWh
