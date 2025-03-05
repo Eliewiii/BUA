@@ -420,7 +420,7 @@ class SolarRadAndBipvSimulation:
                                   facades_pv_tech_obj,
                                   roof_inverter_tech_obj, facades_inverter_tech_obj, roof_inverter_sizing_ratio,
                                   facades_inverter_sizing_ratio, roof_transport_obj, facades_transport_obj,
-                                  uc_end_year, uc_start_year, uc_current_year,
+                                  uc_end_year, uc_start_year, uc_current_year, final_year,
                                   efficiency_computation_method="yearly",
                                   minimum_panel_eroi=1.2,
                                   minimum_economic_roi=0, electricity_sell_price=0.14,
@@ -443,6 +443,7 @@ class SolarRadAndBipvSimulation:
                                                                              uc_end_year=uc_end_year,
                                                                              uc_start_year=uc_start_year,
                                                                              uc_current_year=uc_current_year,
+                                                                             final_year = final_year,
                                                                              efficiency_computation_method=efficiency_computation_method,
                                                                              minimum_panel_eroi=minimum_panel_eroi,
                                                                              minimum_economic_roi=minimum_economic_roi,
@@ -464,6 +465,7 @@ class SolarRadAndBipvSimulation:
                                                                                 uc_end_year=uc_end_year,
                                                                                 uc_start_year=uc_start_year,
                                                                                 uc_current_year=uc_current_year,
+                                                                                final_year=final_year,
                                                                                 efficiency_computation_method=efficiency_computation_method,
                                                                                 minimum_panel_eroi=minimum_panel_eroi,
                                                                                 minimum_economic_roi=minimum_economic_roi,
@@ -501,7 +503,7 @@ class SolarRadAndBipvSimulation:
                                                      inverter_sizing_ratio,
                                                      transport_obj,
                                                      uc_end_year, uc_start_year,
-                                                     uc_current_year, efficiency_computation_method,
+                                                     uc_current_year, final_year, efficiency_computation_method,
                                                      minimum_panel_eroi,
                                                      replacement_scenario, continue_simulation=False,
                                                      minimum_economic_roi=0, electricity_sell_price=0.14,
@@ -606,8 +608,14 @@ class SolarRadAndBipvSimulation:
 
             # Check if final year to add the impact of EOL for remaining panels
             flag_last_year =False
-            if uc_end_year = final_year:
+            if uc_end_year == final_year:
                 flag_last_year =True
+
+            # sum up all panels to get the total number of panels on buildings
+            if roof_or_facades == "roof":
+                nb_of_all_panels = len(self.roof_panel_list)
+            else:
+                nb_of_all_panels = len(self.facades_panel_list)
 
             # LCA and economic for the gate to gate processes for the panels except transportation
             gtg_result_dict = compute_lca_and_cost_for_gtg(
@@ -617,6 +625,8 @@ class SolarRadAndBipvSimulation:
             # LCA and economic for transportation
             transport_result_dict = compute_lca_and_cost_for_transportation(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,
+                total_nb_of_panels = nb_of_all_panels,
+                final_year_reached = flag_last_year,
                 pv_tech_obj=pv_tech_obj,
                 transportation_obj=transport_obj)
             # LCA and economic for maintenance
@@ -629,6 +639,8 @@ class SolarRadAndBipvSimulation:
             # LCA and economic for recycling
             recycling_result_dict = compute_lca_cost_and_dmfa_for_recycling(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,
+                total_nb_of_panels=nb_of_all_panels,
+                final_year_reached=flag_last_year,
                 pv_tech_obj=pv_tech_obj)
             # LCA and economic for the inverter
             inverter_result_dict = compute_lca_and_cost_for_inverter(
@@ -637,7 +649,8 @@ class SolarRadAndBipvSimulation:
                 start_year=self.parameter_dict[roof_or_facades]["start_year"],
                 current_study_duration_in_years=self.parameter_dict[roof_or_facades][
                     "study_duration_in_years"],
-                uc_end_year=uc_end_year)
+                uc_end_year=uc_end_year,
+                final_year_reached = flag_last_year)
             # Add results to the global results dictionary
             self.bipv_results_dict[roof_or_facades] = self.add_results_to_global_results_dict(
                 bipv_results_dict=self.bipv_results_dict[roof_or_facades],

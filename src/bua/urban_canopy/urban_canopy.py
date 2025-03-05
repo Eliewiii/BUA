@@ -1125,6 +1125,7 @@ class UrbanCanopy:
                                                                 uc_start_year=bipv_scenario_obj.start_year,
                                                                 uc_current_year=start_year,
                                                                 uc_end_year=bipv_scenario_obj.end_year,
+                                                                final_year = final_year,
                                                                 efficiency_computation_method=efficiency_computation_method,
                                                                 minimum_panel_eroi=minimum_panel_eroi,
                                                                 minimum_economic_roi=minimum_economic_roi,

@@ -103,6 +103,7 @@ class SimFunSolarRadAndBipv:
                                                minimum_economic_roi=0, electricity_sell_price=0.14,
                                                start_year=default_start_year,
                                                end_year=default_end_year,
+                                               final_year=default_final_year,
                                                replacement_scenario=default_replacement_scenario,
                                                continue_simulation=False, **kwargs):
         """
@@ -145,6 +146,7 @@ class SimFunSolarRadAndBipv:
             minimum_economic_roi=minimum_economic_roi, electricity_sell_price=electricity_sell_price,
             start_year=start_year,
             end_year=end_year,
+            final_year = final_year,
             replacement_scenario=replacement_scenario,
             continue_simulation=continue_simulation, **kwargs)
 

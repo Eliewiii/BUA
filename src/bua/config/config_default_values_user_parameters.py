@@ -67,6 +67,7 @@ default_facades_inverter_sizing_ratio = 0.9
 default_minimum_panel_eroi = 1.2
 default_start_year = datetime.now().year
 default_end_year = default_start_year + 50
+default_final_year = default_end_year
 default_efficiency_computation_method = "yearly"
 default_replacement_scenario = "replace_failed_panels_every_X_years"
 default_replacement_frequency_in_years = 20
