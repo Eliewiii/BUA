@@ -14,6 +14,12 @@ from honeybee.model import Model
 from honeybee_energy.run import to_openstudio_osw, run_osw, run_idf
 from honeybee_energy.result.eui import eui_from_sql
 
+from ladybug.sql import SQLiteResult
+
+required_outputs = ["Zone Electric Equipment Electricity Energy",
+                    "Zone Ideal Loads Supply Air Total Cooling Energy",
+                    "Zone Ideal Loads Supply Air Total Heating Energy", "Zone Lights Electricity Energy"]
+
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")
 
@@ -23,7 +29,7 @@ empty_bes_results_dict = {
     "equipment": {"monthly": [], "monthly_cumulative": [], "yearly": None},
     "lighting": {"monthly": [], "monthly_cumulative": [], "yearly": None},
     # "ventilation": {"monthly": [], "monthly_cumulative": [], "yearly": None},  # Unused for now
-    "total": {"monthly": [], "monthly_cumulative": [], "yearly": None}
+    "total": {"hourly": [], "monthly": [], "monthly_cumulative": [], "yearly": None}
 }
 
 
@@ -51,7 +57,7 @@ class BuildingEnergySimulation:
         # Simulation tracking
         self.sim_duration = None
 
-    def re_initialize(self, keep_idf:bool=False, keep_run:bool=False):
+    def re_initialize(self, keep_idf: bool = False, keep_run: bool = False):
         """
         Re-initialize the values of the attributes of the BuildingEnergySimulation object.
         """
@@ -66,7 +72,7 @@ class BuildingEnergySimulation:
         # Results
         self.bes_results_dict = None
 
-    def set_cop(self, cop_heating:float, cop_cooling:float):
+    def set_cop(self, cop_heating: float, cop_cooling: float):
         """
         Set the coefficient of performance of the heating and cooling systems.
         :param cop_heating: float, coefficient of performance of the heating system
@@ -91,8 +97,9 @@ class BuildingEnergySimulation:
             "sim_duration": self.sim_duration
         }
 
-    def generate_idf_with_openstudio(self, path_building_bes_temp_folder:str, path_epw_file:str,
-                                     path_hbjson_simulation_parameters:str, hb_model_obj: Model, silent:bool=False):
+    def generate_idf_with_openstudio(self, path_building_bes_temp_folder: str, path_epw_file: str,
+                                     path_hbjson_simulation_parameters: str, hb_model_obj: Model,
+                                     silent: bool = False):
         """
         Generate the idf file using OpenStudio.
         :param path_building_bes_temp_folder: str, path to the folder where the idf file will be saved
@@ -123,7 +130,8 @@ class BuildingEnergySimulation:
 
         self.idf_generated = True
 
-    def run_idf_with_energyplus(self, path_building_bes_temp_folder:str, path_epw_file:str, silent:bool=False):
+    def run_idf_with_energyplus(self, path_building_bes_temp_folder: str, path_epw_file: str,
+                                silent: bool = False):
         """
         Run the energy simulation of the building.
         :param path_building_bes_temp_folder: str, path to the folder where the idf file will be saved
@@ -141,8 +149,8 @@ class BuildingEnergySimulation:
 
         self.has_run = True
 
-    def move_result_files_from_temp_to_result_folder(self, path_ubes_temp_sim_folder:str,
-                                                     path_ubes_sim_result_folder:str):
+    def move_result_files_from_temp_to_result_folder(self, path_ubes_temp_sim_folder: str,
+                                                     path_ubes_sim_result_folder: str):
         """
         Move the result files from the temporary folder to the result folder.
         :param path_ubes_temp_sim_folder: str, path to the temporary folder
@@ -184,7 +192,7 @@ class BuildingEnergySimulation:
             # Delete the temp folder
             shutil.rmtree(path_bes_temp_folder, ignore_errors=True)
 
-    def extract_total_energy_use(self, path_ubes_sim_result_folder:str):
+    def extract_total_energy_use(self, path_ubes_sim_result_folder: str):
         """
         Extract the energy use intensity at the building scale from the result files.
         :param path_ubes_sim_result_folder: str, path to the result folder
@@ -197,6 +205,10 @@ class BuildingEnergySimulation:
         path_bes_result_folder = os.path.join(path_ubes_sim_result_folder, self.building_id)
         # Paths to the results files
         path_eplusout_sql = os.path.join(path_bes_result_folder, "eplusout.sql")
+
+        # Check report frequency
+        sql_obj = SQLiteResult(path_eplusout_sql)
+        print("report_frequenct", sql_obj.reporting_frequency)
 
         # Check if the BES result folder and the result files exist
         if not os.path.isdir(path_bes_result_folder):
@@ -224,7 +236,12 @@ class BuildingEnergySimulation:
                                                         # self.bes_results_dict["ventilation"]["yearly"],
                                                         self.bes_results_dict["lighting"]["yearly"]])
 
-    def to_csv(self, path_ubes_sim_result_folder:str):
+        # todo: compute it properly with the proper checks and feed to the rest of the code
+        total_hourly_value=get_hourly_results_from_sql(path_eplusout_sql,self.cop_cooling,self.cop_heating)
+
+        print ("total_hourly_value", sum(total_hourly_value), "total_en_cons",self.bes_results_dict["total"]["yearly"] )
+
+    def to_csv(self, path_ubes_sim_result_folder: str):
         """
         Export the results to a csv file.
         :param path_ubes_sim_result_folder: str, path to the result folder
@@ -254,8 +271,8 @@ class BuildingEnergySimulation:
         return self.bes_results_dict["total"]["yearly"]
 
 
-def from_hbjson_to_idf(dir_to_write_idf_in:str, path_hbjson_file:str, path_epw_file:str,
-                       path_hbjson_simulation_parameters:str, silent=False):
+def from_hbjson_to_idf(dir_to_write_idf_in: str, path_hbjson_file: str, path_epw_file: str,
+                       path_hbjson_simulation_parameters: str, silent=False):
     """
     Convert a hbjson file to an idf file (input for EnergyPlus)
     """
@@ -268,7 +285,7 @@ def from_hbjson_to_idf(dir_to_write_idf_in:str, path_hbjson_file:str, path_epw_f
     (path_osm, path_idf) = run_osw(osw, silent=silent)
 
 
-def bes_result_dict_to_csv(bes_results_dict:dict, path_csv_file:str):
+def bes_result_dict_to_csv(bes_results_dict: dict, path_csv_file: str):
     """
     Export the results to a csv file.
     :param bes_results_dict: dict, results of the building energy simulation
@@ -297,7 +314,25 @@ def bes_result_dict_to_csv(bes_results_dict:dict, path_csv_file:str):
             f.write(f"{value['yearly']},")
 
 
-def clean_directory(path:str):
+def get_hourly_results_from_sql(path_eplusout_sql: str,cop_cooling:float,cop_heating:float):
+    """
+    Extract the hourly results from the sql file in kWh.
+    """
+    sql_obj = SQLiteResult(path_eplusout_sql)
+    total_hourly_values = (0,) * 8760  # Number of hour per year
+    for output in required_outputs:
+        data_collection_list = sql_obj.data_collections_by_output_name(output)
+        for hourly_continuous_collection in data_collection_list:
+            if output == "Zone Ideal Loads Supply Air Total Cooling Energy":
+                hourly_continuous_collection = tuple(map(lambda x: x /cop_cooling, hourly_continuous_collection))
+            elif output == "Zone Ideal Loads Supply Air Total Heating Energy":
+                hourly_continuous_collection = tuple(map(lambda x: x /cop_heating, hourly_continuous_collection))
+            total_hourly_values = tuple(map(sum, zip(total_hourly_values, hourly_continuous_collection)))
+
+    return list(total_hourly_values)
+
+
+def clean_directory(path: str):
     """
 
     """
