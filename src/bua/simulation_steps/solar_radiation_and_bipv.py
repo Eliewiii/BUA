@@ -17,7 +17,7 @@ from ..config.config_default_values_user_parameters import default_id_pv_tech_ro
     default_facades_inverter_sizing_ratio, default_minimum_panel_eroi, default_start_year, default_end_year, \
     default_efficiency_computation_method, default_replacement_scenario, \
     default_bipv_scenario_identifier, default_grid_ghg_intensity, default_grid_energy_intensity, \
-    default_grid_electricity_sell_price
+    default_grid_electricity_sell_price, default_final_year
 
 dev_logger = logging.getLogger("dev")
 user_logger = logging.getLogger("user")

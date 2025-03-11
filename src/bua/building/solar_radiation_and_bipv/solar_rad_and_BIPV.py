@@ -12,6 +12,7 @@ from time import time
 
 from honeybee_radiance.sensorgrid import SensorGrid
 from ladybug_geometry.geometry3d.face import Face3D
+from pydantic.schema import datetime
 
 from .utils_sensorgrid import generate_sensor_grid_for_hb_model
 from .utils_solar_radiation import \
@@ -606,6 +607,12 @@ class SolarRadAndBipvSimulation:
                 replacement_scenario=replacement_scenario,
                 pv_tech_obj=pv_tech_obj, **kwargs)
 
+            # Check if simulation is in first cycle to assign first year values correctly
+            flag_first_year = False
+            if self.parameter_dict[roof_or_facades][
+                    "study_duration_in_years"] == 0:
+                flag_first_year = True
+
             # Check if final year to add the impact of EOL for remaining panels
             flag_last_year =False
             if uc_end_year == final_year:
@@ -613,9 +620,9 @@ class SolarRadAndBipvSimulation:
 
             # sum up all panels to get the total number of panels on buildings
             if roof_or_facades == "roof":
-                nb_of_all_panels = len(self.roof_panel_list)
+                nb_of_all_panels = nb_of_panels_installed_yearly_list[0]
             else:
-                nb_of_all_panels = len(self.facades_panel_list)
+                nb_of_all_panels = nb_of_panels_installed_yearly_list[0]
 
             # LCA and economic for the gate to gate processes for the panels except transportation
             gtg_result_dict = compute_lca_and_cost_for_gtg(
@@ -626,6 +633,7 @@ class SolarRadAndBipvSimulation:
             transport_result_dict = compute_lca_and_cost_for_transportation(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,
                 total_nb_of_panels = nb_of_all_panels,
+                flag_first_year=flag_first_year,
                 final_year_reached = flag_last_year,
                 pv_tech_obj=pv_tech_obj,
                 transportation_obj=transport_obj)
@@ -640,6 +648,7 @@ class SolarRadAndBipvSimulation:
             recycling_result_dict = compute_lca_cost_and_dmfa_for_recycling(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,
                 total_nb_of_panels=nb_of_all_panels,
+                flag_first_year=flag_first_year,
                 final_year_reached=flag_last_year,
                 pv_tech_obj=pv_tech_obj)
             # LCA and economic for the inverter

@@ -292,7 +292,7 @@ def compute_lca_and_cost_for_gtg(nb_of_panels_installed_yearly_list, pv_tech_obj
     return gtg_result_dict
 
 
-def compute_lca_cost_and_dmfa_for_recycling(nb_of_panels_installed_yearly_list, total_nb_of_panels, final_year_reached, pv_tech_obj):
+def compute_lca_cost_and_dmfa_for_recycling(nb_of_panels_installed_yearly_list, total_nb_of_panels, flag_first_year, final_year_reached, pv_tech_obj):
     """
     Take the results from function loop_over_the_years_for_solar_panels and use the pv_tech_obj info to transform it to data
     :param nb_of_panels_installed_yearly_list: list of int: list of the number of panels installed each year
@@ -316,6 +316,20 @@ def compute_lca_cost_and_dmfa_for_recycling(nb_of_panels_installed_yearly_list, 
     revenue_material_recovery_yearly_list = [i * pv_tech_obj.revenue_material_recovery for i in
                                              nb_of_panels_installed_yearly_list]
 
+    # if the simulation is in the first year, correct flows to recycling (none in first year)
+    if flag_first_year == True:
+        # Primary energy
+        primary_energy_recycling_yearly_list[0] = 0
+        # Carbon footprint
+        carbon_recycling_yearly_list[0] = 0
+        # Compute DMFA waste in kg for each year
+        dmfa_waste_yearly_list[0] = 0
+        # Economic cost
+        cost_recycling_yearly_list[0] = 0
+        # Economic revenues
+        revenue_material_recovery_yearly_list[0] = 0
+
+    # correct values in last year, so that the simulation accounts for demolition of building and recycling of all panels
     if final_year_reached == True:
 
         # Primary energy
@@ -328,7 +342,7 @@ def compute_lca_cost_and_dmfa_for_recycling(nb_of_panels_installed_yearly_list, 
         cost_recycling_yearly_list[-1] = pv_tech_obj.cost_recycling * total_nb_of_panels
         # Economic revenues
         revenue_material_recovery_yearly_list[-1] = pv_tech_obj.revenue_material_recovery * total_nb_of_panels
-        # todo : fix assignment of material recovery revenue to correct years
+
 
     recycling_dict = {
         "primary_energy": primary_energy_recycling_yearly_list,
@@ -377,7 +391,7 @@ def compute_lca_and_cost_for_maintenance(panel_list, start_year, current_study_d
     return maintenance_result_dict
 
 
-def compute_lca_and_cost_for_transportation(nb_of_panels_installed_yearly_list, total_nb_of_panels, final_year_reached, pv_tech_obj,
+def compute_lca_and_cost_for_transportation(nb_of_panels_installed_yearly_list, total_nb_of_panels, flag_first_year, final_year_reached, pv_tech_obj,
                                             transportation_obj):
     """
     Take the results from function loop_over_the_years_for_solar_panels and use the pv_tech_obj info to transform it to data
@@ -414,6 +428,16 @@ def compute_lca_and_cost_for_transportation(nb_of_panels_installed_yearly_list, 
         carbon_transport_recycling_yearly_list[-1] = recycling_dict["ghg"] * total_nb_of_panels
         # Economic cost
         cost_transport_recycling_yearly_list[-1] = recycling_dict["cost"] * total_nb_of_panels
+
+    # if the simulation is in the first year, correct flows to recycling (none in first year)
+    if flag_first_year == True:
+
+        # Primary energy
+        primary_energy_transport_recycling_yearly_list[0] = 0
+        # Carbon footprint
+        carbon_transport_recycling_yearly_list[0] = 0
+        # Economic cost
+        cost_transport_recycling_yearly_list[0] = 0
 
     transport_result_dict = {
         "primary_energy": {
@@ -463,6 +487,8 @@ def compute_lca_and_cost_for_inverter(inverter_obj, inverter_sub_capacities, sta
                 inverter_ghg_yearly_list.append(0.)
                 inverter_cost_yearly_list.append(0.)
     elif final_year_reached == True:
+        primary_energy_list, ghg_emission_list, cost_list = inverter_obj.get_primary_energy_ghg_and_cost_for_capacity_list(
+            inverter_sub_capacities)
         inverter_primary_energy_yearly_list[-1] = primary_energy_list
         inverter_ghg_yearly_list[-1] = ghg_emission_list
         inverter_cost_yearly_list[-1] = cost_list
