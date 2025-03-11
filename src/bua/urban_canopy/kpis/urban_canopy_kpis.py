@@ -334,6 +334,7 @@ class UrbanCanopyKPIs:
             electricity_harvested / ubes_electricity_consumption for electricity_harvested in
             bipv_result_dict["energy_harvested"]["yearly"]]
         # Net economical benefit
+        # todo: adjust income generation from electricity with flag for FiT
         sub_kpi_intermediate_results_dict["net_economical_income"]["yearly"] = [
             electricity_harvested * self.grid_electricity_sell_price for electricity_harvested in
             bipv_result_dict["energy_harvested"]["yearly"]]

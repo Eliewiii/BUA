@@ -129,7 +129,7 @@ class BipvScenario:
 
     def set_parameters_for_kpis_computation(self, grid_ghg_intensity, grid_energy_intensity,
                                             grid_electricity_sell_price,
-                                            ubes_electricity_consumption, conditioned_apartment_area,
+                                            ubes_electricity_consumption, ubes_electricity_consumption_hourly, conditioned_apartment_area,
                                             zone_area):
         """
         Set the parameters needed for the computation of the KPIs
@@ -143,7 +143,7 @@ class BipvScenario:
                                                        zone_area=zone_area)
 
     def compute_scenario_kpis(self, grid_ghg_intensity, grid_energy_intensity, grid_electricity_sell_price,
-                     ubes_electricity_consumption, conditioned_apartment_area, zone_area):
+                     ubes_electricity_consumption, ubes_electricity_consumption_hourly, conditioned_apartment_area, zone_area):
         """
         Compute the KPIs of the scenario
         :param grid_ghg_intensity: float: kgCO2/kWh: grid GHG intensity

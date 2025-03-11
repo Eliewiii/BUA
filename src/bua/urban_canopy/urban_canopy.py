@@ -1207,6 +1207,9 @@ class UrbanCanopy:
         ubes_electricity_consumption = sum(self.get_ubes_electricity_consumption_from_building_id_list(
             bipv_scenario_obj.bipv_simulated_building_id_list))
 
+        ubes_electricity_consumption_hourly = sum(self.get_hourly_ubes_electricity_consumption_from_building_id_list(
+            bipv_scenario_obj.bipv_simulated_building_id_list))
+
         conditioned_apartment_area = sum(
             self.get_conditioned_area_from_building_id_list(
                 bipv_scenario_obj.bipv_simulated_building_id_list))
@@ -1216,6 +1219,7 @@ class UrbanCanopy:
             grid_energy_intensity=grid_energy_intensity,
             grid_electricity_sell_price=grid_electricity_sell_price,
             ubes_electricity_consumption=ubes_electricity_consumption,
+            ubes_electricity_consumption_hourly=ubes_electricity_consumption_hourly,
             conditioned_apartment_area=conditioned_apartment_area,
             zone_area=zone_area)
         # Write the results to CSV file
@@ -1247,6 +1251,18 @@ class UrbanCanopy:
         for building_id in building_id_list:
             building_obj = self.building_dict[building_id]
             energy_consumption.append(building_obj.get_bes_energy_consumption())
+
+        return energy_consumption
+
+    def get_hourly_ubes_electricity_consumption_from_building_id_list(self, building_id_list):
+        """
+        Get the hourly energy consumption of buildings (if the energy simulation was run)
+        :param building_id_list: list of building id
+        """
+        energy_consumption = []
+        for building_id in building_id_list:
+            building_obj = self.building_dict[building_id]
+            energy_consumption.append(building_obj.get_bes_hourly_energy_consumption())
 
         return energy_consumption
 
