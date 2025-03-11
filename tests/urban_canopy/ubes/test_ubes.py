@@ -46,7 +46,7 @@ def test_run_bes():
     """
     Check that
     """
-    urban_canopy_object = init_urban_canopy_with_x_buildingmodels(num_buildings=1)
+    urban_canopy_object = init_urban_canopy_with_x_buildingmodels(num_buildings=2)
 
     # Clear simulation temp folder
     building_ids = list(urban_canopy_object.building_dict.keys())
@@ -58,6 +58,7 @@ def test_run_bes():
         # path_hbjson_simulation_parameter_file=default_path_hbjson_simulation_parameter_file,
         # path_file_epw=default_path_weather_file,
         # ddy_file=None,
+        hourly_report_frequency=True,
         overwrite=True)
 
     # Write IDF

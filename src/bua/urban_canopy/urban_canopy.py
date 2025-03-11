@@ -27,7 +27,8 @@ from ..bipv.bipv_technology import BipvTechnology
 from ..bipv.bipv_inverter import BipvInverter
 from ..bipv.bipv_transportation import BipvTransportation
 
-from ..config.bua_config_structure import name_urban_canopy_export_file_pkl, name_urban_canopy_export_file_json, \
+from ..config.bua_config_structure import name_urban_canopy_export_file_pkl, \
+    name_urban_canopy_export_file_json, \
     name_radiation_simulation_folder, name_temporary_files_folder, name_ubes_temp_simulation_folder, \
     name_ubes_simulation_result_folder, name_ubes_epw_file, \
     path_folder_default_bipv_parameters, \
@@ -645,7 +646,8 @@ class UrbanCanopy:
         self.full_context_pyvista_mesh = make_pyvista_polydata_from_list_of_hb_model_and_lb_polyface3d(
             hb_model_and_lb_polyface3d_list=hb_model_and_lb_polyface3d_list)
 
-    def perform_surface_selection_for_lwr_computation(self, min_cf_criterion, context_building_generation_options=None,
+    def perform_surface_selection_for_lwr_computation(self, min_cf_criterion,
+                                                      context_building_generation_options=None,
                                                       overwrite=False):
         """
         Perform the selection of the couple of surfaces to use for for the longwave radiation computation.
@@ -679,7 +681,8 @@ class UrbanCanopy:
             merge_facades_and_roof_faces_in_hb_model=False
         )
         # Perform this first pass context filtering for these is_simulated buildings that were just created
-        target_and_simulated_building_id_list = [building_id for building_id, building_obj in self.building_dict.items()
+        target_and_simulated_building_id_list = [building_id for building_id, building_obj in
+                                                 self.building_dict.items()
                                                  if self.included_in_lwr_computation(building_obj)]
         for building_id, building_obj in self.building_dict.items():
             if self.included_in_lwr_computation(building_obj):
@@ -719,7 +722,8 @@ class UrbanCanopy:
         :param building_obj: Building object
         :return: bool
         """
-        retrun(isinstance(building_obj, BuildingModeled) and (building_obj.is_simulated or building_obj.is_target))
+        return (isinstance(building_obj, BuildingModeled) and (
+                    building_obj.is_simulated or building_obj.is_target))
 
     def perform_the_view_factor_computation_for_lwr(self, overwrite: bool = False):
         """
@@ -730,6 +734,7 @@ class UrbanCanopy:
     def load_epw_and_hb_simulation_parameters_for_ubes(self, path_simulation_folder,
                                                        path_hbjson_simulation_parameter_file,
                                                        path_weather_file, ddy_file=None,
+                                                       hourly_report_frequency=False,
                                                        overwrite=False):
         """
         Load the HB simulation parameters from the json file, check if it is valid, correct it eventually and add to the
@@ -744,7 +749,7 @@ class UrbanCanopy:
 
         flag_re_initialize_building_bes = self.ubes_obj.load_epw_and_hb_simulation_parameters(
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
-            path_weather_file=path_weather_file, ddy_file=ddy_file, overwrite=overwrite)
+            path_weather_file=path_weather_file,hourly_report_frequency=hourly_report_frequency, ddy_file=ddy_file, overwrite=overwrite)
 
         # Re-initialize the UBES of the whole UrbanCanopy if needed
         if flag_re_initialize_building_bes:

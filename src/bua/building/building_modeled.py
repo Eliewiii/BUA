@@ -247,6 +247,12 @@ class BuildingModeled(BuildingBasic):
         """
         return self.bes_obj.get_total_energy_consumption()
 
+    def get_bes_hourly_energy_consumption(self):
+        """
+        Return the hourly energy consumption of the building from the EnergyPlus simulation
+        """
+        return self.bes_obj.get_hourly_energy_consumption()
+
     def make_merged_faces_hb_model(self, orient_roof_mesh_to_according_to_building_orientation=True,
                                    north_angle=0, overwrite=False):
         """

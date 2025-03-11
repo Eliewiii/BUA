@@ -52,6 +52,7 @@ class BuildingEnergySimulation:
         # Flags
         self.idf_generated = False
         self.has_run = False
+        self.hourly_report_frequency = False
         # Results
         self.bes_results_dict = None
         # Simulation tracking
@@ -205,11 +206,6 @@ class BuildingEnergySimulation:
         path_bes_result_folder = os.path.join(path_ubes_sim_result_folder, self.building_id)
         # Paths to the results files
         path_eplusout_sql = os.path.join(path_bes_result_folder, "eplusout.sql")
-
-        # Check report frequency
-        sql_obj = SQLiteResult(path_eplusout_sql)
-        print("report_frequenct", sql_obj.reporting_frequency)
-
         # Check if the BES result folder and the result files exist
         if not os.path.isdir(path_bes_result_folder):
             return
@@ -217,7 +213,15 @@ class BuildingEnergySimulation:
             return
         # Initialize the results dictionary
         self.bes_results_dict = deepcopy(empty_bes_results_dict)
-        # Extract the sql file
+
+        # Get hourly results if the reporting frequency is hourly
+        sql_obj = SQLiteResult(path_eplusout_sql)
+        if sql_obj.reporting_frequency == "Hourly":
+            self.hourly_report_frequency = True
+            self.bes_results_dict["total"]["hourly"] = get_hourly_results_from_sql(sql_obj,
+                                                                                        self.cop_cooling,
+                                                                                        self.cop_heating)
+        # Get End Use intensity
         eui_dict = eui_from_sql(path_eplusout_sql)
         total_floor_area = eui_dict["total_floor_area"]
 
@@ -235,11 +239,6 @@ class BuildingEnergySimulation:
                                                         self.bes_results_dict["equipment"]["yearly"],
                                                         # self.bes_results_dict["ventilation"]["yearly"],
                                                         self.bes_results_dict["lighting"]["yearly"]])
-
-        # todo: compute it properly with the proper checks and feed to the rest of the code
-        total_hourly_value=get_hourly_results_from_sql(path_eplusout_sql,self.cop_cooling,self.cop_heating)
-
-        print ("total_hourly_value", sum(total_hourly_value), "total_en_cons",self.bes_results_dict["total"]["yearly"] )
 
     def to_csv(self, path_ubes_sim_result_folder: str):
         """
@@ -269,6 +268,18 @@ class BuildingEnergySimulation:
                 f"The Building Energy Simulation has not been run yet for building id:{self.building_id}.")
             return 0.
         return self.bes_results_dict["total"]["yearly"]
+
+    def get_hourly_energy_consumption(self):
+        """
+        Get the total energy consumption of the building.
+        :return: float, total energy consumption of the building
+        """
+        if not self.has_run or not self.hourly_report_frequency or not self.bes_results_dict["total"]["hourly"]:
+            user_logger.warning(
+                f"The Building Energy Simulation has not been run yet for building id:{self.building_id} "
+                f"or the report frequency is not hourly.")
+            return []
+        return self.bes_results_dict["total"]["hourly"]
 
 
 def from_hbjson_to_idf(dir_to_write_idf_in: str, path_hbjson_file: str, path_epw_file: str,
@@ -314,19 +325,21 @@ def bes_result_dict_to_csv(bes_results_dict: dict, path_csv_file: str):
             f.write(f"{value['yearly']},")
 
 
-def get_hourly_results_from_sql(path_eplusout_sql: str,cop_cooling:float,cop_heating:float):
+def get_hourly_results_from_sql(sql_obj: str, cop_cooling: float, cop_heating: float):
     """
     Extract the hourly results from the sql file in kWh.
     """
-    sql_obj = SQLiteResult(path_eplusout_sql)
+
     total_hourly_values = (0,) * 8760  # Number of hour per year
     for output in required_outputs:
         data_collection_list = sql_obj.data_collections_by_output_name(output)
         for hourly_continuous_collection in data_collection_list:
             if output == "Zone Ideal Loads Supply Air Total Cooling Energy":
-                hourly_continuous_collection = tuple(map(lambda x: x /cop_cooling, hourly_continuous_collection))
+                hourly_continuous_collection = tuple(
+                    map(lambda x: x / cop_cooling, hourly_continuous_collection))
             elif output == "Zone Ideal Loads Supply Air Total Heating Energy":
-                hourly_continuous_collection = tuple(map(lambda x: x /cop_heating, hourly_continuous_collection))
+                hourly_continuous_collection = tuple(
+                    map(lambda x: x / cop_heating, hourly_continuous_collection))
             total_hourly_values = tuple(map(sum, zip(total_hourly_values, hourly_continuous_collection)))
 
     return list(total_hourly_values)

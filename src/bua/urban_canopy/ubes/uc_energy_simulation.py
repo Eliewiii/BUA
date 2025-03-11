@@ -10,8 +10,8 @@ from copy import deepcopy
 
 from ...config.bua_config_structure import name_ubes_epw_file, name_ubes_hbjson_simulation_parameters_file
 from .check_simulation_parameter import check_simulation_parameters
-from ...building.energy_simulation.building_energy_simulation import empty_bes_results_dict,bes_result_dict_to_csv
-
+from ...building.energy_simulation.building_energy_simulation import empty_bes_results_dict, \
+    bes_result_dict_to_csv
 
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")
@@ -65,14 +65,16 @@ class UrbanBuildingEnergySimulation:
         in the meantime """
         bes_result_dict_to_csv(bes_results_dict=self.ubes_results_dict, path_csv_file=path_csv_file)
 
-    def load_epw_and_hb_simulation_parameters(self, path_hbjson_simulation_parameter_file, path_weather_file,
-                                              ddy_file=None,
-                                              overwrite=False):
+    def load_epw_and_hb_simulation_parameters(self, path_hbjson_simulation_parameter_file: str,
+                                              path_weather_file: str,
+                                              ddy_file: str = None, hourly_report_frequency: bool = False,
+                                              overwrite: bool = False):
         """
         Load the epw file and simulation parameters from the simulation parameter file and check and correct teh
         simulation parameters if needed.
         :param path_hbjson_simulation_parameter_file: str, path to the simulation parameter hbjson file
         :param path_weather_file: str, path to the epw file
+        :param hourly_report_frequency: bool, if True, the output frequency is set to hourly
         :param ddy_file: str, path to the ddy (design day) file
         :param overwrite: bool, if True, overwrite the existing simulation parameters
         :return flag_re_initialize_building_bes: bool, True if the building bes needs to be re-initialized because
@@ -90,6 +92,7 @@ class UrbanBuildingEnergySimulation:
         hb_sim_parameter_obj, lb_epw_obj = check_simulation_parameters(
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
             path_weather_file=path_weather_file,
+            hourly_report_frequency=hourly_report_frequency,
             ddy_file=ddy_file)
         # Set the simulation parameter and epw file
         self.hb_simulation_parameters_obj = hb_sim_parameter_obj
@@ -116,7 +119,7 @@ class UrbanBuildingEnergySimulation:
         # Path to the two files
         path_file_epw = os.path.join(path_ubes_temp_sim_folder, name_ubes_epw_file)
         path_file_simulation_parameter = os.path.join(path_ubes_temp_sim_folder,
-                                                        name_ubes_hbjson_simulation_parameters_file)
+                                                      name_ubes_hbjson_simulation_parameters_file)
         # Check if the epw files exist
         if not os.path.isfile(path_file_epw):
             self.lb_epw_obj.write(path_file_epw)
@@ -127,15 +130,12 @@ class UrbanBuildingEnergySimulation:
 
         return path_file_epw, path_file_simulation_parameter
 
-
-
-    def compute_ubes_results(self,bes_result_dict_list):
+    def compute_ubes_results(self, bes_result_dict_list):
         """
         Compute the UBES results from the list of building energy simulation results.
         """
         # Sum the results
         self.ubes_results_dict = sum_dicts(bes_result_dict_list)
-
 
 
 def sum_dicts(dict_list):
@@ -154,54 +154,9 @@ def sum_dicts(dict_list):
                 result_dict[key] = sum_dicts([result_dict[key], d[key]])
             elif isinstance(d[key], list):
                 result_dict[key] = [x + y for x, y in zip(result_dict[key], d[key])]
-            elif isinstance(d[key], float) or isinstance(d[key],int):  # assuming ints or floats
+            elif isinstance(d[key], float) or isinstance(d[key], int):  # assuming ints or floats
                 result_dict[key] += d[key]
             else:  # If there are other types put None
                 result_dict[key] = None
 
     return result_dict
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
