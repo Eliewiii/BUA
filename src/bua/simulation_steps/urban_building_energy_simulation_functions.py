@@ -23,6 +23,7 @@ class UrbanBuildingEnergySimulationFunctions:
                                                                        path_simulation_folder=default_path_simulation_folder,
                                                                        path_hbjson_simulation_parameter_file=default_path_hbjson_simulation_parameter_file,
                                                                        path_weather_file=default_path_weather_file,
+                                                                       hourly_report_frequency=False,
                                                                        ddy_file=None,
                                                                        overwrite=False):
         """
@@ -31,6 +32,7 @@ class UrbanBuildingEnergySimulationFunctions:
         :param path_simulation_folder: str, path to the simulation folder
         :param path_hbjson_simulation_parameter_file: str, path to the simulation parameter file
         :param path_weather_file: str, path to the weather file
+        :param hourly_report_frequency: bool, if True, the output frequency is hourly
         :param ddy_file: str, path to the ddy file
         :param overwrite: bool, if True, overwrite the existing simulation parameter file
         """
@@ -38,7 +40,8 @@ class UrbanBuildingEnergySimulationFunctions:
         urban_canopy_obj.load_epw_and_hb_simulation_parameters_for_ubes(
             path_simulation_folder=path_simulation_folder,
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
-            path_weather_file=path_weather_file, ddy_file=ddy_file, overwrite=overwrite)
+            path_weather_file=path_weather_file, hourly_report_frequency=hourly_report_frequency,
+            ddy_file=ddy_file, overwrite=overwrite)
 
         # user_logger.info("")
         dev_logger.info("EPW file and HB simulation parameters loaded")
@@ -108,9 +111,8 @@ class UrbanBuildingEnergySimulationFunctions:
     def extract_results_from_ep_simulation(urban_canopy_obj: UrbanCanopy,
                                            path_simulation_folder=default_path_simulation_folder,
                                            cop_heating=default_cop_heating, cop_cooling=default_cop_cooling):
-
         urban_canopy_obj.extract_ubes_results(path_simulation_folder=path_simulation_folder,
-                                                            cop_heating=cop_heating, cop_cooling=cop_cooling)
+                                              cop_heating=cop_heating, cop_cooling=cop_cooling)
 
         user_logger.info("UBES results were extracted")
         dev_logger.info("UBES results were extracted")
