@@ -5,6 +5,8 @@ will be much different
 
 from typing import List
 
+from copy import deepcopy
+
 from ladybug_geometry.geometry3d.pointvector import Point3D
 from honeybee.face import Face
 from honeybee.boundarycondition import Outdoors
@@ -23,8 +25,7 @@ class BuildingLWRContextFilter(BuildingContextFilter):
         """ todo """
         super().__init__()  # inherit from all the attributes of the super class
         # Parameters
-        self.surface_id_list = []
-        self.surface_dict = {}
+        self._surface_id_list = []
 
     def select_context_surfaces_for_lwr_computation(self, building_surfaces_dict: dict,
                                                     urban_canopy_pyvista_mesh,
@@ -34,8 +35,26 @@ class BuildingLWRContextFilter(BuildingContextFilter):
     def add_sky_and_ground_surface(self):
         """ todo """
 
+    @property
+    def outdoor_surface_id_list(self):
+        return deepcopy(self._surface_id_list)
+
+    def generate_radiative_surface_objects_from_hb_model(self, hb_model: Model,
+                                                         include_windows: bool = True) -> List[
+        RadiativeSurface]:
+        """
+
+        """
+
+        radiative_surface_object_list, surface_if_list = self._generate_radiative_surface_objects_from_hb_model(
+            hb_model, include_windows)
+        self._surface_id_list = surface_if_list
+
+        return radiative_surface_object_list
+
     @staticmethod
-    def generate_radiative_surface_objects_from_hb_model(hb_model: Model, include_windows:bool=True)->List[RadiativeSurface]:
+    def _generate_radiative_surface_objects_from_hb_model(hb_model: Model, include_windows: bool = True) -> \
+            List[RadiativeSurface]:
         """ todo """
 
         def _get_hb_model_outdoor_surfaces(hb_model: Model) -> List[Face]:
@@ -88,6 +107,7 @@ class BuildingLWRContextFilter(BuildingContextFilter):
                                                                               include_windows=include_windows)
 
         radiative_surface_object_list = []
+        surface_if_list = []
 
         for surface in hb_face_and_aperture_list:
             if not (isinstance(surface, Face) or isinstance(surface, Aperture)):
@@ -104,6 +124,6 @@ class BuildingLWRContextFilter(BuildingContextFilter):
                 vertex_list=vertex_list, emissivity=emissivity,
                 reflectance=reflectance, transmittance=0.)
             radiative_surface_object_list.append(radiative_surface_object)
+            surface_if_list.append(surface.identifier)
 
-        return radiative_surface_object_list
-
+        return radiative_surface_object_list, surface_if_list

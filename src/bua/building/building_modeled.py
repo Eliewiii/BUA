@@ -444,6 +444,11 @@ class BuildingModeled(BuildingBasic):
 
         return radiative_surface_object_list
 
+    def get_list_of_lwr_outdoor_surfaces_id(self):
+        """
+        Get the list of outdoor radiative surfaces of the building
+        """
+        return self.lwr_context_obj.outdoor_radiative_surface_list
     def perform_second_pass_lwr_context(self,
                                         building_surfaces_dict: dict,
                                         urban_canopy_pyvista_mesh: object,

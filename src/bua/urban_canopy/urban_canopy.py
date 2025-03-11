@@ -14,6 +14,7 @@ from datetime import datetime
 from honeybee.model import Model
 
 from radiance_comp_vf import RadiativeSurfaceManager
+from lwrepcoupling import EpLwrSimulationManager
 
 from .export_to_json import ExportUrbanCanopyToJson
 from .bipv_scenario_urban_canopy import BipvScenario
@@ -60,6 +61,7 @@ class UrbanCanopy:
         # LWR
         self.lwr_context_pyvista_mesh = None  # pyvista mesh of all the buildings within the urban canopy
         self.lwr_radiative_surface_manager = RadiativeSurfaceManager()  # Radiative surface manager object
+        self._lwr_building_id_list = []
 
         # UBES
         self.ubes_obj = UrbanBuildingEnergySimulation()  # Urban Building Energy Simulation object
@@ -1286,12 +1288,13 @@ class UrbanCanopy:
         # Make self.radiative_surface_manager
 
     def generate_radiative_surface_manager_for_lwr_computation(self, overwrite=False,
-                                                                include_windows: bool = True):
+                                                               include_windows: bool = True):
         """
         Generate the radiative surface manager for the longwave radiation computation.
         """
         if overwrite or self.lwr_radiative_surface_manager.is_empty:
             self.lwr_radiative_surface_manager.reset()
+            self._lwr_building_id_list = []
 
         for building_id, building_obj in self.building_dict.items():
             if self._included_in_lwr_computation(building_obj):
@@ -1299,6 +1302,7 @@ class UrbanCanopy:
                     include_windows=include_windows
                 )
                 self.lwr_radiative_surface_manager.add_radiative_surfaces(radiative_surface_list)
+                self._lwr_building_id_list.append(building_id)
 
     def perform_lwr_vf_computation(self, path_simulation_folder: str, overwrite: bool = False, **kwargs):
         """
@@ -1332,86 +1336,46 @@ class UrbanCanopy:
                     "with overwrite if you still want to run the simulation")
         os.makedirs(path_lwr_result_dir)
         # Run the simulation
-        self.lwr_radiative_surface_manager.run_view_factor_computation_in_subprocess(
+        path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self.lwr_radiative_surface_manager.run_view_factor_computation_in_subprocess(
             path_simulation_folder=path_vf_computation_temp_dir,
-            path_result_folder=path_lwr_result_dir,**kwargs)
+            path_result_folder=path_lwr_result_dir, **kwargs)
         # Check if the simulation succeeded
 
         # Delete the temporary files
+        return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
 
-    @staticmethod
-    def _included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
+    def initialize_couple_lwr_simulation(self, path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
+                                         path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str, **kwargs):
         """
-        Condition to check if the building is included in the LWR computation to simplify the code.
-        :param building_obj: Building object
-        :return: bool
-        """
-        return isinstance(building_obj, BuildingModeled) and (
-                building_obj.to_simulate_lwr or building_obj.is_target)
 
-    def perform_the_view_factor_computation_for_lwr(self, overwrite: bool = False):
         """
-        Perform the view factor computation for the longwave radiation.
-        """
-        # todo: @Elie: to be implemented
+        # Load epw and simulation parameters and for timestep
 
-    # def plot_graphs_buildings(self, path_simulation_folder, study_duration_years, country_ghe_cost):
-    #     for building in self.building_dict.values():
-    #         if type(building) is BuildingModeled and building.is_target:
-    #             if building.results_panels["roof"] and building.results_panels["facades"] and \
-    #                     building.results_panels[
-    #                         "Total"]:
-    #                 path_simulation_folder_building = os.path.join(path_simulation_folder,
-    #                                                                name_radiation_simulation_folder,
-    #                                                                building.id)
-    #                 building.plot_panels_energy_results(path_simulation_folder_building, study_duration_years)
-    #                 building.plot_panels_ghg_results(path_simulation_folder_building, study_duration_years,
-    #                                                  country_ghe_cost)
-    #                 building.plot_panels_results_ghe_per_kwh(path_simulation_folder_building,
-    #                                                          study_duration_years)
-    #                 building.plot_panels_results_eroi(path_simulation_folder_building, study_duration_years)
-    #
-    # def plot_graphs_urban_canopy(self, path_simulation_folder, study_duration_years, country_ghe_cost):
-    #
-    #     energy_data = UrbanCanopyAdditionalFunction.get_energy_data_from_all_buildings(self.building_dict)
-    #     carbon_data = UrbanCanopyAdditionalFunction.get_carbon_data_from_all_buildings(self.building_dict,
-    #                                                                                    country_ghe_cost)
-    #
-    #     cum_energy_harvested_roof_uc, cum_energy_harvested_facades_uc, cum_energy_harvested_total_uc = \
-    #         energy_data[0], \
-    #             energy_data[1], energy_data[2]
-    #     cum_primary_energy_roof_uc, cum_primary_energy_facades_uc, cum_primary_energy_total_uc = energy_data[
-    #         3], \
-    #         energy_data[4], energy_data[5]
-    #
-    #     cum_avoided_carbon_emissions_roof_uc, cum_avoided_carbon_emissions_facades_uc, \
-    #         cum_avoided_carbon_emissions_total_uc = carbon_data[0], carbon_data[1], carbon_data[2]
-    #     cum_carbon_emissions_roof_uc, cum_carbon_emissions_facades_uc, cum_carbon_emissions_total_uc = \
-    #         carbon_data[3], \
-    #             carbon_data[4], carbon_data[5]
-    #
-    #     years = list(range(study_duration_years))
-    #
-    #     UrbanCanopyAdditionalFunction.plot_energy_results_uc(path_simulation_folder, years,
-    #                                                          cum_energy_harvested_roof_uc,
-    #                                                          cum_energy_harvested_facades_uc,
-    #                                                          cum_energy_harvested_total_uc,
-    #                                                          cum_primary_energy_roof_uc,
-    #                                                          cum_primary_energy_facades_uc,
-    #                                                          cum_primary_energy_total_uc)
-    #
-    #     UrbanCanopyAdditionalFunction.plot_carbon_results_uc(path_simulation_folder, years,
-    #                                                          cum_avoided_carbon_emissions_roof_uc,
-    #                                                          cum_avoided_carbon_emissions_facades_uc,
-    #                                                          cum_avoided_carbon_emissions_total_uc,
-    #                                                          cum_carbon_emissions_roof_uc,
-    #                                                          cum_carbon_emissions_facades_uc,
-    #                                                          cum_carbon_emissions_total_uc)
-    #
-    #     UrbanCanopyAdditionalFunction.plot_ghe_per_kwh_uc(path_simulation_folder, years,
-    #                                                       cum_energy_harvested_total_uc,
-    #                                                       cum_carbon_emissions_total_uc)
-    #
-    #     UrbanCanopyAdditionalFunction.plot_results_eroi_uc(path_simulation_folder, years,
-    #                                                        cum_primary_energy_total_uc,
-    #                                                        cum_energy_harvested_total_uc)
+        # Generate idfs for all buildings in the temporary folder for LWR
+
+        # Generate the config file for the EpLwrSimulationManager
+        config_dict = EpLwrSimulationManager.make_config_dict(path_dir_config, path_dir_outputs,
+                                                              path_epw_file, path_energyplus_dir,
+                                                              list_building_id, list_path_idf_file,
+                                                              list_of_list_outdoor_surface_name,
+                                                              path_vf_mtx_crs_npz, path_eps_mtx_crs_npz,
+                                                              path_rho_mtx_crs_npz, path_tau_mtx_crs_npz,
+                                                              **kwargs)
+        # Initialize the EpLwrSimulationManager
+        path_ep_lwr_simulation_manager_pkl = EpLwrSimulationManager.
+
+        @staticmethod
+        def _included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
+            """
+            Condition to check if the building is included in the LWR computation to simplify the code.
+            :param building_obj: Building object
+            :return: bool
+            """
+            return isinstance(building_obj, BuildingModeled) and (
+                    building_obj.to_simulate_lwr or building_obj.is_target)
+
+        def perform_the_view_factor_computation_for_lwr(self, overwrite: bool = False):
+            """
+            Perform the view factor computation for the longwave radiation.
+            """
+            # todo: @Elie: to be implemented
