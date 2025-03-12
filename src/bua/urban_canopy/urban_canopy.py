@@ -1304,7 +1304,7 @@ class UrbanCanopy:
                 self.lwr_radiative_surface_manager.add_radiative_surfaces(radiative_surface_list)
                 self._lwr_building_id_list.append(building_id)
 
-    def perform_lwr_vf_computation(self, path_simulation_folder: str, overwrite: bool = False, **kwargs):
+    def perform_lwr_vf_computation(self, path_simulation_folder: str, overwrite: bool = False, delete_temp_files: bool = True, **kwargs):
         """
         Perform the visibility check among surfaces for the longwave radiation computation.
         :param path_simulation_folder:
@@ -1340,7 +1340,8 @@ class UrbanCanopy:
             path_simulation_folder=path_vf_computation_temp_dir,
             path_result_folder=path_lwr_result_dir, **kwargs)
         # Check if the simulation succeeded
-
+        if delete_temp_files:
+            shutil.rmtree(path_vf_computation_temp_dir)
         # Delete the temporary files
         return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
 
@@ -1362,7 +1363,9 @@ class UrbanCanopy:
                                                               path_rho_mtx_crs_npz, path_tau_mtx_crs_npz,
                                                               **kwargs)
         # Initialize the EpLwrSimulationManager
-        path_ep_lwr_simulation_manager_pkl = EpLwrSimulationManager.
+        path_ep_lwr_simulation_manager_pkl = EpLwrSimulationManager.set_up_coupled_lwr_simulation_from_config_dict(config_dict)
+
+
 
         @staticmethod
         def _included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
