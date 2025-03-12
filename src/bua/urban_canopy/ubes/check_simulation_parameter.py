@@ -8,11 +8,11 @@ import os
 from honeybee_energy.simulation.parameter import SimulationParameter
 from ladybug.epw import EPW
 
-required_outputs = ["Zone Electric Equipment Electricity Energy", "Zone Ideal Loads Supply Air Total Cooling Energy",
-                    "Zone Ideal Loads Supply Air Total Heating Energy", "Zone Lights Electricity Energy"]
+from ...building.energy_simulation.building_energy_simulation import required_outputs
 
 
-def check_simulation_parameters(path_hbjson_simulation_parameter_file, path_weather_file, ddy_file=None):
+def check_simulation_parameters(path_hbjson_simulation_parameter_file, path_weather_file,
+                                hourly_report_frequency=False, ddy_file=None):
     """
     Check if the simulation parameter file is valid
     :param path_hbjson_simulation_parameter_file: str, path to the simulation parameter file
@@ -52,7 +52,9 @@ def check_simulation_parameters(path_hbjson_simulation_parameter_file, path_weat
         hb_sim_parameter_obj.sizing_parameter.design_days = des_days
 
     # Check if the output frequency is not annual, the tool requires at least monthly outputs
-    if hb_sim_parameter_obj.output.reporting_frequency == "annual":
+    if hourly_report_frequency:
+        hb_sim_parameter_obj.output.reporting_frequency = "hourly"
+    elif hb_sim_parameter_obj.output.reporting_frequency == "annual":
         hb_sim_parameter_obj.output.reporting_frequency = "monthly"
     # Check if the simulation outputs contain heating, cooling, lighting and equipment and add them if needed
     for output in required_outputs:
