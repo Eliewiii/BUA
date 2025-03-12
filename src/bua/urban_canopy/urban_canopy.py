@@ -13,13 +13,11 @@ from datetime import datetime
 
 from honeybee.model import Model
 
-from radiance_comp_vf import RadiativeSurfaceManager
-from lwrepcoupling import EpLwrSimulationManager
-
 from .export_to_json import ExportUrbanCanopyToJson
 from .bipv_scenario_urban_canopy import BipvScenario
 from .uc_context_filter.shade_manager import ShadeManager
 from .ubes.uc_energy_simulation import UrbanBuildingEnergySimulation
+from .lwr_simulation_manager.lwr_simulation_manager import LwrSimulationManager
 
 from ..building.building_basic import BuildingBasic
 from ..building.building_modeled import BuildingModeled
@@ -60,8 +58,7 @@ class UrbanCanopy:
         self.shade_manager = ShadeManager()  # Shade manager object
         # LWR
         self.lwr_context_pyvista_mesh = None  # pyvista mesh of all the buildings within the urban canopy
-        self.lwr_radiative_surface_manager = RadiativeSurfaceManager()  # Radiative surface manager object
-        self._lwr_building_id_list = []
+        self.lwr_simulation_manager = LwrSimulationManager()  # Radiative surface manager object
 
         # UBES
         self.ubes_obj = UrbanBuildingEnergySimulation()  # Urban Building Energy Simulation object
@@ -1292,23 +1289,22 @@ class UrbanCanopy:
         """
         Generate the radiative surface manager for the longwave radiation computation.
         """
-        if overwrite or self.lwr_radiative_surface_manager.is_empty:
-            self.lwr_radiative_surface_manager.reset()
-            self._lwr_building_id_list = []
+        if overwrite or self.lwr_simulation_manager.is_empty:
+            self.lwr_simulation_manager.reset()
 
         for building_id, building_obj in self.building_dict.items():
             if self._included_in_lwr_computation(building_obj):
-                radiative_surface_list = building_obj.generate_radiative_surface_objects_for_lwr_computation(
-                    include_windows=include_windows
-                )
-                self.lwr_radiative_surface_manager.add_radiative_surfaces(radiative_surface_list)
-                self._lwr_building_id_list.append(building_id)
+                self.lwr_simulation_manager.add_building(building_id=building_id,
+                                                         hb_model=building_obj.hb_model_obj,
+                                                         include_windows=include_windows)
 
-    def perform_lwr_vf_computation(self, path_simulation_folder: str, overwrite: bool = False, delete_temp_files: bool = True, **kwargs):
+    def perform_lwr_vf_computation(self, path_simulation_folder: str, overwrite: bool = False,
+                                   delete_temp_files: bool = True, **kwargs):
         """
         Perform the visibility check among surfaces for the longwave radiation computation.
         :param path_simulation_folder:
         :param overwrite:
+        :param delete_temp_files:
         todo: list of possible arguments for kwargs
 
         """
@@ -1336,7 +1332,7 @@ class UrbanCanopy:
                     "with overwrite if you still want to run the simulation")
         os.makedirs(path_lwr_result_dir)
         # Run the simulation
-        path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self.lwr_radiative_surface_manager.run_view_factor_computation_in_subprocess(
+        path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self.lwr_simulation_manager.run_vf_computation(
             path_simulation_folder=path_vf_computation_temp_dir,
             path_result_folder=path_lwr_result_dir, **kwargs)
         # Check if the simulation succeeded
@@ -1345,12 +1341,16 @@ class UrbanCanopy:
         # Delete the temporary files
         return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
 
-    def initialize_couple_lwr_simulation(self, path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
+    def generate_epw_hbjson_sim_parameters_and_idf_files_for_lwr_simulation(self, path_hbjson_simulation_parameter_file,
+                                                       path_weather_file, ddy_file=None,
+                                                       overwrite=False)
+
+    def initialize_couple_lwr_simulation(self,path_simulation_folder, path_epw_file,path_energyplus_dir,path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
                                          path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str, **kwargs):
         """
 
         """
-        # Load epw and simulation parameters and for timestep
+        # Load epw and simulation parameters and force timestep
 
         # Generate idfs for all buildings in the temporary folder for LWR
 
@@ -1363,9 +1363,8 @@ class UrbanCanopy:
                                                               path_rho_mtx_crs_npz, path_tau_mtx_crs_npz,
                                                               **kwargs)
         # Initialize the EpLwrSimulationManager
-        path_ep_lwr_simulation_manager_pkl = EpLwrSimulationManager.set_up_coupled_lwr_simulation_from_config_dict(config_dict)
-
-
+        path_ep_lwr_simulation_manager_pkl = EpLwrSimulationManager.set_up_coupled_lwr_simulation_from_config_dict(
+            config_dict)
 
         @staticmethod
         def _included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
