@@ -35,7 +35,7 @@ from ..config.bua_config_structure import name_urban_canopy_export_file_pkl, \
     name_radiation_simulation_folder, name_temporary_files_folder, name_ubes_temp_simulation_folder, \
     name_ubes_simulation_result_folder, name_ubes_epw_file, \
     path_folder_default_bipv_parameters, \
-    path_folder_user_bipv_parameters, path_simulation_temp_folder, name_lwr_simulation_result_folder
+    path_folder_user_bipv_parameters, name_lwr_simulation_result_folder, name_dir_lwr_vf, name_dir_lwr_ep_sim
 from ..config.config_constants import TOLERANCE_LBT
 
 from ..config.config_default_values_user_parameters import default_path_weather_file
@@ -1330,6 +1330,7 @@ class UrbanCanopy:
         path_vf_computation_temp_dir = os.path.join(path_simulation_folder, name_temporary_files_folder, "vf")
         # Path result folder for LWR
         path_lwr_result_dir = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder)
+        path_to_the_vfresult_folder = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder)
         # Create the temp simulation folder
         if os.path.exists(path_vf_computation_temp_dir):
             shutil.rmtree(path_vf_computation_temp_dir)
@@ -1340,7 +1341,7 @@ class UrbanCanopy:
                 shutil.rmtree(path_lwr_result_dir)
             elif os.listdir(path_lwr_result_dir):
                 raise FileExistsError(
-                    "There are already resulst for the VF or LWR computation, please for the computaion"
+                    "There are already resulst for the VF or LWR computation, please for the computation"
                     "with overwrite if you still want to run the simulation")
         os.makedirs(path_lwr_result_dir)
         # Run the simulation
@@ -1353,13 +1354,67 @@ class UrbanCanopy:
         # Delete the temporary files
         return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
 
-    def generate_epw_hbjson_sim_parameters_and_idfs_files_for_lwr_simulation(self,
-                                                                             path_simulation_folder,
-                                                                             path_hbjson_simulation_parameter_file,
-                                                                             path_weather_file, ddy_file=None,
-                                                                             hourly_report_frequency: bool = False,
-                                                                             num_time_steps_per_hour: int = 20,
-                                                                             overwrite=False):
+    def set_up_lwr_simulation(self, path_simulation_folder, path_hbjson_simulation_parameter_file,
+                              path_weather_file,
+                              path_energyplus_dir,
+                              path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
+                              path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
+                              ddy_file=None,
+                              hourly_report_frequency: bool = False,
+                              num_time_steps_per_hour: int = 20,
+                              **kwargs):
+
+        """
+
+        :param path_simulation_folder: string, path to the folder where the simulation will be performed.
+        """
+
+        # Load and generate epw, simulation parameters, and idfs,force timestep
+        path_epw_file, path_idf_file_dict = self._generate_epw_hbjson_sim_parameters_and_idfs_files_for_lwr_simulation(
+            path_simulation_folder=path_simulation_folder,
+            path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
+            path_weather_file=path_weather_file, hourly_report_frequency=hourly_report_frequency,
+            num_time_steps_per_hour=num_time_steps_per_hour,
+            ddy_file=ddy_file, overwrite=True)
+
+        # Create folder for LWR simulation
+        path_lwr_simulation_folder = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder,
+                                                  name_dir_lwr_ep_sim)
+        if os.path.exists(path_lwr_simulation_folder):
+            shutil.rmtree(path_lwr_simulation_folder)
+        os.makedirs(path_lwr_simulation_folder)
+        # Generate the config file for the EpLwrSimulationManager
+        self.lwr_simulation_manager.initialize_ep_coupled_lwr_simulation(
+            path_lwr_simulation_folder=path_lwr_simulation_folder,
+            path_epw_file=path_epw_file,
+            path_energyplus_dir=path_energyplus_dir,
+            path_idf_file_dict=path_idf_file_dict,
+            path_vf_mtx_crs_npz=path_vf_mtx_crs_npz,
+            path_eps_mtx_crs_npz=path_eps_mtx_crs_npz,
+            path_rho_mtx_crs_npz=path_rho_mtx_crs_npz,
+            path_tau_mtx_crs_npz=path_tau_mtx_crs_npz,
+            **kwargs)
+
+    def run_lwr_simulation(self, path_simulation_folder, overwrite=False, silent=False):
+        """
+        Run the longwave radiation simulation.
+        :param path_simulation_folder: string, path to the folder where the simulation will be performed.
+        :param overwrite: boolean, if True, the simulation will be run again and the results will overwrite the
+            existing ones.
+        :param silent: boolean, if True, the console outputs will be disabled.
+        """
+
+        # Run the simulation
+        self.lwr_simulation_manager.run_ep_coupled_lwr_simulation()
+
+    def _generate_epw_hbjson_sim_parameters_and_idfs_files_for_lwr_simulation(self,
+                                                                              path_simulation_folder,
+                                                                              path_hbjson_simulation_parameter_file,
+                                                                              path_weather_file,
+                                                                              ddy_file=None,
+                                                                              hourly_report_frequency: bool = False,
+                                                                              num_time_steps_per_hour: int = 20,
+                                                                              overwrite=True):
         self.load_epw_and_hb_simulation_parameters_for_ubes(
             path_simulation_folder=path_simulation_folder,
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
@@ -1367,47 +1422,25 @@ class UrbanCanopy:
             num_time_steps_per_hour=num_time_steps_per_hour,
             ddy_file=ddy_file, overwrite=overwrite)
 
-        path_epw_file, path_idf_files_dict = self.generate_idf_files_for_ubes_with_openstudio(path_simulation_folder=path_simulation_folder,
-                                                         building_id_list=self.lwr_simulation_manager.building_id_list,
-                                                         overwrite=False, silent=False)
+        path_epw_file, path_idf_files_dict = self.generate_idf_files_for_ubes_with_openstudio(
+            path_simulation_folder=path_simulation_folder,
+            building_id_list=self.lwr_simulation_manager.building_id_list,
+            overwrite=True, silent=True)
 
-    def generate_idf_for_lwr_simulation(self, path_simulation_folder, path_epw_file, path_energyplus_dir,
+        return path_epw_file, path_idf_files_dict
 
-                                        def initialize_couple_lwr_simulation(self, path_simulation_folder,
-                                        path_epw_file, path_energyplus_dir,
-                                        path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
-                                        path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str, **kwargs):
+    @staticmethod
+    def _included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
         """
-
+        Condition to check if the building is included in the LWR computation to simplify the code.
+        :param building_obj: Building object
+        :return: bool
         """
-        # Load epw and simulation parameters and force timestep
+        return isinstance(building_obj, BuildingModeled) and (
+                building_obj.to_simulate_lwr or building_obj.is_target)
 
-        # Generate idfs for all buildings in the temporary folder for LWR
-
-        # Generate the config file for the EpLwrSimulationManager
-        config_dict = EpLwrSimulationManager.make_config_dict(path_dir_config, path_dir_outputs,
-                                                              path_epw_file, path_energyplus_dir,
-                                                              list_building_id, list_path_idf_file,
-                                                              list_of_list_outdoor_surface_name,
-                                                              path_vf_mtx_crs_npz, path_eps_mtx_crs_npz,
-                                                              path_rho_mtx_crs_npz, path_tau_mtx_crs_npz,
-                                                              **kwargs)
-        # Initialize the EpLwrSimulationManager
-        path_ep_lwr_simulation_manager_pkl = EpLwrSimulationManager.set_up_coupled_lwr_simulation_from_config_dict(
-            config_dict)
-
-        @staticmethod
-        def _included_in_lwr_computation(building_obj: BuildingModeled) -> bool:
-            """
-            Condition to check if the building is included in the LWR computation to simplify the code.
-            :param building_obj: Building object
-            :return: bool
-            """
-            return isinstance(building_obj, BuildingModeled) and (
-                    building_obj.to_simulate_lwr or building_obj.is_target)
-
-        def perform_the_view_factor_computation_for_lwr(self, overwrite: bool = False):
-            """
-            Perform the view factor computation for the longwave radiation.
-            """
-            # todo: @Elie: to be implemented
+    def perform_the_view_factor_computation_for_lwr(self, overwrite: bool = False):
+        """
+        Perform the view factor computation for the longwave radiation.
+        """
+        # todo: @Elie: to be implemented

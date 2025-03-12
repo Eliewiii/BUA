@@ -116,6 +116,10 @@ name_ubes_hbjson_simulation_parameters_file = "uc_ubes_hb_simulation_parameters.
 # Typology
 name_typology_folder = "typology"
 
+# LWR folders
+name_dir_lwr_vf = "VF"
+name_dir_lwr_ep_sim = "EP_sim"
+
 
 
 
