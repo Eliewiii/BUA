@@ -68,6 +68,7 @@ class UrbanBuildingEnergySimulation:
     def load_epw_and_hb_simulation_parameters(self, path_hbjson_simulation_parameter_file: str,
                                               path_weather_file: str,
                                               ddy_file: str = None, hourly_report_frequency: bool = False,
+                                              num_time_steps_per_hour: int = None,
                                               overwrite: bool = False):
         """
         Load the epw file and simulation parameters from the simulation parameter file and check and correct teh
@@ -93,6 +94,7 @@ class UrbanBuildingEnergySimulation:
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
             path_weather_file=path_weather_file,
             hourly_report_frequency=hourly_report_frequency,
+            num_time_steps_per_hour=num_time_steps_per_hour,
             ddy_file=ddy_file)
         # Set the simulation parameter and epw file
         self.hb_simulation_parameters_obj = hb_sim_parameter_obj

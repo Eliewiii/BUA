@@ -124,12 +124,16 @@ class BuildingEnergySimulation:
         # Export the Honeybee Model to a hbjson file in the path_building_bes_temp_folder
         # path_hbjson_file = hb_model_obj.to_hbjson(name=self.building_id, folder=path_building_bes_temp_folder)
 
-        from_hbjson_to_idf(dir_to_write_idf_in=path_building_bes_temp_folder,
+        path_idf = from_hbjson_to_idf(dir_to_write_idf_in=path_building_bes_temp_folder,
                            path_hbjson_file=path_hbjson_file,
                            path_epw_file=path_epw_file,
                            path_hbjson_simulation_parameters=path_hbjson_simulation_parameters, silent=silent)
 
         self.idf_generated = True
+
+        return path_idf
+
+
 
     def run_idf_with_energyplus(self, path_building_bes_temp_folder: str, path_epw_file: str,
                                 silent: bool = False):
@@ -294,6 +298,8 @@ def from_hbjson_to_idf(dir_to_write_idf_in: str, path_hbjson_file: str, path_epw
                             epw_file=path_epw_file)
     ## Run simulation in OpenStudio to generate IDF ##
     (path_osm, path_idf) = run_osw(osw, silent=silent)
+
+    return path_idf
 
 
 def bes_result_dict_to_csv(bes_results_dict: dict, path_csv_file: str):

@@ -684,7 +684,8 @@ class UrbanCanopy:
     def load_epw_and_hb_simulation_parameters_for_ubes(self, path_simulation_folder,
                                                        path_hbjson_simulation_parameter_file,
                                                        path_weather_file, ddy_file=None,
-                                                       hourly_report_frequency=False,
+                                                       hourly_report_frequency: bool = False,
+                                                       num_time_steps_per_hour: int = None,
                                                        overwrite=False):
         """
         Load the HB simulation parameters from the json file, check if it is valid, correct it eventually and add to the
@@ -694,12 +695,16 @@ class UrbanCanopy:
             parameters.
         :param path_weather_file: string, path to the epw file.
         :param ddy_file: string, path to the ddy (design days) file.
+        :param hourly_report_frequency: bool, if True, the hourly report frequency will be used.
+        :param num_time_steps_per_hour: int, number of time steps per hour.
         :param overwrite: bool, if True, the existing HB simulation parameters will be overwritten.
         """
 
         flag_re_initialize_building_bes = self.ubes_obj.load_epw_and_hb_simulation_parameters(
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
-            path_weather_file=path_weather_file,hourly_report_frequency=hourly_report_frequency, ddy_file=ddy_file, overwrite=overwrite)
+            path_weather_file=path_weather_file, hourly_report_frequency=hourly_report_frequency,
+            num_time_steps_per_hour=num_time_steps_per_hour,
+            ddy_file=ddy_file, overwrite=overwrite)
 
         # Re-initialize the UBES of the whole UrbanCanopy if needed
         if flag_re_initialize_building_bes:
@@ -753,16 +758,22 @@ class UrbanCanopy:
         # Write the EPW and simulation parameters files in the temporary ubes folder
         path_epw_file, path_hbjson_simulation_parameters = self.ubes_obj.write_epw_and_hb_simulation_parameters(
             path_ubes_temp_sim_folder=path_ubes_temp_sim_folder)
+
+        path_idf_files_dict = {}
+
         # Generate the idf files for the buildings
         for building_obj in self.building_dict.values():
             if ((building_id_list is None or building_id_list is []) or building_obj.id in building_id_list) \
                     and isinstance(building_obj, BuildingModeled) and (
                     building_obj.is_target or building_obj.to_simulate):
                 # Generate the hbjson then idf file for the building simulation
-                building_obj.generate_idf_for_bes_with_openstudio(
+                path_idf = building_obj.generate_idf_for_bes_with_openstudio(
                     path_ubes_temp_sim_folder=path_ubes_temp_sim_folder,
                     path_hbjson_simulation_parameters=path_hbjson_simulation_parameters,
                     path_epw_file=path_epw_file, overwrite=overwrite, silent=silent)
+                path_idf_files_dict[building_obj.id] = path_idf
+
+        return path_epw_file, path_idf_files_dict
 
     def run_idf_files_for_ubes_with_energyplus(self, path_simulation_folder, building_id_list=None,
                                                overwrite=False, silent=False, run_in_parallel=False):
@@ -1342,12 +1353,30 @@ class UrbanCanopy:
         # Delete the temporary files
         return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
 
-    def generate_epw_hbjson_sim_parameters_and_idf_files_for_lwr_simulation(self, path_hbjson_simulation_parameter_file,
-                                                       path_weather_file, ddy_file=None,
-                                                       overwrite=False)
+    def generate_epw_hbjson_sim_parameters_and_idfs_files_for_lwr_simulation(self,
+                                                                             path_simulation_folder,
+                                                                             path_hbjson_simulation_parameter_file,
+                                                                             path_weather_file, ddy_file=None,
+                                                                             hourly_report_frequency: bool = False,
+                                                                             num_time_steps_per_hour: int = 20,
+                                                                             overwrite=False):
+        self.load_epw_and_hb_simulation_parameters_for_ubes(
+            path_simulation_folder=path_simulation_folder,
+            path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
+            path_weather_file=path_weather_file, hourly_report_frequency=hourly_report_frequency,
+            num_time_steps_per_hour=num_time_steps_per_hour,
+            ddy_file=ddy_file, overwrite=overwrite)
 
-    def initialize_couple_lwr_simulation(self,path_simulation_folder, path_epw_file,path_energyplus_dir,path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
-                                         path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str, **kwargs):
+        path_epw_file, path_idf_files_dict = self.generate_idf_files_for_ubes_with_openstudio(path_simulation_folder=path_simulation_folder,
+                                                         building_id_list=self.lwr_simulation_manager.building_id_list,
+                                                         overwrite=False, silent=False)
+
+    def generate_idf_for_lwr_simulation(self, path_simulation_folder, path_epw_file, path_energyplus_dir,
+
+                                        def initialize_couple_lwr_simulation(self, path_simulation_folder,
+                                        path_epw_file, path_energyplus_dir,
+                                        path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
+                                        path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str, **kwargs):
         """
 
         """

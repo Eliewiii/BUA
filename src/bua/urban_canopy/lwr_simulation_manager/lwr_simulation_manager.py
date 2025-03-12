@@ -33,6 +33,11 @@ class LwrSimulationManager:
         """ Check if the RadiativeSurfaceManager object is empty."""
         return self._radiative_surface_manager.is_empty
 
+    @property
+    def building_id_list(self):
+        """ Check if the RadiativeSurfaceManager object is empty."""
+        return self._building_id_list
+
     def reset(self):
         """ Reset the RadiativeSurfaceManager object."""
         self.init_radiative_surface_manager()

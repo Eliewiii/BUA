@@ -528,11 +528,13 @@ class BuildingModeled(BuildingBasic):
         # Add the shades to the model
         hb_model_with_shades.add_shades(hb_shade_list)
         # Generate the IDF file
-        self.bes_obj.generate_idf_with_openstudio(path_building_bes_temp_folder=path_building_bes_temp_folder,
+        path_idf = self.bes_obj.generate_idf_with_openstudio(path_building_bes_temp_folder=path_building_bes_temp_folder,
                                                   path_epw_file=path_epw_file,
                                                   path_hbjson_simulation_parameters=path_hbjson_simulation_parameters,
                                                   hb_model_obj=hb_model_with_shades,
                                                   silent=silent)
+
+        return path_idf
 
     def run_idf_with_energyplus_for_bes(self, path_ubes_temp_sim_folder, path_epw_file, overwrite=False,
                                         silent=False):
