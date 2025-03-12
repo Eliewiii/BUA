@@ -1207,8 +1207,12 @@ class UrbanCanopy:
         ubes_electricity_consumption = sum(self.get_ubes_electricity_consumption_from_building_id_list(
             bipv_scenario_obj.bipv_simulated_building_id_list))
 
-        ubes_electricity_consumption_hourly = sum(self.get_hourly_ubes_electricity_consumption_from_building_id_list(
-            bipv_scenario_obj.bipv_simulated_building_id_list))
+        ubes_electricity_consumption_hourly = [0 for i in range(8760)]
+        building_hourly_consumption_list = self.get_hourly_ubes_electricity_consumption_from_building_id_list(
+            bipv_scenario_obj.bipv_simulated_building_id_list)
+        for building_hourly_consumption in building_hourly_consumption_list:
+            ubes_electricity_consumption_hourly = [i + j for i,j in zip(ubes_electricity_consumption_hourly,building_hourly_consumption) ]
+
 
         conditioned_apartment_area = sum(
             self.get_conditioned_area_from_building_id_list(

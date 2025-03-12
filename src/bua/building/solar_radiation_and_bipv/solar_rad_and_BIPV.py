@@ -53,6 +53,7 @@ empty_parameter_dict = {
 }
 empty_sub_bipv_results_dict = {
     "energy_harvested": {"yearly": [], "cumulative": [], "total": 0.0},
+    "hourly_energy_harvested": {"yearly": [], "cumulative": [], "total": 0.0},
     "primary_energy": {
         "gate_to_gate": {"yearly": [], "cumulative": [], "total": 0.0},
         "transportation": {
@@ -596,7 +597,7 @@ class SolarRadAndBipvSimulation:
             # Get the hourly irradiance table
             hourly_irradiance_table = get_hourly_irradiance_table(path_ill_file)
 
-            energy_harvested_yearly_list, nb_of_panels_installed_yearly_list = simulate_bipv_yearly_energy_harvesting(
+            hourly_energy_harvested_table, energy_harvested_yearly_list, nb_of_panels_installed_yearly_list = simulate_bipv_yearly_energy_harvesting(
                 pv_panel_obj_list=panel_list,
                 hourly_solar_irradiance_table=hourly_irradiance_table,
                 inverter_capacity=self.parameter_dict[roof_or_facades]["inverter"]["capacity"],
@@ -664,6 +665,7 @@ class SolarRadAndBipvSimulation:
             self.bipv_results_dict[roof_or_facades] = self.add_results_to_global_results_dict(
                 bipv_results_dict=self.bipv_results_dict[roof_or_facades],
                 energy_harvested_yearly_list=energy_harvested_yearly_list,
+                hourly_energy_harvested_table=hourly_energy_harvested_table,
                 gtg_result_dict=gtg_result_dict,
                 transport_result_dict=transport_result_dict,
                 maintenance_result_dict=maintenance_result_dict,
@@ -687,7 +689,7 @@ class SolarRadAndBipvSimulation:
         return simulation_has_run
 
     @staticmethod
-    def add_results_to_global_results_dict(bipv_results_dict, energy_harvested_yearly_list, gtg_result_dict,
+    def add_results_to_global_results_dict(bipv_results_dict, hourly_energy_harvested_yearly_table, energy_harvested_yearly_list, gtg_result_dict,
                                            transport_result_dict, maintenance_result_dict,
                                            recycling_result_dict,
                                            inverter_result_dict):
@@ -705,6 +707,7 @@ class SolarRadAndBipvSimulation:
 
         # Energy harvested
         bipv_results_dict["energy_harvested"]["yearly"] += energy_harvested_yearly_list
+        bipv_results_dict["hourly_energy_harvested"]["yearly"] += hourly_energy_harvested_yearly_table
         # LCA Primary energy
         bipv_results_dict["primary_energy"]["gate_to_gate"]["yearly"] += gtg_result_dict["primary_energy"]
         bipv_results_dict["primary_energy"]["transportation"]["gate_to_gate"]["yearly"] += \

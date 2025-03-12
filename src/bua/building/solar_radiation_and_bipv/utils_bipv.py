@@ -153,6 +153,7 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
 
     num_panels = len(pv_panel_obj_list)
     # Initialize the lists
+    hourly_energy_production_per_year_table = []
     energy_production_per_year_list = []
     nb_of_panels_installed_per_year_list = []
     nb_panel_failed_per_year_list = []
@@ -165,6 +166,7 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
     if iteration_start_year < uc_end_year:
         for year in range(iteration_start_year, uc_end_year):
             # initialize
+            hourly_energy_harvested = []
             annual_energy_harvested = 0.
             nb_of_new_panels = 0
             num_failed_panels = 0
@@ -227,12 +229,13 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
                 pv_panel_obj_list]
             for i in range(nb_of_sun_hours):
                 # todo : change the name to hourly_total_power and save it to a list to output
-                total_power = sum(
+                hourly_total_power = sum(
                     [hourly_power_generation_by_panels_table[j][i] for j in range(len(pv_panel_obj_list))])
-                if total_power > inverter_capacity:
-                    total_power = inverter_capacity
+                if hourly_total_power > inverter_capacity:
+                    hourly_total_power = inverter_capacity
+                hourly_energy_harvested.append(hourly_total_power)
                 # Energy in kWh/h is power in kW * 1h
-                annual_energy_harvested += total_power
+                annual_energy_harvested += hourly_total_power
             for panel_obj in pv_panel_obj_list:
                 failed=panel_obj.increment_age_by_one_year()
                 if failed:
@@ -240,12 +243,12 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
 
             # todo: add dictionary to track the number of replaced panel by "previous" (not th one of the new panel installed if different) technology
 
-
+            hourly_energy_production_per_year_table.append(hourly_total_power/1000) # append list for every hour in every year
             energy_production_per_year_list.append(annual_energy_harvested / 1000)  # convert Wh to kWh
             nb_of_panels_installed_per_year_list.append(nb_of_new_panels)
             nb_panel_failed_per_year_list.append(num_failed_panels)
 
-    return energy_production_per_year_list, nb_of_panels_installed_per_year_list #, num_active_panel_yearly_list, nb_panel_failed_per_year_list
+    return hourly_energy_production_per_year_table, energy_production_per_year_list, nb_of_panels_installed_per_year_list #, num_active_panel_yearly_list, nb_panel_failed_per_year_list
 
 
 def compute_lca_and_cost_for_gtg(nb_of_panels_installed_yearly_list, pv_tech_obj, roof_or_facades):

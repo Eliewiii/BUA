@@ -64,14 +64,14 @@ class BipvSubsidy:
                         subsidy_obj.carbon_tax = int(value["carbon_tax_per_ton_CO2"])
                         subsidy_obj.income_tax = float(value["income_tax_reduction_on_energy_generation"])
 
-                        cls.write_subsidy_objects_to_dict(cls, subsidy_obj, subsidy_obj_dict)
+                        # Save the object in the dictionary if it does not exist
+                        if subsidy_obj.identifier not in subsidy_obj_dict:
+                            subsidy_obj_dict[subsidy_obj.identifier] = subsidy_obj
+                        else:
+                            raise ValueError(f"The subsidy object{subsidy_obj.identifier} already exists, "
+                                             f"it must have been duplicated in the json file")
 
         return subsidy_obj_dict
 
-    def write_subsidy_objects_to_dict(self, subsidy_obj, subsidy_obj_dict):
+    def get_electricity_price_per_hour(self, ):
 
-        if subsidy_obj.identifier not in subsidy_obj_dict:
-            subsidy_obj_dict[subsidy_obj.identifier] = subsidy_obj
-        else:
-            raise ValueError(f"The subsidy object{subsidy_obj.identifier} already exists, "
-                             f"it must have been duplicated in the json file")
