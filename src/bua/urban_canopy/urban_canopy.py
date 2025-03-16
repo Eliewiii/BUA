@@ -1189,7 +1189,7 @@ class UrbanCanopy:
 
     def compute_bipv_kpis_at_urban_scale(self, path_simulation_folder, bipv_scenario_identifier,
                                          grid_ghg_intensity, grid_energy_intensity,
-                                         grid_electricity_sell_price, zone_area):
+                                         grid_electricity_sell_price, zone_area, subsidy_obj):
         """
         Post-process the BIPV results at urban scale
         :param path_simulation_folder: string, path to the simulation folder
@@ -1225,7 +1225,8 @@ class UrbanCanopy:
             ubes_electricity_consumption=ubes_electricity_consumption,
             ubes_electricity_consumption_hourly=ubes_electricity_consumption_hourly,
             conditioned_apartment_area=conditioned_apartment_area,
-            zone_area=zone_area)
+            zone_area=zone_area,
+            subsidy_type = subsidy_obj)
         # Write the results to CSV file
         path_radiation_and_bipv_result_folder = os.path.join(path_simulation_folder,
                                                              name_radiation_simulation_folder)

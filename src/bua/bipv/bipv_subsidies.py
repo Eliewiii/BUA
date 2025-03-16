@@ -5,7 +5,7 @@ Class of subsidies to integrate in economic assessment
 import os
 import json
 
-
+from bua.config.config_default_values_user_parameters import default_grid_ghg_intensity
 
 
 class BipvSubsidy:
@@ -73,5 +73,46 @@ class BipvSubsidy:
 
         return subsidy_obj_dict
 
-    def get_electricity_price_per_hour(self, ):
+    def get_electricity_price_per_hour(self, hour):
+
+        hour_of_day = hour % 24
+        if 21 <= hour_of_day or hour_of_day < 10:  # 21:00 - 10:00
+            return self.electricity_price_offpeak_hours
+        elif 10 <= hour_of_day < 15:  # 10:00 - 15:00
+            return self.electricity_price_shoulder_hours
+        elif 15 <= hour_of_day < 21:  # 15:00 - 21:00
+            return self.electricity_price_peak_hours
+
+    def calculate_investment_subsidy(self):
+
+        investment_support = self.investment_support
+
+        return investment_support
+
+    def calculate_loan_payment_list(self, start_year, end_year, years_of_loan_payback, bipv_results_dict):
+
+        loan_payments = []
+        r = self.loan_interest_rate
+        initial_investment_cost = bipv_results_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0]
+
+
+        for year in range(end_year - start_year):
+            if year == 0:
+                loan_payments.append(0)
+            elif year < years_of_loan_payback:
+                loan_payments.append((initial_investment_cost*(1-self.equity_ratio) * r) / (1 - (1 + r) ** - years_of_loan_payback))
+            elif year > years_of_loan_payback:
+                loan_payments.append(0)
+
+        # correct investment cost in year 0
+        bipv_results_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0] = initial_investment_cost*self.equity_ratio
+
+        return loan_payments
+
+    def calculate_carbon_tax_savings_list(self, bipv_results_dict, grid_ghg_intensity = default_grid_ghg_intensity):
+
+        carbon_tax_savings = [grid_ghg_intensity * self.carbon_tax/1000000 * bipv_results_dict["energy_harvested"]["yearly"][year]
+                              for year in len(bipv_results_dict["energy_harvested"]["yearly"])]
+
+        return carbon_tax_savings
 

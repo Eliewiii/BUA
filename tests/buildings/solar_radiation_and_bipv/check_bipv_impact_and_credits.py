@@ -20,6 +20,7 @@ scenarios_dict = {
             "y_size": 2.030
         }}
 scenario_id = list(scenarios_dict.keys())[0]
+subsidy_type = "fit_fixed_high"
 
 # load urban canopy object from generate_sample_for_bipv
 json_result_dict = {}
@@ -50,7 +51,8 @@ SimFunSolarRadAndBipv.run_kpi_simulation(urban_canopy_object=urban_canopy_object
                                          grid_ghg_intensity=default_grid_ghg_intensity,
                                          grid_energy_intensity=default_grid_energy_intensity,
                                          grid_electricity_sell_price=default_grid_electricity_sell_price,
-                                         zone_area=None)
+                                         zone_area=None,
+                                         subsidy_type = subsidy_type)
 
 alternative_result_dict = {
     "scenario_id": scenario_id,

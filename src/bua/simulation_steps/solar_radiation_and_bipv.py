@@ -160,7 +160,8 @@ class SimFunSolarRadAndBipv:
                            grid_ghg_intensity=default_grid_ghg_intensity,
                            grid_energy_intensity=default_grid_energy_intensity,
                            grid_electricity_sell_price=default_grid_electricity_sell_price,
-                           zone_area=None):
+                           zone_area=None,
+                           subsidy_type=None):
         """
         Compute the KPIs at the urban scale. It includes BIPV and UBES KPIs.
         :param urban_canopy_object: UrbanCanopy: urban canopy object
@@ -177,7 +178,8 @@ class SimFunSolarRadAndBipv:
                                                              grid_ghg_intensity=grid_ghg_intensity,
                                                              grid_energy_intensity=grid_energy_intensity,
                                                              grid_electricity_sell_price=grid_electricity_sell_price,
-                                                             zone_area=zone_area)
+                                                             zone_area=zone_area,
+                                                             subsidy_type = None)
 
         user_logger.info("KPIS have been computed successfully")
         dev_logger.info("KPIS have been computed successfully")
