@@ -104,7 +104,7 @@ class RadarChart:
 
             # Plot each dataset (fill and outline)
             # ax.fill(angles_for_data, normalized_values, color=data["color"], alpha=0.3)
-            ax.plot(angles_for_data, normalized_values, color=data["color"], linewidth=2, label=data["label"],
+            ax.plot(angles_for_data, normalized_values, color=data["color"], linewidth=1.5, label=data["label"],
                     linestyle=data["style"])
 
         # # Set category labels
