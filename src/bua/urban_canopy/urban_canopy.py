@@ -1322,7 +1322,7 @@ class UrbanCanopy:
         """
 
         # Check if there are surfaces to perform the computation
-        if self.lwr_radiative_surface_manager.is_empty:
+        if self.lwr_simulation_manager.is_empty:
             user_logger.warning(
                 "The radiative surface manager is empty, the visibility check cannot be performed.")
             return
@@ -1346,8 +1346,8 @@ class UrbanCanopy:
         os.makedirs(path_lwr_result_dir)
         # Run the simulation
         path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self.lwr_simulation_manager.run_vf_computation(
-            path_simulation_folder=path_vf_computation_temp_dir,
-            path_result_folder=path_lwr_result_dir, **kwargs)
+            path_vf_computation_temp_dir=path_vf_computation_temp_dir,
+            path_vf_results_dir=path_lwr_result_dir, **kwargs)
         # Check if the simulation succeeded
         if delete_temp_files:
             shutil.rmtree(path_vf_computation_temp_dir)
@@ -1385,7 +1385,7 @@ class UrbanCanopy:
         os.makedirs(path_lwr_simulation_folder)
         # Generate the config file for the EpLwrSimulationManager
         self.lwr_simulation_manager.initialize_ep_coupled_lwr_simulation(
-            path_lwr_simulation_folder=path_lwr_simulation_folder,
+            path_dir_lwr_sim=path_lwr_simulation_folder,
             path_epw_file=path_epw_file,
             path_energyplus_dir=path_energyplus_dir,
             path_idf_file_dict=path_idf_file_dict,

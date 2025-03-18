@@ -25,8 +25,8 @@ class LwrSimulationManager:
         self._building_id_list = []
         self._building_outdoor_surface_id_table: List[List[str]] = []
         #
-        self.vf_sim_performed = False
-        self.lwr_sim_performed = False
+        self._vf_sim_performed = False
+        self._lwr_sim_performed = False
 
     @property
     def is_empty(self):
@@ -38,14 +38,19 @@ class LwrSimulationManager:
         """ Check if the RadiativeSurfaceManager object is empty."""
         return self._building_id_list
 
+    @property
+    def num_surfaces(self):
+        """ Number of surfaces  in the RadiativeSurfaceManager object."""
+        return self._radiative_surface_manager.num_surface
+
     def reset(self):
         """ Reset the RadiativeSurfaceManager object."""
         self.init_radiative_surface_manager()
         self.init_ep_lwr_simulation_manager()
         self._building_id_list = []
         self._building_outdoor_surface_id_table = []
-        self.vf_sim_performed = False
-        self.lwr_sim_performed = False
+        self._vf_sim_performed = False
+        self._lwr_sim_performed = False
 
     def init_radiative_surface_manager(self):
         """ Reinitialize the RadiativeSurfaceManager object if needed. """
@@ -82,17 +87,17 @@ class LwrSimulationManager:
         """
 
         """
-        if self.radiative_surface_manager.is_empty:
+        if self._radiative_surface_manager.is_empty:
             logging.warning(
                 "The radiative surface manager is empty, the visibility check cannot be performed.")
             return
-        if self.vf_sim_performed:
+        if self._vf_sim_performed:
             logging.warning(
                 "The view factor computation has already been performed, the computation will be skipped.")
             return
 
         # Run the simulation
-        path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self.radiative_surface_manager.run_view_factor_computation_in_subprocess(
+        path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self._radiative_surface_manager.run_view_factor_computation_in_subprocess(
             path_simulation_folder=path_vf_computation_temp_dir,
             path_result_folder=path_vf_results_dir,
             num_worker_cpu_bound=num_worker_cpu_bound,
@@ -110,7 +115,7 @@ class LwrSimulationManager:
         # Check if the simulation succeeded
         # todo add a check for the simulation success
 
-        self.vf_sim_performed = True
+        self._vf_sim_performed = True
 
         return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
 
@@ -119,16 +124,17 @@ class LwrSimulationManager:
                                              path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
                                              path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
                                              tol: float = 1e-6,
-                                             maxiter: int = 150, rtol=1e-5, precondition=False, num_worker=0):
+                                             maxiter: int = 150, rtol=1e-5, precondition=False, num_workers=0,to_pkl=False):
         """
+
 
         """
         # Check
-        if not self.vf_sim_performed:
+        if not self._vf_sim_performed:
             raise Exception(
                 "The view factor computation has not been performed yet, the LWR simulation cannot be run")
         # Generate the configuration dictionary
-        config_dict = self.make_config_dict_for_ep_coupled_lwr_simulation(path_dir_lwr_sim,
+        config_dict = self._make_config_dict_for_ep_coupled_lwr_simulation(path_dir_lwr_sim,
                                                                           path_epw_file,
                                                                           path_energyplus_dir,
                                                                           path_idf_file_dict,
@@ -138,15 +144,15 @@ class LwrSimulationManager:
                                                                           path_tau_mtx_crs_npz, tol=tol,
                                                                           maxiter=maxiter, rtol=rtol,
                                                                           precondition=precondition,
-                                                                          num_worker=num_worker)
+                                                                          num_workers=num_workers)
         # Initialize the EP coupled LWR simulation manager and generartes the configuration file
         """
         This initialization includes some preprocessing, generating additional strings for IDF files to 
         include the LWR computation, and finally generating the adjusted idf files.
         """
-        self._ep_lwr_simulation_manager.set_up_coupled_lwr_simulation_from_config_file(config_dict)
+        self._ep_lwr_simulation_manager,_=self._ep_lwr_simulation_manager.set_up_coupled_lwr_simulation_from_config_dict(config_dict,to_pkl=to_pkl)
 
-    def make_config_dict_for_ep_coupled_lwr_simulation(self, path_dir_lwr_sim: str,
+    def _make_config_dict_for_ep_coupled_lwr_simulation(self, path_dir_lwr_sim: str,
                                                        path_epw_file: str,
                                                        path_energyplus_dir: str,
                                                        path_idf_file_dict: Dict[str, str],
@@ -154,7 +160,7 @@ class LwrSimulationManager:
                                                        path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
                                                        tol: float = 1e-6,
                                                        maxiter: int = 150, rtol=1e-5, precondition=False,
-                                                       num_worker=0):
+                                                       num_workers=0):
         """
         Generate the configuration dictionary for the EP coupled LWR simulation.
         It is put in a separate function to generate the configuration dict and then debug the
@@ -170,7 +176,7 @@ class LwrSimulationManager:
             - **maxiter** (int, optional): Maximum number of iterations (default: 150, valid range: 1 to 1000).
             - **rtol** (float, optional): Relative tolerance within iterations on columns  (default: 5e-7, valid range: 1e-10 to 1e-5).
             - **precondition** (bool, optional): Whether to apply preconditioning (default: False).
-            - **num_workers** (int, optional): Number of parallel workers (default: 0, valid range: 0 to 64).
+            - **num_workerss** (int, optional): Number of parallel workers (default: 0, valid range: 0 to 64).
 
         """
         list_path_idf_file = [path_idf_file_dict[building_id] for building_id in self._building_id_list]
@@ -188,7 +194,7 @@ class LwrSimulationManager:
             tol=tol,
             maxiter=maxiter, rtol=rtol,
             precondition=precondition,
-            num_worker=num_worker
+            num_workers=num_workers
         )
         return config_dict
 

@@ -8,7 +8,8 @@ import json
 
 from ..urban_canopy import UrbanCanopy
 
-from ..config.config_default_values_user_parameters import default_path_simulation_folder
+from ..config.config_default_values_user_parameters import default_path_simulation_folder, \
+    default_path_hbjson_simulation_parameter_file, default_path_weather_file
 
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")
@@ -35,6 +36,7 @@ class SimulationLWR:
         )
         user_logger.info("Radiative surface manager for LWR computation generated successfully")
         dev_logger.info("Radiative surface manager for LWR computation generated successfully")
+
     @staticmethod
     def perform_lwr_vf_computation(urban_canopy_object: UrbanCanopy,
                                    path_simulation_folder: str = default_path_simulation_folder,
@@ -42,10 +44,46 @@ class SimulationLWR:
         """
 
         """
-        urban_canopy_object.perform_lwr_vf_computation(
+        path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = urban_canopy_object.perform_lwr_vf_computation(
             path_simulation_folder=path_simulation_folder,
             overwrite=overwrite,
             **kwargs
         )
-        user_logger.info("LWR view factors computed successfully")
-        dev_logger.info("LWR view factors computed successfully")
+
+        return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
+
+        user_logger.info("View factors computed successfully")
+        dev_logger.info("View factors computed successfully")
+
+    @staticmethod
+    def set_up_lwr_simulation(urban_canopy_object: UrbanCanopy,
+                              path_energyplus_dir,
+                              path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
+                              path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
+                              path_simulation_folder=default_path_simulation_folder,
+                              path_hbjson_simulation_parameter_file=default_path_hbjson_simulation_parameter_file,
+                              path_weather_file=default_path_weather_file,
+                              ddy_file=None,
+                              hourly_report_frequency: bool = False,
+                              num_time_steps_per_hour: int = 20,
+                              **kwargs):
+        """
+
+        """
+        urban_canopy_object.set_up_lwr_simulation(
+            path_simulation_folder=path_simulation_folder,
+            path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
+            path_weather_file=path_weather_file,
+            path_energyplus_dir=path_energyplus_dir,
+            path_vf_mtx_crs_npz=path_vf_mtx_crs_npz,
+            path_eps_mtx_crs_npz=path_eps_mtx_crs_npz,
+            path_rho_mtx_crs_npz=path_rho_mtx_crs_npz,
+            path_tau_mtx_crs_npz=path_tau_mtx_crs_npz,
+            ddy_file=ddy_file,
+            hourly_report_frequency=hourly_report_frequency,
+            num_time_steps_per_hour=num_time_steps_per_hour,
+            **kwargs
+        )
+        user_logger.info("LWR simulation set up successfully")
+        dev_logger.info("LWR simulation set up successfully")
+
