@@ -177,28 +177,28 @@ class UrbanCanopyKPIs:
         df.insert(0, '', ["roof", "facades", "total"])
         df.to_csv(file_path, index=False)
 
-    def compute_intermediate_results_dict(self, bipv_results_dict, subsidy_obj):
+    def compute_intermediate_results_dict(self, bipv_results_dict, subsidy_obj, discount_rate):
         """
         Compute the intermediate results of the building.
         :param bipv_results_dict: dictionary, the results of the BIPV simulation
         """
         self.kpi_intermediate_results_dict["roof"] = self.compute_intermediate_sub_results_dict(
-            bipv_result_dict=bipv_results_dict["roof"], subsidy_obj)
+            bipv_result_dict=bipv_results_dict["roof"], subsidy_obj=subsidy_obj, discount_rate=discount_rate)
         self.kpi_intermediate_results_dict["facades"] = self.compute_intermediate_sub_results_dict(
-            bipv_result_dict=bipv_results_dict["facades"], subsidy_obj)
+            bipv_result_dict=bipv_results_dict["facades"], subsidy_obj=subsidy_obj, discount_rate=discount_rate)
         self.kpi_intermediate_results_dict["total"] = self.compute_intermediate_sub_results_dict(
-            bipv_result_dict=bipv_results_dict["total"], subsidy_obj)
+            bipv_result_dict=bipv_results_dict["total"], subsidy_obj=subsidy_obj, discount_rate=discount_rate)
 
         self.kpi_intermediate_results_dict = compute_cumulative_and_total_value_bipv_result_dict(
             bipv_results_dict=self.kpi_intermediate_results_dict)
 
-    def compute_kpis(self, bipv_results_dict, subsidy_obj):
+    def compute_kpis(self, bipv_results_dict, subsidy_obj, discount_rate):
         """
         Compute the KPIs of the building.
         :param bipv_results_dict: dictionary, the results of the BIPV simulation
         """
         # compute the intermediate results
-        self.compute_intermediate_results_dict(bipv_results_dict=bipv_results_dict, subsidy_obj)
+        self.compute_intermediate_results_dict(bipv_results_dict=bipv_results_dict, subsidy_obj=subsidy_obj, discount_rate=discount_rate)
         # Roof
         self.compute_sub_kpis(bipv_result_dict=bipv_results_dict["roof"], sub_type="roof")
         # Facades
@@ -278,7 +278,7 @@ class UrbanCanopyKPIs:
             self.kpi_intermediate_results_dict[sub_type][
                 "net_economical_benefit_density"]["conditioned_apartment"]["cumulative"][-1]
 
-    def compute_intermediate_sub_results_dict(self, bipv_result_dict, subsidy_obj):
+    def compute_intermediate_sub_results_dict(self, bipv_result_dict, subsidy_obj, discount_rate):
         """
         Compute the intermediate results of the building.
         :param bipv_result_dict: dictionary, the results of the BIPV simulation
@@ -335,9 +335,9 @@ class UrbanCanopyKPIs:
             bipv_result_dict["energy_harvested"]["yearly"]]
 
         # Net economical benefit
-        # todo: integrate energy consumption
+        # Todo: integrate energy consumption
 
-        for year in len(bipv_result_dict["energy_harvested"]["yearly"]):
+        for year in range(len(bipv_result_dict["energy_harvested"]["yearly"])):
             electricity_revenue_per_year = 0
             for hour in range(8760):
 
@@ -346,6 +346,7 @@ class UrbanCanopyKPIs:
 
                 surplus_energy = electricity_harvested - electricity_consumed # positive if surplus
 
+                # receive electricity selling price for hour of the day
                 fit_for_specific_hour = subsidy_obj.get_electricity_price_per_hour(subsidy_obj, hour)
 
                 if surplus_energy <= 0:
@@ -353,10 +354,16 @@ class UrbanCanopyKPIs:
                 elif surplus_energy > 0:
                     energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price + surplus_energy * fit_for_specific_hour
 
+                # sum up revenues over all hours for the year
                 electricity_revenue_per_year += energy_revenue_per_hour
 
-            sub_kpi_intermediate_results_dict["net_economical_income"]["yearly"][year] = electricity_revenue_per_year
-            sub_kpi_intermediate_results_dict["net_economical_benefit"]["yearly"][year] = electricity_revenue_per_year - bipv_result_dict["cost"]["net_profit"]["yearly"][year]
+            # discount revenue
+
+            discounted_revenue = electricity_revenue_per_year / ((1 + discount_rate) ** year)
+
+            # write to dict
+            sub_kpi_intermediate_results_dict["net_economical_income"]["yearly"][year] = discounted_revenue
+            sub_kpi_intermediate_results_dict["net_economical_benefit"]["yearly"][year] = discounted_revenue - bipv_result_dict["cost"]["net_profit"]["yearly"][year]
 
         if self.zone_area is not None:
             sub_kpi_intermediate_results_dict["net_economical_benefit_density"]["zone"]["yearly"] = [
@@ -368,6 +375,7 @@ class UrbanCanopyKPIs:
             sub_kpi_intermediate_results_dict["net_economical_benefit"]["yearly"]]
 
         return sub_kpi_intermediate_results_dict
+
 
     @staticmethod
     def compute_lifetime_investment_pay_back_time(cumulative_annual_cost_list, cumulative_annual_offset_list):

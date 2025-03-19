@@ -72,6 +72,7 @@ default_efficiency_computation_method = "yearly"
 default_replacement_scenario = "replace_failed_panels_every_X_years"
 default_replacement_frequency_in_years = 20
 default_bipv_scenario_identifier = "new_uc_scenario"
+default_discount_rate = 0.05
 
 # Default values for panel simulation - LCA
 default_country_ghe_cost = 0.57874  # todo: value used on old files

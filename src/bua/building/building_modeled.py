@@ -694,6 +694,7 @@ class BuildingModeled(BuildingBasic):
                                            minimum_economic_roi=0, electricity_sell_price=0.14,
                                            replacement_scenario="replace_failed_panels_every_X_years",
                                            continue_simulation=False,
+                                           discount_rate=discount_rate,
                                            **kwargs):
         """
         Run the BIPV simulation for the building on the roof and/or on the facades of the buildings.
@@ -737,7 +738,8 @@ class BuildingModeled(BuildingBasic):
             minimum_economic_roi=minimum_economic_roi,
             electricity_sell_price=electricity_sell_price,
             replacement_scenario=replacement_scenario,
-            continue_simulation=continue_simulation, **kwargs)
+            continue_simulation=continue_simulation,
+            discount_rate=discount_rate **kwargs)
         # Write the results in a csv file
         if "no_csv" not in kwargs or not kwargs["no_csv"]:
             self.solar_radiation_and_bipv_simulation_obj.write_building_bipv_results_to_csv(

@@ -6,7 +6,7 @@ import logging
 from ..urban_canopy import UrbanCanopy
 
 from ..config.config_default_values_user_parameters import default_path_simulation_folder, \
-    default_path_weather_file
+    default_path_weather_file, default_discount_rate
 
 from ..config.config_default_values_user_parameters import default_roof_grid_size_x, default_facades_grid_size_x, \
     default_roof_grid_size_y, default_facades_grid_size_y, default_offset_dist
@@ -105,7 +105,9 @@ class SimFunSolarRadAndBipv:
                                                end_year=default_end_year,
                                                final_year=default_final_year,
                                                replacement_scenario=default_replacement_scenario,
-                                               continue_simulation=False, **kwargs):
+                                               continue_simulation=False,
+                                               discount_rate=default_discount_rate,
+                                               **kwargs):
         """
         Make oriented bounding boxes of buildings in the urban canopy
         :param urban_canopy_object: urban canopy object
@@ -126,6 +128,7 @@ class SimFunSolarRadAndBipv:
         :param end_year: int: default=start_year+50: year when the scenario ends
         :param replacement_scenario: str: default="replace_failed_panels_every_X_years": scenario for the replacement
         :param continue_simulation: bool: default=False: if True, continue the simulation
+        :param discount_rate: float: default=0.05: discount rate of the cash flows
         :param kwargs: dict: other parameters
         """
 
@@ -148,7 +151,8 @@ class SimFunSolarRadAndBipv:
             end_year=end_year,
             final_year = final_year,
             replacement_scenario=replacement_scenario,
-            continue_simulation=continue_simulation, **kwargs)
+            continue_simulation=continue_simulation,
+            discount_rate=discount_rate **kwargs)
 
         user_logger.info("The BIPV simulation have been performed successfully")
         dev_logger.info("The BIPV simulation have been performed successfully")
@@ -161,7 +165,8 @@ class SimFunSolarRadAndBipv:
                            grid_energy_intensity=default_grid_energy_intensity,
                            grid_electricity_sell_price=default_grid_electricity_sell_price,
                            zone_area=None,
-                           subsidy_type=None):
+                           subsidy_type=None,
+                           discount_rate=default_discount_rate):
         """
         Compute the KPIs at the urban scale. It includes BIPV and UBES KPIs.
         :param urban_canopy_object: UrbanCanopy: urban canopy object
@@ -179,7 +184,8 @@ class SimFunSolarRadAndBipv:
                                                              grid_energy_intensity=grid_energy_intensity,
                                                              grid_electricity_sell_price=grid_electricity_sell_price,
                                                              zone_area=zone_area,
-                                                             subsidy_type = None)
+                                                             subsidy_type = None,
+                                                             discount_rate = discount_rate)
 
         user_logger.info("KPIS have been computed successfully")
         dev_logger.info("KPIS have been computed successfully")

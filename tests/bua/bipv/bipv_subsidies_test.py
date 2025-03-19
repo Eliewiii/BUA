@@ -2,6 +2,7 @@
 
 """
 import os
+import random
 
 import pytest
 
@@ -27,3 +28,31 @@ class TestBipvSubsidiesObj:
 
         print(subsidy_obj_dict)
 
+    def test_get_feed_in_tariff(self):
+        subsidy_obj_dict = {}
+        BipvSubsidy.create_bipv_subsidy_obj_from_json(subsidy_obj_dict, path_test_data_bipv_dir)
+        bipv_sub_obj = subsidy_obj_dict["fit_time_of_use"]
+        hour = random.randint(0,8760)
+        print(hour)
+
+        price = bipv_sub_obj.get_electricity_price_per_hour(hour)
+        print(price)
+
+    def test_loan_payments(self):
+        start_year = 2025
+        end_year = 2075
+        subsidy_obj_dict = {}
+        BipvSubsidy.create_bipv_subsidy_obj_from_json(subsidy_obj_dict, path_test_data_bipv_dir)
+        bipv_sub_obj = subsidy_obj_dict["loan_low"]
+        bipv_results_dict = {"cost": {
+            "investment": {
+                "gate_to_gate": {
+                    "yearly": [random.randint(1, 100000) for _ in range(end_year-start_year)]
+                    }}}}
+        print(bipv_results_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0])
+
+        payments = bipv_sub_obj.calculate_loan_payment_list(start_year, end_year, 25, bipv_results_dict)
+
+        print(sum(payments), bipv_results_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0])
+
+    def test_carbon_tax(self):

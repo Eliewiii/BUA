@@ -149,6 +149,7 @@ class SolarRadAndBipvSimulation:
         self.roof_bipv_sim_run = False
         self.facades_bipv_sim_run = False
 
+
     def set_mesh_parameters(self, roof_or_facades, on_roof_or_facades, grid_size_x=1, grid_size_y=1,
                             offset_dist=0.1):
         """
@@ -427,7 +428,7 @@ class SolarRadAndBipvSimulation:
                                   minimum_panel_eroi=1.2,
                                   minimum_economic_roi=0, electricity_sell_price=0.14,
                                   replacement_scenario="replace_failed_panels_every_X_years",
-                                  continue_simulation=False, **kwargs):
+                                  continue_simulation=False, discount_rate=0.05, **kwargs):
         """
 
         """
@@ -445,14 +446,14 @@ class SolarRadAndBipvSimulation:
                                                                              uc_end_year=uc_end_year,
                                                                              uc_start_year=uc_start_year,
                                                                              uc_current_year=uc_current_year,
-                                                                             final_year = final_year,
+                                                                             final_year=final_year,
                                                                              efficiency_computation_method=efficiency_computation_method,
                                                                              minimum_panel_eroi=minimum_panel_eroi,
-                                                                             minimum_economic_roi=minimum_economic_roi,
-                                                                             electricity_sell_price=electricity_sell_price,
                                                                              replacement_scenario=replacement_scenario,
                                                                              continue_simulation=continue_simulation,
-                                                                             **kwargs)
+                                                                             minimum_economic_roi=minimum_economic_roi,
+                                                                             electricity_sell_price=electricity_sell_price,
+                                                                             discount_rate=discount_rate, **kwargs)
 
         run_bipv_on_facades = self.run_bipv_panel_simulation_on_roof_or_facades(roof_or_facades="facades",
                                                                                 on_roof_or_facades=self.on_facades,
@@ -470,11 +471,11 @@ class SolarRadAndBipvSimulation:
                                                                                 final_year=final_year,
                                                                                 efficiency_computation_method=efficiency_computation_method,
                                                                                 minimum_panel_eroi=minimum_panel_eroi,
-                                                                                minimum_economic_roi=minimum_economic_roi,
-                                                                                electricity_sell_price=electricity_sell_price,
                                                                                 replacement_scenario=replacement_scenario,
                                                                                 continue_simulation=continue_simulation,
-                                                                                **kwargs)
+                                                                                minimum_economic_roi=minimum_economic_roi,
+                                                                                electricity_sell_price=electricity_sell_price,
+                                                                                discount_rate=discount_rate, **kwargs)
 
         # Total results
         if run_bipv_on_roof and run_bipv_on_facades:
@@ -509,7 +510,7 @@ class SolarRadAndBipvSimulation:
                                                      minimum_panel_eroi,
                                                      replacement_scenario, continue_simulation=False,
                                                      minimum_economic_roi=0, electricity_sell_price=0.14,
-                                                     **kwargs):
+                                                     discount_rate=0.05, **kwargs):
         """
 
         """
@@ -627,9 +628,8 @@ class SolarRadAndBipvSimulation:
 
             # LCA and economic for the gate to gate processes for the panels except transportation
             gtg_result_dict = compute_lca_and_cost_for_gtg(
-                nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,
-                pv_tech_obj=pv_tech_obj,
-                roof_or_facades=roof_or_facades)
+                nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list, pv_tech_obj=pv_tech_obj,
+                roof_or_facades=roof_or_facades, discount_rate=discount_rate)
             # LCA and economic for transportation
             transport_result_dict = compute_lca_and_cost_for_transportation(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,
@@ -651,7 +651,8 @@ class SolarRadAndBipvSimulation:
                 total_nb_of_panels=nb_of_all_panels,
                 flag_first_year=flag_first_year,
                 final_year_reached=flag_last_year,
-                pv_tech_obj=pv_tech_obj)
+                pv_tech_obj=pv_tech_obj,
+                discount_rate=discount_rate)
             # LCA and economic for the inverter
             inverter_result_dict = compute_lca_and_cost_for_inverter(
                 inverter_obj=self.parameter_dict[roof_or_facades]["inverter"]["technology"],
@@ -660,7 +661,8 @@ class SolarRadAndBipvSimulation:
                 current_study_duration_in_years=self.parameter_dict[roof_or_facades][
                     "study_duration_in_years"],
                 uc_end_year=uc_end_year,
-                final_year_reached = flag_last_year)
+                final_year_reached = flag_last_year,
+                discount_rate=discount_rate)
             # Add results to the global results dictionary
             self.bipv_results_dict[roof_or_facades] = self.add_results_to_global_results_dict(
                 bipv_results_dict=self.bipv_results_dict[roof_or_facades],

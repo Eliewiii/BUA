@@ -1,5 +1,5 @@
 from bua.config.config_default_values_user_parameters import default_path_simulation_folder, default_grid_ghg_intensity, \
-    default_grid_energy_intensity, default_grid_electricity_sell_price
+    default_grid_energy_intensity, default_grid_electricity_sell_price, default_discount_rate
 import json
 import logging
 import os
@@ -43,7 +43,8 @@ SimFunSolarRadAndBipv.run_bipv_harvesting_and_lca_simulation(
             replacement_scenario="replace_failed_panels_every_X_years",
             continue_simulation=False,
             update_panel_technology=False,
-            replacement_frequency_in_years=scenarios_dict[scenario_id]["replacement"])
+            replacement_frequency_in_years=scenarios_dict[scenario_id]["replacement"],
+            discount_rate=default_discount_rate)
 
 ##### Run KPI computation
 SimFunSolarRadAndBipv.run_kpi_simulation(urban_canopy_object=urban_canopy_object,
@@ -52,7 +53,8 @@ SimFunSolarRadAndBipv.run_kpi_simulation(urban_canopy_object=urban_canopy_object
                                          grid_energy_intensity=default_grid_energy_intensity,
                                          grid_electricity_sell_price=default_grid_electricity_sell_price,
                                          zone_area=None,
-                                         subsidy_type = subsidy_type)
+                                         subsidy_type = subsidy_type,
+                                         discount_rate = default_discount_rate)
 
 alternative_result_dict = {
     "scenario_id": scenario_id,

@@ -143,7 +143,7 @@ class BipvScenario:
                                                        zone_area=zone_area)
 
     def compute_scenario_kpis(self, grid_ghg_intensity, grid_energy_intensity, grid_electricity_sell_price,
-                     ubes_electricity_consumption, ubes_electricity_consumption_hourly, conditioned_apartment_area, zone_area, subsidy_obj):
+                     ubes_electricity_consumption, ubes_electricity_consumption_hourly, conditioned_apartment_area, zone_area, subsidy_obj, discount_rate):
         """
         Compute the KPIs of the scenario
         :param grid_ghg_intensity: float: kgCO2/kWh: grid GHG intensity
@@ -165,7 +165,7 @@ class BipvScenario:
                                                  zone_area=zone_area)
         # Compute the KPIs
         self.urban_canopy_bipv_kpis_obj.compute_kpis(
-            bipv_results_dict=self.bipv_results_dict, subsidy_obj)
+            bipv_results_dict=self.bipv_results_dict, subsidy_obj=subsidy_obj, discount_rate=discount_rate)
 
     def write_kpis_to_csv(self, path_radiation_and_bipv_result_folder):
         """

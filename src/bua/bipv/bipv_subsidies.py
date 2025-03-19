@@ -77,11 +77,13 @@ class BipvSubsidy:
 
         hour_of_day = hour % 24
         if 21 <= hour_of_day or hour_of_day < 10:  # 21:00 - 10:00
-            return self.electricity_price_offpeak_hours
+            electricity_price_per_hour = self.electricity_price_offpeak_hours
         elif 10 <= hour_of_day < 15:  # 10:00 - 15:00
-            return self.electricity_price_shoulder_hours
+            electricity_price_per_hour = self.electricity_price_shoulder_hours
         elif 15 <= hour_of_day < 21:  # 15:00 - 21:00
-            return self.electricity_price_peak_hours
+            electricity_price_per_hour = self.electricity_price_peak_hours
+
+        return electricity_price_per_hour
 
     def calculate_investment_subsidy(self):
 
@@ -116,3 +118,5 @@ class BipvSubsidy:
 
         return carbon_tax_savings
 
+    def integrate_subsidies_in_results(self):
+        None
