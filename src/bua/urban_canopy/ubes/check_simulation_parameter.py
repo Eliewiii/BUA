@@ -12,7 +12,7 @@ from ...building.energy_simulation.building_energy_simulation import required_ou
 
 
 def check_simulation_parameters(path_hbjson_simulation_parameter_file, path_weather_file,
-                                hourly_report_frequency=False, num_time_steps_per_hour:int = None, ddy_file=None):
+                                hourly_report_frequency=False, num_time_steps_per_hour:int = None, ddy_file=None,add_outdoor_face_temperature =False):
     """
     Check if the simulation parameter file is valid
     :param path_hbjson_simulation_parameter_file: str, path to the simulation parameter file
@@ -59,7 +59,9 @@ def check_simulation_parameters(path_hbjson_simulation_parameter_file, path_weat
     # Check if the simulation outputs contain heating, cooling, lighting and equipment and add them if needed
     for output in required_outputs:
         if output not in hb_sim_parameter_obj.output.outputs:
-            hb_sim_parameter_obj.output.outputs.add_output(output)
+            hb_sim_parameter_obj.output.add_output(output)
+    if add_outdoor_face_temperature:
+        hb_sim_parameter_obj.output.add_output("Surface Outside Face Temperature")
 
     # Check if the number of time steps per hour is provided
     if num_time_steps_per_hour is not None:

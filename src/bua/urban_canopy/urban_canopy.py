@@ -686,6 +686,7 @@ class UrbanCanopy:
                                                        path_weather_file, ddy_file=None,
                                                        hourly_report_frequency: bool = False,
                                                        num_time_steps_per_hour: int = None,
+                                                       add_outdoor_face_temperature:bool=False,
                                                        overwrite=False):
         """
         Load the HB simulation parameters from the json file, check if it is valid, correct it eventually and add to the
@@ -703,7 +704,7 @@ class UrbanCanopy:
         flag_re_initialize_building_bes = self.ubes_obj.load_epw_and_hb_simulation_parameters(
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
             path_weather_file=path_weather_file, hourly_report_frequency=hourly_report_frequency,
-            num_time_steps_per_hour=num_time_steps_per_hour,
+            num_time_steps_per_hour=num_time_steps_per_hour,add_outdoor_face_temperature=add_outdoor_face_temperature,
             ddy_file=ddy_file, overwrite=overwrite)
 
         # Re-initialize the UBES of the whole UrbanCanopy if needed
@@ -1420,6 +1421,7 @@ class UrbanCanopy:
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
             path_weather_file=path_weather_file, hourly_report_frequency=hourly_report_frequency,
             num_time_steps_per_hour=num_time_steps_per_hour,
+            add_outdoor_face_temperature=True,
             ddy_file=ddy_file, overwrite=overwrite)
 
         path_epw_file, path_idf_files_dict = self.generate_idf_files_for_ubes_with_openstudio(

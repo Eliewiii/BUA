@@ -25,6 +25,7 @@ class UrbanBuildingEnergySimulationFunctions:
                                                                        path_weather_file=default_path_weather_file,
                                                                        hourly_report_frequency=False,
                                                                        ddy_file=None,
+                                                                       add_outdoor_face_temperature=False,
                                                                        overwrite=False):
         """
         Load the simulation parameters from the simulation parameter file and check and correct them if needed.
@@ -41,6 +42,7 @@ class UrbanBuildingEnergySimulationFunctions:
             path_simulation_folder=path_simulation_folder,
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
             path_weather_file=path_weather_file, hourly_report_frequency=hourly_report_frequency,
+            add_outdoor_face_temperature=add_outdoor_face_temperature,
             ddy_file=ddy_file, overwrite=overwrite)
 
         # user_logger.info("")

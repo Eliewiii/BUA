@@ -17,11 +17,11 @@ from tests.urban_canopy.uc_test_utils import init_urban_canopy_with_one_building
 
 class TestUrbCanRadSurMan:
 
-    def test_set_up_lwr_simulation(self, init_urban_canopy_with_two_buildingmodels):
+    def test_set_up_lwr_simulation(self, init_urban_canopy_with_one_buildingmodel):
         """
 
         """
-        urban_canopy_object = init_urban_canopy_with_two_buildingmodels
+        urban_canopy_object = init_urban_canopy_with_one_buildingmodel
         SimulationLWR.generate_radiative_surface_manager_for_lwr_computation(urban_canopy_object,
                                                                              overwrite=True,
                                                                              include_windows=True)
@@ -35,8 +35,9 @@ class TestUrbCanRadSurMan:
                                             path_eps_mtx_crs_npz=path_eps_mtx_crs_npz,
                                             path_rho_mtx_crs_npz=path_rho_mtx_crs_npz,
                                             path_tau_mtx_crs_npz=path_tau_mtx_crs_npz,
-                                            hourly_report_frequency=False,
+                                            hourly_report_frequency=True,
                                             num_time_steps_per_hour=20,
+
                                             to_pkl=True
                                             )
 
