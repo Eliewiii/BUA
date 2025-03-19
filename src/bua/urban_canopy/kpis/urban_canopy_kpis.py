@@ -335,7 +335,7 @@ class UrbanCanopyKPIs:
             bipv_result_dict["energy_harvested"]["yearly"]]
 
         # Net economical benefit
-        # Todo: integrate energy consumption
+        # Todo: integrate energy consumption and adjust harvested energy list to full hours from sun hour list
 
         for year in range(len(bipv_result_dict["energy_harvested"]["yearly"])):
             electricity_revenue_per_year = 0
@@ -358,7 +358,6 @@ class UrbanCanopyKPIs:
                 electricity_revenue_per_year += energy_revenue_per_hour
 
             # discount revenue
-
             discounted_revenue = electricity_revenue_per_year / ((1 + discount_rate) ** year)
 
             # write to dict
@@ -494,3 +493,9 @@ def flatten_kpi_dict(d, parent_key='', sep='_'):
         else:
             items.append((new_key, [value for value in v.values()]))
     return dict(items)
+
+def stretch_harvested_energy_list(harvested_energy_list, sun_hours_list):
+    """
+    adjust harvested energy list from sun hours to all hours of the year
+    """
+

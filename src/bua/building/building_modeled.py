@@ -27,6 +27,7 @@ from .utils_buildings.lbt_obj_methods.hb_model_addons import HbAddons
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")
 
+# todo : write function here to read sun hours file into list through dynami calling from folderstructure
 
 class BuildingModeled(BuildingBasic):
     """BuildingBasic class, representing one building in an urban canopy."""
@@ -694,7 +695,7 @@ class BuildingModeled(BuildingBasic):
                                            minimum_economic_roi=0, electricity_sell_price=0.14,
                                            replacement_scenario="replace_failed_panels_every_X_years",
                                            continue_simulation=False,
-                                           discount_rate=discount_rate,
+                                           discount_rate=0.05,
                                            **kwargs):
         """
         Run the BIPV simulation for the building on the roof and/or on the facades of the buildings.
