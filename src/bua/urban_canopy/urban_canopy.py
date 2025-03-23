@@ -1206,6 +1206,7 @@ class UrbanCanopy:
 
         bipv_scenario_obj = self.bipv_scenario_dict[bipv_scenario_identifier]
 
+        # get electricity consumption from building modeled
         ubes_electricity_consumption = sum(self.get_ubes_electricity_consumption_from_building_id_list(
             bipv_scenario_obj.bipv_simulated_building_id_list))
 
@@ -1215,6 +1216,9 @@ class UrbanCanopy:
         for building_hourly_consumption in building_hourly_consumption_list:
             ubes_electricity_consumption_hourly = [i + j for i,j in zip(ubes_electricity_consumption_hourly,building_hourly_consumption) ]
 
+        # get list with electricity harvested for the full year
+        full_year_energy_harvesting = self.stretch_harvested_energy_list(bipv_scenario_obj,
+                                                                         "False")
 
         conditioned_apartment_area = sum(
             self.get_conditioned_area_from_building_id_list(
@@ -1273,6 +1277,38 @@ class UrbanCanopy:
             energy_consumption.append(building_obj.get_bes_hourly_energy_consumption())
 
         return energy_consumption
+
+    def stretch_harvested_energy_list(self, bipv_scenario_obj, building_id_list, round_up):
+        """
+        adjust harvested energy list from sun hours to all hours of the year
+        """
+        # todo: understand where to best call the function and include roof/facades parameter
+
+        building_obj = self.building_dict[building_id_list[0]]
+
+        harvested_energy_list = bipv_scenario_obj.bipv_results_dict[]
+
+        path_to_building = os.path.join(name_radiation_simulation_folder, building_id_list[0])
+        path_to_ill_file = os.path.join(path_to_building, "roof.ill")
+        path_to_sun_hours_file = os.path.join(path_to_building, "roof_sun-up-hours.txt")
+
+        if os.path.isfile(path_to_ill_file) and building_obj.check_if_simulation_ran():
+            with open(path_to_sun_hours_file, "r") as file:
+                content = file.read()
+            if round_up == True:
+                sun_hours_list = [round(float(x)) for x in content.split()]
+            elif round_up == False:
+                sun_hours_list = [int(x) for x in content.split()]
+
+
+        # Initialize full year irradiation list with zeros
+        full_year_irradiation_list = [0] * 8760
+
+        # Assign irradiation values to corresponding sun_hours
+        for hour, value in zip(sun_hours_list, harvested_energy_list):
+            full_year_irradiation_list[hour] = value
+
+        return full_year_irradiation_list
 
     def get_conditioned_area_from_building_id_list(self, building_id_list):
         """

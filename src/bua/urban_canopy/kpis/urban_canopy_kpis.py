@@ -376,6 +376,7 @@ class UrbanCanopyKPIs:
         return sub_kpi_intermediate_results_dict
 
 
+
     @staticmethod
     def compute_lifetime_investment_pay_back_time(cumulative_annual_cost_list, cumulative_annual_offset_list):
         """
@@ -494,8 +495,7 @@ def flatten_kpi_dict(d, parent_key='', sep='_'):
             items.append((new_key, [value for value in v.values()]))
     return dict(items)
 
-def stretch_harvested_energy_list(harvested_energy_list, sun_hours_list):
-    """
-    adjust harvested energy list from sun hours to all hours of the year
-    """
+
+
+
 

@@ -848,7 +848,7 @@ class SolarRadAndBipvSimulation:
     def did_simulation_run(self):
 
         if self.roof_irradiance_run == True and self.facades_irradiance_run == True:
-            if self.roof_bipv_sim_run == true and self.facades_bipv_sim_run == True:
+            if self.roof_bipv_sim_run == True and self.facades_bipv_sim_run == True:
                 return True
             else:
                 raise Exception('BIPV simulation did not run yet')

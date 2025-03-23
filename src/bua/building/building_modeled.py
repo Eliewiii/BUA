@@ -599,6 +599,10 @@ class BuildingModeled(BuildingBasic):
         self.bes_obj.re_initialize()
 
 
+    def check_if_simulation_ran(self):
+
+        return self.solar_radiation_and_bipv_simulation_obj.did_simulation_run()
+
 
 
     def generate_sensor_grid(self, bipv_on_roof=True, bipv_on_facades=True,
