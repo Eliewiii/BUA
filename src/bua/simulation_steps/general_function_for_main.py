@@ -27,7 +27,12 @@ class SimulationCommonMethods:
 
     @classmethod
     def create_or_load_urban_canopy_object(cls,path_simulation_folder=path_simulation_temp_folder,overwrite=False):
-        # todo @Elie, correct the function
+        """
+        Create or load an UrbanCanopy object
+        :param path_simulation_folder: str, path to the simulation folder
+        :param overwrite: bool, if True, overwrite the existing urban canopy object and delete all the
+            simulation files if there is any
+        """
         path_urban_canopy_pkl = os.path.join(path_simulation_folder, "urban_canopy.pkl")
         if os.path.isfile(path_urban_canopy_pkl):
             if not overwrite:

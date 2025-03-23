@@ -1331,7 +1331,6 @@ class UrbanCanopy:
         path_vf_computation_temp_dir = os.path.join(path_simulation_folder, name_temporary_files_folder, "vf")
         # Path result folder for LWR
         path_lwr_result_dir = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder)
-        path_to_the_vfresult_folder = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder)
         # Create the temp simulation folder
         if os.path.exists(path_vf_computation_temp_dir):
             shutil.rmtree(path_vf_computation_temp_dir)
@@ -1396,13 +1395,9 @@ class UrbanCanopy:
             path_tau_mtx_crs_npz=path_tau_mtx_crs_npz,
             **kwargs)
 
-    def run_lwr_simulation(self, path_simulation_folder, overwrite=False, silent=False):
+    def run_lwr_simulation(self):
         """
         Run the longwave radiation simulation.
-        :param path_simulation_folder: string, path to the folder where the simulation will be performed.
-        :param overwrite: boolean, if True, the simulation will be run again and the results will overwrite the
-            existing ones.
-        :param silent: boolean, if True, the console outputs will be disabled.
         """
 
         # Run the simulation

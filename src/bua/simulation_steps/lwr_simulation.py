@@ -87,3 +87,13 @@ class SimulationLWR:
         user_logger.info("LWR simulation set up successfully")
         dev_logger.info("LWR simulation set up successfully")
 
+    @staticmethod
+    def run_coupled_ubes_lwr_simulation(urban_canopy_object: UrbanCanopy):
+        """
+
+        """
+        urban_canopy_object.run_lwr_simulation()
+        user_logger.info("LWR simulation ran successfully")
+        dev_logger.info("LWR simulation ran successfully")
+
+
