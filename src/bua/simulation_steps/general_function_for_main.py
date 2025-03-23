@@ -25,18 +25,25 @@ class SimulationCommonMethods:
         # make the folder that will contain the temporary files of the simulation
         os.makedirs(os.path.join(path_simulation_folder, name_temporary_files_folder), exist_ok=True)
 
-    @staticmethod
-    def create_or_load_urban_canopy_object(path_simulation_folder=path_simulation_temp_folder):
+    @classmethod
+    def create_or_load_urban_canopy_object(cls,path_simulation_folder=path_simulation_temp_folder,overwrite=False):
         # todo @Elie, correct the function
         path_urban_canopy_pkl = os.path.join(path_simulation_folder, "urban_canopy.pkl")
         if os.path.isfile(path_urban_canopy_pkl):
-            urban_canopy = UrbanCanopy.make_urban_canopy_from_pkl(path_urban_canopy_pkl)
-            dev_logger.info(
-                "An urban canopy already exist in the simulation folder, the input GIS will be added to it")
-        else:
-            urban_canopy = UrbanCanopy()
-            user_logger.info("New urban canopy object was created")
-            dev_logger.info("New urban canopy object was created")
+            if not overwrite:
+                urban_canopy = UrbanCanopy.make_urban_canopy_from_pkl(path_urban_canopy_pkl)
+                dev_logger.info(
+                    "An urban canopy already exist in the simulation folder")
+                return urban_canopy
+            else:
+                # remove all the file in the folder
+                shutil.rmtree(path_simulation_folder)
+                cls.make_simulation_folder(path_simulation_folder=path_simulation_folder)
+
+        urban_canopy = UrbanCanopy()
+        user_logger.info("New urban canopy object was created")
+        dev_logger.info("New urban canopy object was created")
+
         return urban_canopy
 
     @staticmethod
