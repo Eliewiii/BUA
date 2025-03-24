@@ -202,40 +202,40 @@ radar.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="asce
 radar.add_axis("Harvested Electricity", "MWh/m2", 2, 4, "value", order="ascending")
 radar.add_axis("Payback Time", "year", 30, 45, "value", order="descending")
 
-# Add data
-radar.add_data([3.56, 74.9, 1.66, 58, 2.36, 32], color="blue", label="Sustainable Low")
-radar.add_data([3.49, 77.0, 1.65, 32.1, 2.57, 33], color="green", label="Sustainable Medium")
-radar.add_data([3.19, 85.5, 1.55, 27.9, 3.33, 35], color="red", label="Sustainable High")
-
-
-
-# Balanced
-radar.add_data([3.43, 78.5, 1.64, 63, 2.54, 35], color="cornflowerblue", label="Balanced Low")
-radar.add_data([3.34, 81.1, 1.62, 35, 2.80, 35], color="mediumseagreen", label="Balanced Medium")
-radar.add_data([3.08, 89.3, 1.53, 30.3, 3.62, 37], color="lightcoral", label="Balanced High")
-
-
-# Production
-radar.add_data([2.81, 98.7, 1.43, 68, 2.75, 41], color="cyan", label="Production Low")
-radar.add_data([2.73, 102, 1.41, 37, 3.02, 42], color="limegreen", label="Production Medium")
-radar.add_data([2.51, 112, 1.34, 32.9, 3.92, 44], color="magenta", label="Production High")
-
-
-# #Sustanainble CIGS
-# radar.add_data([6.55, 25.3, 1.76, 51.8, 2.09, 31], color="blue", style="--", label="Sustainable Low")
-# radar.add_data([6.09, 27.3, 1.65, 33.4, 2.52, 33], color="green", style="--", label="Sustainable Medium")
-# radar.add_data([5.95,  28.3, 1.60, 28.0, 3.35, 34], color="red", style="--", label="Sustainable High")
+# # Add data
+# radar.add_data([3.56, 74.9, 1.66, 58, 2.36, 32], color="blue", label="Sustainable Low")
+# radar.add_data([3.49, 77.0, 1.65, 32.1, 2.57, 33], color="green", label="Sustainable Medium")
+# radar.add_data([3.19, 85.5, 1.55, 27.9, 3.33, 35], color="red", label="Sustainable High")
+#
+#
 #
 # # Balanced
-# radar.add_data([6.56, 25.4, 1.77, 54.0, 2.19, 32], color="cornflowerblue", label="Balanced Low")
-# radar.add_data([6.07, 27.7, 1.65, 33.1, 2.66, 35], color="mediumseagreen", label="Balanced Medium")
-# radar.add_data([5.94, 28.6, 1.64, 29.5, 3.51, 35], color="lightcoral", label="Balanced High")
+# radar.add_data([3.43, 78.5, 1.64, 63, 2.54, 35], color="cornflowerblue", label="Balanced Low")
+# radar.add_data([3.34, 81.1, 1.62, 35, 2.80, 35], color="mediumseagreen", label="Balanced Medium")
+# radar.add_data([3.08, 89.3, 1.53, 30.3, 3.62, 37], color="lightcoral", label="Balanced High")
 #
 #
 # # Production
-# radar.add_data([5.64, 30.5, 1.54, 58.6, 2.36, 38], color="cyan", label="Production Low")
-# radar.add_data([5.22, 33.2, 1.43, 35.7, 2.86, 41], color="limegreen", label="Production Medium")
-# radar.add_data([5.05, 34.5, 1.39, 31.8, 3.79, 42], color="magenta", label="Production High")
+# radar.add_data([2.81, 98.7, 1.43, 68, 2.75, 41], color="cyan", label="Production Low")
+# radar.add_data([2.73, 102, 1.41, 37, 3.02, 42], color="limegreen", label="Production Medium")
+# radar.add_data([2.51, 112, 1.34, 32.9, 3.92, 44], color="magenta", label="Production High")
+
+
+#Sustanainble CIGS
+radar.add_data([6.55, 25.3, 1.76, 51.8, 2.09, 31], color="blue", label="Sustainable Low")
+radar.add_data([6.09, 27.3, 1.65, 33.4, 2.52, 33], color="green", label="Sustainable Medium")
+radar.add_data([5.95,  28.3, 1.60, 28.0, 3.35, 34], color="red", label="Sustainable High")
+
+# Balanced
+radar.add_data([6.56, 25.4, 1.77, 54.0, 2.19, 32], color="cornflowerblue", label="Balanced Low")
+radar.add_data([6.07, 27.7, 1.65, 33.1, 2.66, 35], color="mediumseagreen", label="Balanced Medium")
+radar.add_data([5.94, 28.6, 1.64, 29.5, 3.51, 35], color="lightcoral", label="Balanced High")
+
+
+# Production
+radar.add_data([5.64, 30.5, 1.54, 58.6, 2.36, 38], color="cyan", label="Production Low")
+radar.add_data([5.22, 33.2, 1.43, 35.7, 2.86, 41], color="limegreen", label="Production Medium")
+radar.add_data([5.05, 34.5, 1.39, 31.8, 3.79, 42], color="magenta", label="Production High")
 
 
 # Optionally, auto set boundaries
