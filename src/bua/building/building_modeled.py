@@ -736,6 +736,7 @@ class BuildingModeled(BuildingBasic):
             facades_inverter_sizing_ratio=facades_inverter_sizing_ratio,
             roof_transport_obj=roof_transport_obj,
             facades_transport_obj=facades_transport_obj,
+            bipv_subsidy_obj=bipv_subsidy_obj,
             uc_end_year=uc_end_year, uc_start_year=uc_start_year,
             uc_current_year=uc_current_year, final_year = final_year,
             efficiency_computation_method=efficiency_computation_method,

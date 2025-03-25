@@ -6,6 +6,7 @@ import os
 
 from copy import deepcopy
 
+from ..bipv.bipv_subsidies import BipvSubsidy
 from ..building.solar_radiation_and_bipv.solar_rad_and_BIPV import empty_bipv_results_dict, \
     sum_bipv_results_dicts_with_different_years, bipv_results_to_csv
 
@@ -31,6 +32,7 @@ class BipvScenario:
         self.bipv_simulation_has_run = False
         self.bipv_simulated_building_id_list = None
         self.bipv_results_dict = None
+        self.bipv_subsidy_obj = BipvSubsidy()
         self.urban_canopy_bipv_kpis_obj = UrbanCanopyKPIs()
         # Initialize the results dictionaries
         self.init_bipv_results_dict()
@@ -177,7 +179,7 @@ class BipvScenario:
                                                end_year=self.end_year,prefix=self.id)
 
 
-    def stretch_harvested_energy_list(self, hourly_values_table, sun_hours_list, round_up):
+    def stretch_harvested_energy_list(self,hourly_values_table, sun_hours_list, round_up):
         """
         adjust harvested energy list from sun hours to all hours of the year
         """

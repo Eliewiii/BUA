@@ -254,37 +254,6 @@ def simulate_bipv_yearly_energy_harvesting(pv_panel_obj_list,
 
     return hourly_energy_production_per_year_table, energy_production_per_year_list, nb_of_panels_installed_per_year_list #, num_active_panel_yearly_list, nb_panel_failed_per_year_list
 
-def stretch_harvested_energy_list(self, bipv_scenario_obj, building_id_list, round_up, roof_or_facade):
-    """
-    adjust harvested energy list from sun hours to all hours of the year
-    """
-
-    building_obj = self.building_dict[building_id_list[0]]
-
-    harvested_energy_list = bipv_scenario_obj.bipv_results_dict[roof_or_facade]["energy_harvested"]["yearly"]
-
-    path_to_building = os.path.join(name_radiation_simulation_folder, building_id_list[0])
-    path_to_ill_file = os.path.join(path_to_building, "roof.ill")
-    path_to_sun_hours_file = os.path.join(path_to_building, "roof_sun-up-hours.txt")
-
-    if os.path.isfile(path_to_ill_file) and building_obj.check_if_simulation_ran():
-        with open(path_to_sun_hours_file, "r") as file:
-            content = file.read()
-        if round_up == True:
-            sun_hours_list = [round(float(x)) for x in content.split()]
-        elif round_up == False:
-            sun_hours_list = [int(x) for x in content.split()]
-
-
-    # Initialize full year irradiation list with zeros
-    full_year_irradiation_list = [0] * 8760
-
-    # Assign irradiation values to corresponding sun_hours
-    for hour, value in zip(sun_hours_list, harvested_energy_list):
-        full_year_irradiation_list[hour] = value
-
-    return full_year_irradiation_list
-
 def compute_lca_and_cost_for_gtg(nb_of_panels_installed_yearly_list, pv_tech_obj, roof_or_facades, discount_rate):
     """
     Take the results from function loop_over_the_years_for_solar_panels and use the pv_tech_obj info to transform it to data
@@ -543,3 +512,22 @@ def compute_lca_and_cost_for_inverter(inverter_obj, inverter_sub_capacities, sta
     }
 
     return inverter_result_dict
+
+def compute_subsidies(gate_to_gate_dict, energy_harvested_list, subsidy_obj, start_year, end_year, roof_or_facade, discount_rate, grid_ghg_intensity):
+    """
+    Compute the subsidy payments for loans, carbon tax savings, and one-time investments
+    :param bipv_scenario_obj: BipvScenario object
+    :param subsidy_obj: Subsidy object
+    :param discount_rate: float: discount rate
+    """
+
+    investment_support_yearly_list = subsidy_obj.calculate_investment_subsidy(start_year, end_year, gate_to_gate_dict, roof_or_facade)
+    carbon_tax_yearly_list = subsidy_obj.calculate_carbon_tax_savings_list(energy_harvested_list, grid_ghg_intensity)
+    gate_to_gate_dict = subsidy_obj.calculate_loan_payment_list(start_year, end_year, gate_to_gate_dict)
+
+    subsidy_result_dict = {
+        "investment_support": investment_support_yearly_list,
+        "carbon_tax": carbon_tax_yearly_list
+    }
+
+    return subsidy_result_dict, gate_to_gate_dict

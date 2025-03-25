@@ -3,6 +3,7 @@
 """
 import os
 import random
+import pytest
 
 from bua.bipv.bipv_subsidies import BipvSubsidy
 from bua.urban_canopy.bipv_scenario_urban_canopy import BipvScenario

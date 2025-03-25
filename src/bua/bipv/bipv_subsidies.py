@@ -13,7 +13,7 @@ class BipvSubsidy:
 
     def __init__(self, identifier):
         self.identifier = identifier
-
+        self.type = None
         # electricity selling price
         self.electricity_price_peak_hours = None  # in USD/kWh, for 15:00-21:00
         self.electricity_price_offpeak_hours = None  # in USD/kWh, for 10:00-15:00
@@ -26,6 +26,7 @@ class BipvSubsidy:
         #loan
         self.equity_ratio = None # ratio, how much money is paid upfront
         self.loan_interest_rate = None # interest rate on loan
+        self.payback_years = None # years over which loan is paid back
 
         #carbon credit
         self.carbon_tax = None # USD per ton CO2
@@ -49,7 +50,7 @@ class BipvSubsidy:
                         if value["type"] != "subsidy":
                             continue
                         subsidy_obj = cls(value["id"])
-
+                        subsidy_obj.type = str(value["type"])
                         # defining object properties
                         subsidy_obj.electricity_price_peak_hours = float(value["fit_peak"])
                         subsidy_obj.electricity_price_offpeak_hours = float(value["fit_offpeak"])
@@ -60,6 +61,7 @@ class BipvSubsidy:
 
                         subsidy_obj.equity_ratio = float(value["loan_equity_ratio"])
                         subsidy_obj.loan_interest_rate = float(value["loan_interest_rate"])
+                        subsidy_obj.payback_years = int(value["payback_years"])
 
                         subsidy_obj.carbon_tax = int(value["carbon_tax_per_ton_CO2"])
                         subsidy_obj.income_tax = float(value["income_tax_reduction_on_energy_generation"])
@@ -85,38 +87,39 @@ class BipvSubsidy:
 
         return electricity_price_per_hour
 
-    def calculate_investment_subsidy(self):
+    def calculate_investment_subsidy(self, start_year, end_year, gate_to_gate_dict, roof_or_facade):
 
-        investment_support = self.investment_support
+        investment_support_yearly_list = [0] * (end_year - start_year)
+        investment_support_yearly_list[0] = self.investment_support*gate_to_gate_dict[roof_or_facade]["cost"]["investment"][0]
 
-        return investment_support
+        return investment_support_yearly_list
 
-    def calculate_loan_payment_list(self, start_year, end_year, years_of_loan_payback, bipv_results_dict):
+    def calculate_loan_payment_list(self, start_year, end_year, gate_to_gate_dict):
 
         loan_payments = []
         r = self.loan_interest_rate
-        initial_investment_cost = bipv_results_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0]
+        initial_investment_cost = gate_to_gate_dict["cost"]["investment"][0]
 
 
         for year in range(end_year - start_year):
             if year == 0:
                 loan_payments.append(0)
-            elif year < years_of_loan_payback:
-                loan_payments.append((initial_investment_cost*(1-self.equity_ratio) * r) / (1 - (1 + r) ** - years_of_loan_payback))
-            elif year > years_of_loan_payback:
+            elif year < self.payback_years:
+                loan_payments.append((initial_investment_cost*(1-self.equity_ratio) * r) / (1 - (1 + r) ** - self.payback_years))
+            elif year > self.payback_years:
                 loan_payments.append(0)
 
         # correct investment cost in year 0
-        bipv_results_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0] = initial_investment_cost*self.equity_ratio
+        gate_to_gate_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0] = initial_investment_cost*self.equity_ratio
 
-        return loan_payments
+        gate_to_gate_dict["cost"]["investment"]["loan_payments"]["yearly"] = loan_payments
 
-    def calculate_carbon_tax_savings_list(self, bipv_results_dict, grid_ghg_intensity = default_grid_ghg_intensity):
+        return gate_to_gate_dict
 
-        carbon_tax_savings = [grid_ghg_intensity * self.carbon_tax/1000000 * bipv_results_dict["energy_harvested"]["yearly"][year]
-                              for year in len(bipv_results_dict["energy_harvested"]["yearly"])]
+    def calculate_carbon_tax_savings_list(self, energy_harvested_list, grid_ghg_intensity = default_grid_ghg_intensity):
+
+        carbon_tax_savings = [grid_ghg_intensity * self.carbon_tax/1000000 * energy_harvested_list[year]
+                              for year in len(energy_harvested_list)]
 
         return carbon_tax_savings
 
-    def integrate_subsidies_in_results(self):
-        None
