@@ -10,6 +10,7 @@ import shutil
 from datetime import datetime
 
 from honeybee.model import Model
+from numpy.distutils.fcompiler.none import NoneFCompiler
 
 from .export_to_json import ExportUrbanCanopyToJson
 from .bipv_scenario_urban_canopy import BipvScenario
@@ -20,6 +21,7 @@ from ..building.building_basic import BuildingBasic
 from ..building.building_modeled import BuildingModeled
 from ..building.context_filter.utils_functions_context_filter import \
     make_pyvista_polydata_from_list_of_hb_model_and_lb_polyface3d
+from ..building.solar_radiation_and_bipv.utils_bipv import stretch_harvested_energy_list
 from ..urban_canopy.utils_urban_canopy.extract_gis_files import extract_gis
 from ..typology.typology import Typology
 
@@ -1156,6 +1158,30 @@ class UrbanCanopy:
         bipv_scenario_obj.sum_bipv_results_at_urban_scale(
             solar_rad_and_bipv_obj_list=solar_rad_and_bipv_obj_list)
 
+        # process proper hourly values , not only for sun hours
+
+        # Retrieve the sun hours
+        for building_id in bipv_scenario_obj.bipv_simulated_building_id_list:
+            # Try to get the sun hours for the building
+            sun_hours = self.building_dict[building_id].solar_radiation_and_bipv_simulation_obj.get_sun_hours_list(path_simulation_folder)  # retrieves list from solarRadAndBipvSimulation
+            if sun_hours is not None:
+                break
+
+        # check to make sure a proper list was retrieved
+        try:
+            if not isinstance(sun_hours, list) or len(sun_hours) == 0:
+                raise ValueError("Empty or invalid list imported")
+
+            print("List of sun hours was successfully obtained.")
+
+        except Exception as e:
+            print("List of sun hours was not imported.")
+
+        # Set the sun hours in the bipv_scenario
+        for key in bipv_scenario_obj.bipv_results_dict:
+            bipv_scenario_obj.bipv_results_dict[key]["hourly_energy_harvested"]["yearly"] = bipv_scenario_obj.stretch_harvested_energy_list(
+                bipv_scenario_obj.bipv_results_dict[key]["hourly_energy_harvested"]["yearly"], sun_hours, round_up = False)
+
         # Write urban scale results to CSV file (overwrite existing file if it exists)
         if "no_csv" not in kwargs or not kwargs["no_csv"]:
             bipv_scenario_obj.write_bipv_results_to_csv(
@@ -1278,37 +1304,7 @@ class UrbanCanopy:
 
         return energy_consumption
 
-    def stretch_harvested_energy_list(self, bipv_scenario_obj, building_id_list, round_up):
-        """
-        adjust harvested energy list from sun hours to all hours of the year
-        """
-        # todo: understand where to best call the function and include roof/facades parameter
 
-        building_obj = self.building_dict[building_id_list[0]]
-
-        harvested_energy_list = bipv_scenario_obj.bipv_results_dict[]
-
-        path_to_building = os.path.join(name_radiation_simulation_folder, building_id_list[0])
-        path_to_ill_file = os.path.join(path_to_building, "roof.ill")
-        path_to_sun_hours_file = os.path.join(path_to_building, "roof_sun-up-hours.txt")
-
-        if os.path.isfile(path_to_ill_file) and building_obj.check_if_simulation_ran():
-            with open(path_to_sun_hours_file, "r") as file:
-                content = file.read()
-            if round_up == True:
-                sun_hours_list = [round(float(x)) for x in content.split()]
-            elif round_up == False:
-                sun_hours_list = [int(x) for x in content.split()]
-
-
-        # Initialize full year irradiation list with zeros
-        full_year_irradiation_list = [0] * 8760
-
-        # Assign irradiation values to corresponding sun_hours
-        for hour, value in zip(sun_hours_list, harvested_energy_list):
-            full_year_irradiation_list[hour] = value
-
-        return full_year_irradiation_list
 
     def get_conditioned_area_from_building_id_list(self, building_id_list):
         """

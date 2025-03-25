@@ -175,3 +175,26 @@ class BipvScenario:
         path_folder = os.path.join(path_radiation_and_bipv_result_folder, self.id)
         self.urban_canopy_bipv_kpis_obj.to_csv(path_folder=path_folder, start_year=self.start_year,
                                                end_year=self.end_year,prefix=self.id)
+
+
+    def stretch_harvested_energy_list(self, hourly_values_table, sun_hours_list, round_up):
+        """
+        adjust harvested energy list from sun hours to all hours of the year
+        """
+
+        full_year_irradiation_table = []  # To store results for multiple years
+
+        for yearly_values in hourly_values_table:
+            full_year_irradiation_list = [0] * 8760  # Initialize with zeros for each year
+
+            if round_up == True:
+                for hour, value in zip(sun_hours_list, yearly_values):
+                    full_year_irradiation_list[round(float(hour))] = value
+
+            elif round_up == False:
+                for hour, value in zip(sun_hours_list, yearly_values):
+                    full_year_irradiation_list[int(hour)] = value
+
+            full_year_irradiation_table.append(full_year_irradiation_list)
+
+        return full_year_irradiation_table

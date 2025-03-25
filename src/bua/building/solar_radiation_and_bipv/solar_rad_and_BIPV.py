@@ -14,6 +14,7 @@ from honeybee_radiance.sensorgrid import SensorGrid
 from ladybug_geometry.geometry3d.face import Face3D
 from pydantic.schema import datetime
 
+from example_Elie_to_make_it_use_with_default.Elie_test_read_urban_canopy import path_simulation_folder
 from .utils_sensorgrid import generate_sensor_grid_for_hb_model
 from .utils_solar_radiation import \
     run_hb_model_annual_irradiance_simulation, move_annual_irr_hb_radiance_results, \
@@ -846,6 +847,9 @@ class SolarRadAndBipvSimulation:
         return panel_lb_face_list
 
     def did_simulation_run(self):
+        """
+        check if simulation is done
+        """
 
         if self.roof_irradiance_run == True and self.facades_irradiance_run == True:
             if self.roof_bipv_sim_run == True and self.facades_bipv_sim_run == True:
@@ -854,6 +858,22 @@ class SolarRadAndBipvSimulation:
                 raise Exception('BIPV simulation did not run yet')
         else:
             raise Exception('Irradiance simulation did not run yet')
+
+    def get_sun_hours_list(self, path_simulation_folder):
+        """
+        retrieve list of sun hours from irradiation folder
+        """
+
+        if self.did_simulation_run():
+            path_to_file = os.path.join(path_simulation_folder, name_radiation_simulation_folder, self.building_id, "roof_sun-up-hours.txt")
+
+            with open(path_to_file, 'r') as f:
+                sun_hours_list = [float(line.strip()) for line in f]
+
+        else:
+            raise Exception("Simulation did not run yet")
+
+        return sun_hours_list
 
 def bipv_results_to_csv(path_radiation_and_bipv_result_folder, building_id_or_uc_scenario_name, bipv_results_dict,
                         start_year,

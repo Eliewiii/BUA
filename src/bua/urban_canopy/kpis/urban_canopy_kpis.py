@@ -10,6 +10,8 @@ from copy import deepcopy
 
 from ...building.solar_radiation_and_bipv.solar_rad_and_BIPV import \
     compute_cumulative_and_total_value_bipv_result_dict
+from ...building.solar_radiation_and_bipv.utils_bipv import stretch_harvested_energy_list
+from ...config.bua_config_structure import name_radiation_simulation_folder
 
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")
@@ -183,11 +185,11 @@ class UrbanCanopyKPIs:
         :param bipv_results_dict: dictionary, the results of the BIPV simulation
         """
         self.kpi_intermediate_results_dict["roof"] = self.compute_intermediate_sub_results_dict(
-            bipv_result_dict=bipv_results_dict["roof"], subsidy_obj=subsidy_obj, discount_rate=discount_rate)
+            bipv_result_dict=bipv_results_dict["roof"], subsidy_obj=subsidy_obj, discount_rate=discount_rate, roof_or_facade="roof")
         self.kpi_intermediate_results_dict["facades"] = self.compute_intermediate_sub_results_dict(
-            bipv_result_dict=bipv_results_dict["facades"], subsidy_obj=subsidy_obj, discount_rate=discount_rate)
+            bipv_result_dict=bipv_results_dict["facades"], subsidy_obj=subsidy_obj, discount_rate=discount_rate, roof_or_facade="facade")
         self.kpi_intermediate_results_dict["total"] = self.compute_intermediate_sub_results_dict(
-            bipv_result_dict=bipv_results_dict["total"], subsidy_obj=subsidy_obj, discount_rate=discount_rate)
+            bipv_result_dict=bipv_results_dict["total"], subsidy_obj=subsidy_obj, discount_rate=discount_rate, roof_or_facade="total")
 
         self.kpi_intermediate_results_dict = compute_cumulative_and_total_value_bipv_result_dict(
             bipv_results_dict=self.kpi_intermediate_results_dict)
@@ -278,7 +280,7 @@ class UrbanCanopyKPIs:
             self.kpi_intermediate_results_dict[sub_type][
                 "net_economical_benefit_density"]["conditioned_apartment"]["cumulative"][-1]
 
-    def compute_intermediate_sub_results_dict(self, bipv_result_dict, subsidy_obj, discount_rate):
+    def compute_intermediate_sub_results_dict(self, bipv_result_dict, subsidy_obj, discount_rate, roof_or_facade):
         """
         Compute the intermediate results of the building.
         :param bipv_result_dict: dictionary, the results of the BIPV simulation
@@ -337,22 +339,24 @@ class UrbanCanopyKPIs:
         # Net economical benefit
         # Todo: integrate energy consumption and adjust harvested energy list to full hours from sun hour list
 
+
         for year in range(len(bipv_result_dict["energy_harvested"]["yearly"])):
             electricity_revenue_per_year = 0
+
             for hour in range(8760):
 
-                electricity_harvested = bipv_result_dict["hourly_energy_harvested"]["yearly"][hour]
+                electricity_harvested = bipv_result_dict["hourly_energy_harvested"][year][hour]
                 electricity_consumed = bipv_result_dict["hourly_energy_consumed"]["yearly"][hour] # not correct, just placeholder
 
-                surplus_energy = electricity_harvested - electricity_consumed # positive if surplus
+                hourly_surplus_energy = electricity_harvested - electricity_consumed # positive if surplus
 
                 # receive electricity selling price for hour of the day
                 fit_for_specific_hour = subsidy_obj.get_electricity_price_per_hour(subsidy_obj, hour)
 
-                if surplus_energy <= 0:
-                    energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price
-                elif surplus_energy > 0:
-                    energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price + surplus_energy * fit_for_specific_hour
+                if hourly_surplus_energy <= 0:
+                    energy_revenue_per_hour = electricity_harvested * self.grid_electricity_sell_price
+                elif hourly_surplus_energy > 0:
+                    energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price + hourly_surplus_energy * fit_for_specific_hour
 
                 # sum up revenues over all hours for the year
                 electricity_revenue_per_year += energy_revenue_per_hour
@@ -374,7 +378,6 @@ class UrbanCanopyKPIs:
             sub_kpi_intermediate_results_dict["net_economical_benefit"]["yearly"]]
 
         return sub_kpi_intermediate_results_dict
-
 
 
     @staticmethod

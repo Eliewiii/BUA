@@ -4,9 +4,8 @@
 import os
 import random
 
-import pytest
-
 from bua.bipv.bipv_subsidies import BipvSubsidy
+from bua.urban_canopy.bipv_scenario_urban_canopy import BipvScenario
 
 path_test_folder =os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -55,4 +54,20 @@ class TestBipvSubsidiesObj:
 
         print(sum(payments), bipv_results_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0])
 
-    def test_carbon_tax(self):
+    def test_energy_harvesting_stretched_list(self):
+
+        sun_hours = [7.5, 8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5, 17.5, 18.5, 19.5, 20.5]
+
+        hourly_energy_table = [[7.5, 8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5, 17.5, 18.5, 19.5, 20.5],
+                               [7.5, 8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5, 17.5, 18.5, 19.5, 20.5],
+                               [7.5, 8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5, 17.5, 18.5, 19.5, 20.5],
+                               [7.5, 8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5, 17.5, 18.5, 19.5, 20.5],
+                               [7.5, 8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5, 17.5, 18.5, 19.5, 20.5]]
+
+
+        bipv_scenario_obj = BipvScenario("baseline", 2025, 2075)
+        bipv_scenario_obj.init_bipv_results_dict()
+        bipv_scenario_obj.bipv_results_dict["roof"]["hourly_energy_harvested"]["yearly"] = (
+            bipv_scenario_obj.stretch_harvested_energy_list(hourly_energy_table, sun_hours, round_up=False))
+
+        print(bipv_scenario_obj.bipv_results_dict["roof"]["hourly_energy_harvested"]["yearly"])
