@@ -657,7 +657,8 @@ class UrbanCanopy:
                 # Check if the building has a HB model
                 elif building.hb_model_obj is not None:
                     # Make the HB model mesh
-                    hb_model_and_lb_polyface3d_list.append(building.hb_model_obj.to_pyvista_mesh())
+                    building.make_lb_polyface3d_extruded_footprint()
+                    hb_model_and_lb_polyface3d_list.append(building.lb_polyface3d_extruded_footprint)
                 else:
                     dev_logger.info(
                         f"The building {building.id} does not have a Honeybee model, it will not be included in the "
@@ -698,6 +699,7 @@ class UrbanCanopy:
         :param ddy_file: string, path to the ddy (design days) file.
         :param hourly_report_frequency: bool, if True, the hourly report frequency will be used.
         :param num_time_steps_per_hour: int, number of time steps per hour.
+        :param add_outdoor_face_temperature: Add the Outside Face Surface temperature to the outputs of EnergyPlus
         :param overwrite: bool, if True, the existing HB simulation parameters will be overwritten.
         """
 

@@ -24,6 +24,7 @@ class UrbanBuildingEnergySimulationFunctions:
                                                                        path_hbjson_simulation_parameter_file=default_path_hbjson_simulation_parameter_file,
                                                                        path_weather_file=default_path_weather_file,
                                                                        hourly_report_frequency=False,
+                                                                       num_time_steps_per_hour = None,
                                                                        ddy_file=None,
                                                                        add_outdoor_face_temperature=False,
                                                                        overwrite=False):
@@ -34,6 +35,7 @@ class UrbanBuildingEnergySimulationFunctions:
         :param path_hbjson_simulation_parameter_file: str, path to the simulation parameter file
         :param path_weather_file: str, path to the weather file
         :param hourly_report_frequency: bool, if True, the output frequency is hourly
+        :param num_time_steps_per_hour: int, number of time steps per hour.
         :param ddy_file: str, path to the ddy file
         :param overwrite: bool, if True, overwrite the existing simulation parameter file
         """
@@ -42,6 +44,7 @@ class UrbanBuildingEnergySimulationFunctions:
             path_simulation_folder=path_simulation_folder,
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
             path_weather_file=path_weather_file, hourly_report_frequency=hourly_report_frequency,
+            num_time_steps_per_hour= num_time_steps_per_hour,
             add_outdoor_face_temperature=add_outdoor_face_temperature,
             ddy_file=ddy_file, overwrite=overwrite)
 
