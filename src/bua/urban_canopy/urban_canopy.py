@@ -16,12 +16,13 @@ from .export_to_json import ExportUrbanCanopyToJson
 from .bipv_scenario_urban_canopy import BipvScenario
 from .uc_context_filter.shade_manager import ShadeManager
 from .ubes.uc_energy_simulation import UrbanBuildingEnergySimulation
+from ..bipv.bipv_subsidies import BipvSubsidy
 
 from ..building.building_basic import BuildingBasic
 from ..building.building_modeled import BuildingModeled
 from ..building.context_filter.utils_functions_context_filter import \
     make_pyvista_polydata_from_list_of_hb_model_and_lb_polyface3d
-from ..building.solar_radiation_and_bipv.utils_bipv import stretch_harvested_energy_list
+from ..building.solar_radiation_and_bipv.solar_rad_and_BIPV import sum_tables
 from ..urban_canopy.utils_urban_canopy.extract_gis_files import extract_gis
 from ..typology.typology import Typology
 
@@ -1004,7 +1005,7 @@ class UrbanCanopy:
     def run_bipv_panel_simulation_on_buildings(self, path_simulation_folder, bipv_scenario_identifier,
                                                building_id_list, roof_id_pv_tech, facades_id_pv_tech,
                                                roof_transport_id,
-                                               facades_transport_id, roof_inverter_id, facades_inverter_id,
+                                               facades_transport_id, roof_inverter_id, facades_inverter_id, subsidy_id,
                                                roof_inverter_sizing_ratio=0.9,
                                                facades_inverter_sizing_ratio=0.9,
                                                efficiency_computation_method="yearly",
@@ -1052,6 +1053,7 @@ class UrbanCanopy:
         if not continue_simulation or bipv_scenario_identifier not in self.bipv_scenario_dict.keys():
             self.bipv_scenario_dict[bipv_scenario_identifier] = BipvScenario(
                 identifier=bipv_scenario_identifier,
+                subsidy_identifier=subsidy_id,
                 start_year=start_year,
                 end_year=end_year)
         # Continue the simulation with the existing scenario
@@ -1085,10 +1087,11 @@ class UrbanCanopy:
                     user_logger.warning(f"No irradiance simulation was run for The building id "
                                         f"{building_id}, the BIPV simulation will not be run for this building.")
 
-        # Read the files in the defauly and library and extract the BIPV technologies, transportation and inverter objects
+        # Read the files in the default and library and extract the BIPV technologies, transportation and inverter objects
         bipv_technology_obj_dict = {}
         bipv_transportation_obj_dict = {}
         bipv_inverter_obj_dict = {}
+        bipv_subsidy_dict = {}
         for path_folder in [path_folder_default_bipv_parameters, path_folder_user_bipv_parameters]:
             bipv_technology_obj_dict = BipvTechnology.load_pv_technologies_from_json_to_dictionary(
                 bipv_technology_obj_dict=bipv_technology_obj_dict, path_json_folder=path_folder)
@@ -1096,6 +1099,8 @@ class UrbanCanopy:
                 transportation_obj_dict=bipv_transportation_obj_dict, path_json_folder=path_folder)
             bipv_inverter_obj_dict = BipvInverter.load_bipv_inverter_obj_from_json_to_dictionary(
                 inverter_obj_dict=bipv_inverter_obj_dict, path_json_folder=path_folder)
+            bipv_subsidy_dict = BipvSubsidy.create_bipv_subsidy_obj_from_json(
+                subsidy_obj_dict=bipv_subsidy_dict, path_json_folder=path_folder)
 
         # Reinitialize the simulation for the all the buildings if the simulation is not continued
         if not continue_simulation:
@@ -1110,6 +1115,7 @@ class UrbanCanopy:
         facades_transport_obj = bipv_transportation_obj_dict[facades_transport_id]
         roof_inverter_obj = bipv_inverter_obj_dict[roof_inverter_id]
         facades_inverter_obj = bipv_inverter_obj_dict[facades_inverter_id]
+        bipv_subsidy_obj = bipv_subsidy_dict[subsidy_id]
 
         # Folder to store the results
         path_radiation_and_bipv_result_folder = os.path.join(path_simulation_folder,
@@ -1126,6 +1132,7 @@ class UrbanCanopy:
                                                                 facades_pv_tech_obj=facade_pv_tech_obj,
                                                                 roof_inverter_obj=roof_inverter_obj,
                                                                 facades_inverter_obj=facades_inverter_obj,
+                                                                bipv_subsidy_obj=bipv_subsidy_obj,
                                                                 roof_inverter_sizing_ratio=roof_inverter_sizing_ratio,
                                                                 facades_inverter_sizing_ratio=facades_inverter_sizing_ratio,
                                                                 roof_transport_obj=roof_transport_obj,
@@ -1158,29 +1165,41 @@ class UrbanCanopy:
         bipv_scenario_obj.sum_bipv_results_at_urban_scale(
             solar_rad_and_bipv_obj_list=solar_rad_and_bipv_obj_list)
 
-        # process proper hourly values , not only for sun hours
 
-        # Retrieve the sun hours
-        for building_id in bipv_scenario_obj.bipv_simulated_building_id_list:
-            # Try to get the sun hours for the building
-            sun_hours = self.building_dict[building_id].solar_radiation_and_bipv_simulation_obj.get_sun_hours_list(path_simulation_folder)  # retrieves list from solarRadAndBipvSimulation
-            if sun_hours is not None:
-                break
+        # sum up hourly energy harvested from all buildings
+        for roof_or_facades in ["roof", "facades"]:
+            table_of_hourly_energy_harvested = []
+            for building_obj in building_id_list:
+                table_of_hourly_energy_harvested.append(
+                    self.building_dict[building_obj].solar_radiation_and_bipv_simulation_obj.get_bipv_hourly_energy_harvested(
+                        start_year=bipv_scenario_obj.start_year, end_year=bipv_scenario_obj.end_year, roof_or_facades=roof_or_facades))
+            hourly_energy_harvested_all_buildings_table = sum_tables(table_of_hourly_energy_harvested)
 
-        # check to make sure a proper list was retrieved
-        try:
-            if not isinstance(sun_hours, list) or len(sun_hours) == 0:
-                raise ValueError("Empty or invalid list imported")
 
-            print("List of sun hours was successfully obtained.")
+            # Retrieve the sun hours
+            for building_id in bipv_scenario_obj.bipv_simulated_building_id_list:
+                # Try to get the sun hours for the building
+                sun_hours = self.building_dict[building_id].solar_radiation_and_bipv_simulation_obj.get_sun_hours_list(roof_or_facades, path_simulation_folder)  # retrieves list from solarRadAndBipvSimulation
+                if sun_hours is not None:
+                    break
 
-        except Exception as e:
-            print("List of sun hours was not imported.")
+            # check to make sure a proper list was retrieved
+            try:
+                if not isinstance(sun_hours, list) or len(sun_hours) == 0:
+                    raise ValueError("Empty or invalid list imported")
 
-        # Set the sun hours in the bipv_scenario
-        for key in bipv_scenario_obj.bipv_results_dict:
-            bipv_scenario_obj.bipv_results_dict[key]["hourly_energy_harvested"]["yearly"] = bipv_scenario_obj.stretch_harvested_energy_list(
-                bipv_scenario_obj.bipv_results_dict[key]["hourly_energy_harvested"]["yearly"], sun_hours, round_up = False)
+                print("List of sun hours was successfully obtained.")
+
+            except Exception as e:
+                print("List of sun hours was not imported.")
+
+            # Set the sun hours in the bipv_scenario
+
+            bipv_scenario_obj.bipv_hourly_energy_harvested_dict[roof_or_facades] = bipv_scenario_obj.stretch_harvested_energy_list(
+                hourly_energy_harvested_all_buildings_table, sun_hours, round_up = False)
+
+        bipv_scenario_obj.bipv_hourly_energy_harvested_dict["total"] = sum_tables(bipv_scenario_obj.bipv_hourly_energy_harvested_dict["roof"],
+                                                                                  bipv_scenario_obj.bipv_hourly_energy_harvested_dict["facades"])
 
         # Write urban scale results to CSV file (overwrite existing file if it exists)
         if "no_csv" not in kwargs or not kwargs["no_csv"]:
@@ -1242,9 +1261,8 @@ class UrbanCanopy:
         for building_hourly_consumption in building_hourly_consumption_list:
             ubes_electricity_consumption_hourly = [i + j for i,j in zip(ubes_electricity_consumption_hourly,building_hourly_consumption) ]
 
-        # get list with electricity harvested for the full year
-        full_year_energy_harvesting = self.stretch_harvested_energy_list(bipv_scenario_obj,
-                                                                         "False")
+
+
 
         conditioned_apartment_area = sum(
             self.get_conditioned_area_from_building_id_list(

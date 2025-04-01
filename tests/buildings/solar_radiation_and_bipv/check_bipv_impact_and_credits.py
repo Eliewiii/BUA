@@ -35,6 +35,7 @@ SimFunSolarRadAndBipv.run_bipv_harvesting_and_lca_simulation(
             bipv_scenario_identifier=scenario_id,
             roof_id_pv_tech=scenarios_dict[scenario_id]["rooftech"],
             facades_id_pv_tech=scenarios_dict[scenario_id]["envtech"],
+            subsidy_id=subsidy_type,
             minimum_panel_eroi=1.5,
             minimum_economic_roi=0,
             electricity_sell_price=0.14,

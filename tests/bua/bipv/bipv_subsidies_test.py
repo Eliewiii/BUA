@@ -4,6 +4,7 @@
 import os
 import random
 import pytest
+import unittest
 
 from bua.bipv.bipv_subsidies import BipvSubsidy
 from bua.urban_canopy.bipv_scenario_urban_canopy import BipvScenario
@@ -14,7 +15,7 @@ path_test_data_bipv_dir=os.path.join(path_test_folder,'test_data',"bipv")
 
 name_json_bipv_subsidies_test= "subsidies_julius.json"
 
-class TestBipvSubsidiesObj:
+class TestBipvSubsidiesObj(unittest.TestCase):
 
     def test_initialize(self):
         bipv_sub_obj = BipvSubsidy("test")
@@ -44,16 +45,19 @@ class TestBipvSubsidiesObj:
         subsidy_obj_dict = {}
         BipvSubsidy.create_bipv_subsidy_obj_from_json(subsidy_obj_dict, path_test_data_bipv_dir)
         bipv_sub_obj = subsidy_obj_dict["loan_low"]
-        bipv_results_dict = {"cost": {
-            "investment": {
-                "gate_to_gate": {
-                    "yearly": [random.randint(1, 100000) for _ in range(end_year-start_year)]
-                    }}}}
-        print(bipv_results_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0])
+        gtg_dict = {"cost": {
+            "investment": [random.randint(1, 100000) for _ in range(end_year-start_year)]
+            },
+            "loan_payments" : None
+        }
+        original_investment_cost = gtg_dict["cost"]["investment"][0]
 
-        payments = bipv_sub_obj.calculate_loan_payment_list(start_year, end_year, 25, bipv_results_dict)
+        gtg_dict = bipv_sub_obj.calculate_loan_payment_list(start_year, end_year, gtg_dict)
 
-        print(sum(payments), bipv_results_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0])
+        new_investment_cost = gtg_dict["cost"]["investment"][0]
+
+        self.assertEqual(new_investment_cost*2, original_investment_cost)
+
 
     def test_energy_harvesting_stretched_list(self):
 
@@ -72,3 +76,42 @@ class TestBipvSubsidiesObj:
             bipv_scenario_obj.stretch_harvested_energy_list(hourly_energy_table, sun_hours, round_up=False))
 
         print(bipv_scenario_obj.bipv_results_dict["roof"]["hourly_energy_harvested"]["yearly"])
+
+
+    def test_energy_harvesting_stretched_list_new(self):
+
+        sun_hours = [7.5, 8.5]
+
+        hourly_energy_table = [[2, 3],
+                               [4, 3],
+                               [1, 5],
+                               [4, 2]]
+
+        # Expected output when round_up is False
+        expected_output_no_round = [
+            [0, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ]
+
+        full_year_irradiation_table = BipvScenario.stretch_harvested_energy_list(hourly_energy_table, sun_hours,
+                                                                                 round_up=False)
+
+        # Assert that the function returns the expected result
+        self.assertEqual(full_year_irradiation_table, expected_output_no_round)
+
+        # Expected output when round_up is True
+        expected_output_round_up = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ]
+
+        full_year_irradiation_table_round_up = BipvScenario.stretch_harvested_energy_list(hourly_energy_table,
+                                                                                          sun_hours, round_up=True)
+
+        # Assert that the function returns the expected result when rounding up
+        self.assertEqual(full_year_irradiation_table_round_up, expected_output_round_up)
+

@@ -254,6 +254,12 @@ class BuildingModeled(BuildingBasic):
         """
         return self.bes_obj.get_hourly_energy_consumption()
 
+    def get_bipv_hourly_energy_harvested(self,start_year, end_year):
+        """
+        Return the hourly energy consumption of the building from the EnergyPlus simulation
+        """
+        return self.solar_radiation_and_bipv_simulation_obj.get_bipv_hourly_energy_harvested(start_year, end_year)
+
     def make_merged_faces_hb_model(self, orient_roof_mesh_to_according_to_building_orientation=True,
                                    north_angle=0, overwrite=False):
         """
@@ -690,7 +696,7 @@ class BuildingModeled(BuildingBasic):
     def building_run_bipv_panel_simulation(self, path_simulation_folder, path_radiation_and_bipv_result_folder,
                                            roof_pv_tech_obj, facades_pv_tech_obj,
                                            roof_transport_obj,
-                                           facades_transport_obj, roof_inverter_obj, facades_inverter_obj,
+                                           facades_transport_obj, roof_inverter_obj, facades_inverter_obj, bipv_subsidy_obj,
                                            roof_inverter_sizing_ratio,
                                            facades_inverter_sizing_ratio,
                                            uc_start_year,
@@ -745,7 +751,7 @@ class BuildingModeled(BuildingBasic):
             electricity_sell_price=electricity_sell_price,
             replacement_scenario=replacement_scenario,
             continue_simulation=continue_simulation,
-            discount_rate=discount_rate **kwargs)
+            discount_rate=discount_rate, **kwargs)
         # Write the results in a csv file
         if "no_csv" not in kwargs or not kwargs["no_csv"]:
             self.solar_radiation_and_bipv_simulation_obj.write_building_bipv_results_to_csv(

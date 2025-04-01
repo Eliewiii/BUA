@@ -290,6 +290,7 @@ def compute_lca_and_cost_for_gtg(nb_of_panels_installed_yearly_list, pv_tech_obj
         "ghg": carbon_material_extraction_and_manufacturing_yearly_list,
         "cost": {
             "investment": cost_investement_yearly_list,
+            "loan_payments": None,
             "revenue": {
                 "substituted_construction_material": revenue_substituted_construction_material_yearly_list}
         }
@@ -513,21 +514,37 @@ def compute_lca_and_cost_for_inverter(inverter_obj, inverter_sub_capacities, sta
 
     return inverter_result_dict
 
-def compute_subsidies(gate_to_gate_dict, energy_harvested_list, subsidy_obj, start_year, end_year, roof_or_facade, discount_rate, grid_ghg_intensity):
+def compute_subsidies(gate_to_gate_dict, energy_harvested_list, bipv_subsidy_obj, start_year, end_year, discount_rate, grid_ghg_intensity):
     """
     Compute the subsidy payments for loans, carbon tax savings, and one-time investments
     :param bipv_scenario_obj: BipvScenario object
-    :param subsidy_obj: Subsidy object
+    :param bipv_subsidy_obj: Subsidy object
     :param discount_rate: float: discount rate
     """
 
-    investment_support_yearly_list = subsidy_obj.calculate_investment_subsidy(start_year, end_year, gate_to_gate_dict, roof_or_facade)
-    carbon_tax_yearly_list = subsidy_obj.calculate_carbon_tax_savings_list(energy_harvested_list, grid_ghg_intensity)
-    gate_to_gate_dict = subsidy_obj.calculate_loan_payment_list(start_year, end_year, gate_to_gate_dict)
+    investment_support_yearly_list = bipv_subsidy_obj.calculate_investment_subsidy(start_year, end_year, gate_to_gate_dict)
+    carbon_tax_yearly_list = bipv_subsidy_obj.calculate_carbon_tax_savings_list(energy_harvested_list, grid_ghg_intensity)
+    gate_to_gate_dict = bipv_subsidy_obj.calculate_loan_payment_list(start_year, end_year, gate_to_gate_dict)
+
+    # discount cash flows
+    gate_to_gate_dict["cost"]["loan_payments"] = discount_list_of_cashflows(gate_to_gate_dict["cost"]["loan_payments"], discount_rate)
+    discounted_investment_support_yearly_list = discount_list_of_cashflows(investment_support_yearly_list, discount_rate)
+    discounted_carbon_tax_yearly_list = discount_list_of_cashflows(carbon_tax_yearly_list, discount_rate)
 
     subsidy_result_dict = {
-        "investment_support": investment_support_yearly_list,
-        "carbon_tax": carbon_tax_yearly_list
+        "investment_support": discounted_investment_support_yearly_list,
+        "carbon_tax": discounted_carbon_tax_yearly_list
     }
 
     return subsidy_result_dict, gate_to_gate_dict
+
+def discount_list_of_cashflows(cashflows, discount_rate):
+    """
+    Given a list of cash flows, return a list of discounted cash flows.
+
+    :param cashflows: List of cash flows (e.g., [100, 200, 300])
+    :param discount_rate: Discount rate as a decimal (e.g., 0.05 for 5%)
+    :return: List of discounted cash flows
+    """
+    discounted = [cf / ((1 + discount_rate) ** t) for t, cf in enumerate(cashflows, start=1)]
+    return discounted

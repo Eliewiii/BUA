@@ -6,7 +6,7 @@ import logging
 from ..urban_canopy import UrbanCanopy
 
 from ..config.config_default_values_user_parameters import default_path_simulation_folder, \
-    default_path_weather_file, default_discount_rate
+    default_path_weather_file, default_discount_rate, default_subsidy_id
 
 from ..config.config_default_values_user_parameters import default_roof_grid_size_x, default_facades_grid_size_x, \
     default_roof_grid_size_y, default_facades_grid_size_y, default_offset_dist
@@ -96,6 +96,7 @@ class SimFunSolarRadAndBipv:
                                                facades_transport_id=default_facades_transport_id,
                                                roof_inverter_id=default_roof_inverter_id,
                                                facades_inverter_id=default_facades_inverter_id,
+                                               subsidy_id=default_subsidy_id,
                                                roof_inverter_sizing_ratio=default_roof_inverter_sizing_ratio,
                                                facades_inverter_sizing_ratio=default_facades_inverter_sizing_ratio,
                                                efficiency_computation_method=default_efficiency_computation_method,
@@ -142,6 +143,7 @@ class SimFunSolarRadAndBipv:
             facades_transport_id=facades_transport_id,
             roof_inverter_id=roof_inverter_id,
             facades_inverter_id=facades_inverter_id,
+            subsidy_id=subsidy_id,
             roof_inverter_sizing_ratio=roof_inverter_sizing_ratio,
             facades_inverter_sizing_ratio=facades_inverter_sizing_ratio,
             efficiency_computation_method=efficiency_computation_method,
@@ -152,7 +154,7 @@ class SimFunSolarRadAndBipv:
             final_year = final_year,
             replacement_scenario=replacement_scenario,
             continue_simulation=continue_simulation,
-            discount_rate=discount_rate **kwargs)
+            discount_rate=discount_rate, **kwargs)
 
         user_logger.info("The BIPV simulation have been performed successfully")
         dev_logger.info("The BIPV simulation have been performed successfully")

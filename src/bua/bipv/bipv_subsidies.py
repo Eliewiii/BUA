@@ -61,7 +61,7 @@ class BipvSubsidy:
 
                         subsidy_obj.equity_ratio = float(value["loan_equity_ratio"])
                         subsidy_obj.loan_interest_rate = float(value["loan_interest_rate"])
-                        subsidy_obj.payback_years = int(value["payback_years"])
+                        subsidy_obj.payback_years = int(value["loan_payback_years"])
 
                         subsidy_obj.carbon_tax = int(value["carbon_tax_per_ton_CO2"])
                         subsidy_obj.income_tax = float(value["income_tax_reduction_on_energy_generation"])
@@ -87,10 +87,10 @@ class BipvSubsidy:
 
         return electricity_price_per_hour
 
-    def calculate_investment_subsidy(self, start_year, end_year, gate_to_gate_dict, roof_or_facade):
+    def calculate_investment_subsidy(self, start_year, end_year, gate_to_gate_dict):
 
         investment_support_yearly_list = [0] * (end_year - start_year)
-        investment_support_yearly_list[0] = self.investment_support*gate_to_gate_dict[roof_or_facade]["cost"]["investment"][0]
+        investment_support_yearly_list[0] = self.investment_support*gate_to_gate_dict["cost"]["investment"][0]
 
         return investment_support_yearly_list
 
@@ -98,6 +98,7 @@ class BipvSubsidy:
 
         loan_payments = []
         r = self.loan_interest_rate
+        print(gate_to_gate_dict["cost"])
         initial_investment_cost = gate_to_gate_dict["cost"]["investment"][0]
 
 
@@ -110,16 +111,16 @@ class BipvSubsidy:
                 loan_payments.append(0)
 
         # correct investment cost in year 0
-        gate_to_gate_dict["cost"]["investment"]["gate_to_gate"]["yearly"][0] = initial_investment_cost*self.equity_ratio
+        gate_to_gate_dict["cost"]["investment"][0] = initial_investment_cost*self.equity_ratio
 
-        gate_to_gate_dict["cost"]["investment"]["loan_payments"]["yearly"] = loan_payments
+        gate_to_gate_dict["cost"]["loan_payments"] = loan_payments
 
         return gate_to_gate_dict
 
     def calculate_carbon_tax_savings_list(self, energy_harvested_list, grid_ghg_intensity = default_grid_ghg_intensity):
 
         carbon_tax_savings = [grid_ghg_intensity * self.carbon_tax/1000000 * energy_harvested_list[year]
-                              for year in len(energy_harvested_list)]
+                              for year in range(len(energy_harvested_list))]
 
         return carbon_tax_savings
 

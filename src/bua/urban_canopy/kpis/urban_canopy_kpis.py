@@ -10,7 +10,6 @@ from copy import deepcopy
 
 from ...building.solar_radiation_and_bipv.solar_rad_and_BIPV import \
     compute_cumulative_and_total_value_bipv_result_dict
-from ...building.solar_radiation_and_bipv.utils_bipv import stretch_harvested_energy_list
 from ...config.bua_config_structure import name_radiation_simulation_folder
 
 user_logger = logging.getLogger("user")

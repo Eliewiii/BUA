@@ -62,6 +62,7 @@ default_roof_transport_id = "China-Israel"
 default_facades_transport_id = "China-Israel"
 default_roof_inverter_id = "inverter_default"
 default_facades_inverter_id = "inverter_default"
+default_subsidy_id = "no_subsidy"
 default_roof_inverter_sizing_ratio = 0.9
 default_facades_inverter_sizing_ratio = 0.9
 default_minimum_panel_eroi = 1.2

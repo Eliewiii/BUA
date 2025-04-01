@@ -7,14 +7,16 @@ import logging
 import shutil
 import csv
 
+from typing import List, Dict
+
 from copy import deepcopy
 from time import time
+from turtledemo.penrose import start
 
 from honeybee_radiance.sensorgrid import SensorGrid
 from ladybug_geometry.geometry3d.face import Face3D
 from pydantic.schema import datetime
 
-from example_Elie_to_make_it_use_with_default.Elie_test_read_urban_canopy import path_simulation_folder
 from .utils_sensorgrid import generate_sensor_grid_for_hb_model
 from .utils_solar_radiation import \
     run_hb_model_annual_irradiance_simulation, move_annual_irr_hb_radiance_results, \
@@ -100,7 +102,6 @@ empty_sub_bipv_results_dict = {
             "total": {"yearly": [], "cumulative": [], "total": 0.0}
         },
         "subsidies": {
-            "loan_payments": {"yearly": [], "cumulative": [], "total": 0.0},
             "investment_support": {"yearly": [], "cumulative": [], "total": 0.0},
             "carbon_tax_savings": {"yearly": [], "cumulative": [], "total": 0.0},
             "total": {"yearly": [], "cumulative": [], "total": 0.0}
@@ -148,6 +149,7 @@ class SolarRadAndBipvSimulation:
         self.irradiance_simulation_duration = {"roof": None, "facades": None}
         # bipv results
         self.bipv_results_dict = None
+        self.hourly_energy_harvested_dict = {"roof": [], "facades": [], "total": []}
         self.init_bipv_results_dict()
         # parameters
         self.parameter_dict = deepcopy(empty_parameter_dict)
@@ -156,7 +158,6 @@ class SolarRadAndBipvSimulation:
         self.facades_irradiance_run = False
         self.roof_bipv_sim_run = False
         self.facades_bipv_sim_run = False
-
 
     def set_mesh_parameters(self, roof_or_facades, on_roof_or_facades, grid_size_x=1, grid_size_y=1,
                             offset_dist=0.1):
@@ -187,6 +188,7 @@ class SolarRadAndBipvSimulation:
         self.init_bipv_results_dict()
         self.roof_panel_list = None
         self.facades_panel_list = None
+        self.hourly_energy_harvested_dict = {"roof": [], "facades": [], "total": []}
         for roof_or_facade in ["roof", "facades"]:
             self.parameter_dict[roof_or_facade]["panel_technology"] = None
             self.parameter_dict[roof_or_facade]["minimum_panel_eroi"] = None
@@ -218,7 +220,7 @@ class SolarRadAndBipvSimulation:
             "id"] = efficiency_computation_method
         self.parameter_dict[roof_or_facades]["start_year"] = start_year
         self.parameter_dict[roof_or_facades]["study_duration_in_years"] = 0
-        # todo: add the additional paameters
+        # todo: add the additional parameters
         if "replacement_frequency_in_years" in kwargs.keys():
             self.parameter_dict[roof_or_facades]["replacement_scenario"][
                 "replacement_frequency_in_years"] = kwargs["replacement_frequency_in_years"]
@@ -261,16 +263,21 @@ class SolarRadAndBipvSimulation:
         if self.facades_panel_list is not None:
             json_dict["facades_panel_mesh_index_list"] = [panel.index for panel in self.facades_panel_list]
         # Adjust the parameter dict to make it json serializable
-        json_dict["parameters"]["roof"]["panel_technology"] = json_dict["parameters"]["roof"]["panel_technology"].identifier if json_dict["parameters"]["roof"]["panel_technology"] is not None else None
-        json_dict["parameters"]["roof"]["inverter"]["technology"] = json_dict["parameters"]["roof"]["inverter"]["technology"].identifier if json_dict["parameters"]["roof"]["inverter"]["technology"] is not None else None
+        json_dict["parameters"]["roof"]["panel_technology"] = json_dict["parameters"]["roof"][
+            "panel_technology"].identifier if json_dict["parameters"]["roof"]["panel_technology"] is not None else None
+        json_dict["parameters"]["roof"]["inverter"]["technology"] = json_dict["parameters"]["roof"]["inverter"][
+            "technology"].identifier if json_dict["parameters"]["roof"]["inverter"]["technology"] is not None else None
 
-        json_dict["parameters"]["facades"]["panel_technology"] = json_dict["parameters"]["facades"]["panel_technology"].identifier if json_dict["parameters"]["facades"]["panel_technology"] is not None else None
-        json_dict["parameters"]["facades"]["inverter"]["technology"] = json_dict["parameters"]["facades"]["inverter"]["technology"].identifier if json_dict["parameters"]["facades"]["inverter"]["technology"] is not None else None
-
+        json_dict["parameters"]["facades"]["panel_technology"] = json_dict["parameters"]["facades"][
+            "panel_technology"].identifier if json_dict["parameters"]["facades"][
+                                                  "panel_technology"] is not None else None
+        json_dict["parameters"]["facades"]["inverter"]["technology"] = json_dict["parameters"]["facades"]["inverter"][
+            "technology"].identifier if json_dict["parameters"]["facades"]["inverter"][
+                                            "technology"] is not None else None
 
         return json_dict
 
-    def move(self,moving_vector):
+    def move(self, moving_vector):
         """
         Move the sensorgrid of the object if the building is moved.
         :param moving_vector: list: [x, y, z] translation vector
@@ -430,7 +437,8 @@ class SolarRadAndBipvSimulation:
     def run_bipv_panel_simulation(self, path_simulation_folder, roof_pv_tech_obj,
                                   facades_pv_tech_obj,
                                   roof_inverter_tech_obj, facades_inverter_tech_obj, roof_inverter_sizing_ratio,
-                                  facades_inverter_sizing_ratio, roof_transport_obj, facades_transport_obj, bipv_subsidy_obj,
+                                  facades_inverter_sizing_ratio, roof_transport_obj, facades_transport_obj,
+                                  bipv_subsidy_obj,
                                   uc_end_year, uc_start_year, uc_current_year, final_year,
                                   efficiency_computation_method="yearly",
                                   minimum_panel_eroi=1.2,
@@ -451,7 +459,7 @@ class SolarRadAndBipvSimulation:
                                                                              inverter_tech_obj=roof_inverter_tech_obj,
                                                                              inverter_sizing_ratio=roof_inverter_sizing_ratio,
                                                                              transport_obj=roof_transport_obj,
-                                                                             bipv_subsidy_obj = bipv_subsidy_obj,
+                                                                             bipv_subsidy_obj=bipv_subsidy_obj,
                                                                              uc_end_year=uc_end_year,
                                                                              uc_start_year=uc_start_year,
                                                                              uc_current_year=uc_current_year,
@@ -508,13 +516,18 @@ class SolarRadAndBipvSimulation:
         elif run_bipv_on_facades:
             self.bipv_results_dict["total"] = self.bipv_results_dict["facades"]
 
+        if run_bipv_on_roof:
+            self.roof_bipv_sim_run= True
+        if run_bipv_on_facades:
+            self.facades_bipv_sim_run= True
+
     def run_bipv_panel_simulation_on_roof_or_facades(self, roof_or_facades, on_roof_or_facades,
                                                      sensorgrid_dict,
                                                      annual_panel_irradiance_list, panel_list,
                                                      path_simulation_folder,
                                                      pv_tech_obj, inverter_tech_obj,
                                                      inverter_sizing_ratio,
-                                                     transport_obj, subsidy_obj,
+                                                     transport_obj, bipv_subsidy_obj,
                                                      uc_end_year, uc_start_year,
                                                      uc_current_year, final_year, efficiency_computation_method,
                                                      minimum_panel_eroi,
@@ -547,7 +560,8 @@ class SolarRadAndBipvSimulation:
                                                       bipv_transportation_obj=transport_obj,
                                                       annual_panel_irradiance_list=annual_panel_irradiance_list,
                                                       minimum_panel_eroi=minimum_panel_eroi,
-                                                      minimum_economic_roi=minimum_economic_roi, electricity_sell_price=electricity_sell_price
+                                                      minimum_economic_roi=minimum_economic_roi,
+                                                      electricity_sell_price=electricity_sell_price
                                                       )
 
                 # Size the inverters capacity
@@ -622,13 +636,13 @@ class SolarRadAndBipvSimulation:
             # Check if simulation is in first cycle to assign first year values correctly
             flag_first_year = False
             if self.parameter_dict[roof_or_facades][
-                    "study_duration_in_years"] == 0:
+                "study_duration_in_years"] == 0:
                 flag_first_year = True
 
             # Check if final year to add the impact of EOL for remaining panels
-            flag_last_year =False
+            flag_last_year = False
             if uc_end_year == final_year:
-                flag_last_year =True
+                flag_last_year = True
 
             # sum up all panels to get the total number of panels on buildings
             if roof_or_facades == "roof":
@@ -643,18 +657,20 @@ class SolarRadAndBipvSimulation:
             # LCA and economic for transportation
             transport_result_dict = compute_lca_and_cost_for_transportation(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,
-                total_nb_of_panels = nb_of_all_panels,
+                total_nb_of_panels=nb_of_all_panels,
                 flag_first_year=flag_first_year,
-                final_year_reached = flag_last_year,
+                final_year_reached=flag_last_year,
                 pv_tech_obj=pv_tech_obj,
-                transportation_obj=transport_obj)
+                transportation_obj=transport_obj,
+                discount_rate=discount_rate)
             # LCA and economic for maintenance
             maintenance_result_dict = compute_lca_and_cost_for_maintenance(
                 panel_list=panel_list,
                 start_year=self.parameter_dict[roof_or_facades]["start_year"],
                 current_study_duration_in_years=self.parameter_dict[roof_or_facades][
                     "study_duration_in_years"],
-                uc_end_year=uc_end_year)
+                uc_end_year=uc_end_year,
+                discount_rate=discount_rate)
             # LCA and economic for recycling
             recycling_result_dict = compute_lca_cost_and_dmfa_for_recycling(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,
@@ -671,29 +687,30 @@ class SolarRadAndBipvSimulation:
                 current_study_duration_in_years=self.parameter_dict[roof_or_facades][
                     "study_duration_in_years"],
                 uc_end_year=uc_end_year,
-                final_year_reached = flag_last_year,
+                final_year_reached=flag_last_year,
                 discount_rate=discount_rate)
             # Subsidy calculation
             subsidy_result_dict, gtg_result_dict = compute_subsidies(
-                bipv_results_dict=gtg_result_dict,
+                gate_to_gate_dict=gtg_result_dict,
                 energy_harvested_list=energy_harvested_yearly_list,
-                bipv_subsidy_obj=subsidy_obj,
-                uc_end_year=uc_end_year,
-                roof_or_facades=roof_or_facades,
-                discount_rate = discount_rate,
+                bipv_subsidy_obj=bipv_subsidy_obj,
+                start_year=self.parameter_dict[roof_or_facades]["start_year"],
+                end_year=uc_end_year,
+                discount_rate=discount_rate,
                 grid_ghg_intensity=default_grid_ghg_intensity)
 
             # Add results to the global results dictionary
             self.bipv_results_dict[roof_or_facades] = self.add_results_to_global_results_dict(
                 bipv_results_dict=self.bipv_results_dict[roof_or_facades],
                 energy_harvested_yearly_list=energy_harvested_yearly_list,
-                hourly_energy_harvested_table=hourly_energy_harvested_table,
                 gtg_result_dict=gtg_result_dict,
                 transport_result_dict=transport_result_dict,
                 maintenance_result_dict=maintenance_result_dict,
                 recycling_result_dict=recycling_result_dict,
                 inverter_result_dict=inverter_result_dict,
                 subsidy_result_dict=subsidy_result_dict)
+
+            self.hourly_energy_harvested_dict[roof_or_facades] = hourly_energy_harvested_table
 
             # Update the duration in year of the simulation
             self.parameter_dict[roof_or_facades]["study_duration_in_years"] = uc_end_year - \
@@ -712,7 +729,8 @@ class SolarRadAndBipvSimulation:
         return simulation_has_run
 
     @staticmethod
-    def add_results_to_global_results_dict(bipv_results_dict, hourly_energy_harvested_yearly_table, energy_harvested_yearly_list, gtg_result_dict,
+    def add_results_to_global_results_dict(bipv_results_dict,
+                                           energy_harvested_yearly_list, gtg_result_dict,
                                            transport_result_dict, maintenance_result_dict,
                                            recycling_result_dict,
                                            inverter_result_dict,
@@ -731,7 +749,6 @@ class SolarRadAndBipvSimulation:
 
         # Energy harvested
         bipv_results_dict["energy_harvested"]["yearly"] += energy_harvested_yearly_list
-        bipv_results_dict["hourly_energy_harvested"]["yearly"] += hourly_energy_harvested_yearly_table
         # LCA Primary energy
         bipv_results_dict["primary_energy"]["gate_to_gate"]["yearly"] += gtg_result_dict["primary_energy"]
         bipv_results_dict["primary_energy"]["transportation"]["gate_to_gate"]["yearly"] += \
@@ -804,7 +821,8 @@ class SolarRadAndBipvSimulation:
             recycling_result_dict["cost"]["revenue"]["material_recovery"])]
 
         # Economical subsidies
-        bipv_results_dict["cost"]["subsidies"]["investment_support"]["yearly"] += subsidy_result_dict["investment_support"]
+        bipv_results_dict["cost"]["subsidies"]["investment_support"]["yearly"] += subsidy_result_dict[
+            "investment_support"]
         bipv_results_dict["cost"]["subsidies"]["carbon_tax_savings"]["yearly"] += subsidy_result_dict["carbon_tax"]
         bipv_results_dict["cost"]["subsidies"]["total"]["yearly"] += [sum(i) for i in zip(
             subsidy_result_dict["investment_support"],
@@ -812,7 +830,8 @@ class SolarRadAndBipvSimulation:
         )]
 
         # Economical net cost
-        bipv_results_dict["cost"]["net_profit"]["yearly"] = [investment - revenue - subsidy for [investment, revenue, subsidy] in
+        bipv_results_dict["cost"]["net_profit"]["yearly"] = [investment - revenue - subsidy for
+                                                             [investment, revenue, subsidy] in
                                                              zip(
                                                                  bipv_results_dict["cost"]["investment"][
                                                                      "total"]["yearly"],
@@ -824,8 +843,40 @@ class SolarRadAndBipvSimulation:
         # Compute cumulative and total values
         bipv_results_dict = compute_cumulative_and_total_value_bipv_result_dict(bipv_results_dict)
 
-
         return bipv_results_dict
+
+    def get_bipv_hourly_energy_harvested(self, start_year:int, end_year:int, roof_or_facades:str) -> List[List[float]] | None:
+        """
+        obtain the hourly harvested energy for the building and write it to the dict
+        """
+        # todo: integrate checks for what happens if the simulation did not run on roofs or facades (make them none)
+
+        if not (self.did_simulation_run("roof") or self.did_simulation_run("facades")):
+            return None
+
+        new_hourly_energy_harvested_table = []
+
+        print(self.hourly_energy_harvested_dict[roof_or_facades])
+        # get the number of sun hour
+        for roof_or_fac in ["roof", "facades"]:
+            if len(self.hourly_energy_harvested_dict[roof_or_fac]) > 0:
+                num_sun_hour = len(self.hourly_energy_harvested_dict[roof_or_fac][0])
+                break
+
+
+        if self.did_simulation_run(roof_or_facades):
+            new_hourly_energy_harvested_table.append([[0 for i in range(num_sun_hour)] for j in range(
+                self.parameter_dict[roof_or_facades]["start_year"] - start_year)])
+            new_hourly_energy_harvested_table.append(self.hourly_energy_harvested_dict[roof_or_facades])
+            new_hourly_energy_harvested_table.append([[0 for i in range(num_sun_hour)] for j in range(
+                end_year - start_year - self.parameter_dict[roof_or_facades]["study_duration_in_years"])])
+        else:
+            new_hourly_energy_harvested_table = [[0 for i in range(num_sun_hour)] for j in
+                                                                 range(end_year - start_year)]
+
+        return new_hourly_energy_harvested_table
+
+
 
     def write_building_bipv_results_to_csv(self, path_radiation_and_bipv_result_folder):
         """
@@ -884,34 +935,37 @@ class SolarRadAndBipvSimulation:
 
         return panel_lb_face_list
 
-    def did_simulation_run(self):
+    def did_simulation_run(self, roof_or_facades: str, both=False) -> bool:
         """
         check if simulation is done
         """
+        if roof_or_facades == 'roof' or both:
+            if not self.roof_bipv_sim_run:
+                return False
 
-        if self.roof_irradiance_run == True and self.facades_irradiance_run == True:
-            if self.roof_bipv_sim_run == True and self.facades_bipv_sim_run == True:
-                return True
-            else:
-                raise Exception('BIPV simulation did not run yet')
-        else:
-            raise Exception('Irradiance simulation did not run yet')
+        if roof_or_facades == 'facades' or both:
+            if not self.facades_bipv_sim_run:
+                return False
+        return True
 
-    def get_sun_hours_list(self, path_simulation_folder):
+    def get_sun_hours_list(self, roof_or_facades, path_simulation_folder):
         """
         retrieve list of sun hours from irradiation folder
         """
 
-        if self.did_simulation_run():
-            path_to_file = os.path.join(path_simulation_folder, name_radiation_simulation_folder, self.building_id, "roof_sun-up-hours.txt")
+        # todo: remake it to chak for either roof and/or facade as one of them might not have been run
+        if self.did_simulation_run(roof_or_facades=roof_or_facades):
+            path_to_file = os.path.join(path_simulation_folder, name_radiation_simulation_folder, self.building_id,
+                                        "roof_sun-up-hours.txt")
 
             with open(path_to_file, 'r') as f:
                 sun_hours_list = [float(line.strip()) for line in f]
 
         else:
-            raise Exception("Simulation did not run yet")
+            sun_hours_list = None
 
         return sun_hours_list
+
 
 def bipv_results_to_csv(path_radiation_and_bipv_result_folder, building_id_or_uc_scenario_name, bipv_results_dict,
                         start_year,
@@ -1064,3 +1118,23 @@ def from_sensorgrid_face_index_to_lb_face3d(sensorgrid_face_index, sensorgrid):
 
     return Face3D(lb_point3d_list)
 
+
+def sum_tables(*tables):
+    # Base case: If there's only one table, return it
+    if len(tables) == 1:
+        return tables[0]
+
+    # Recursive case: Sum corresponding elements of the first table with the rest
+    def sum_two_tables(t1, t2):
+        if isinstance(t1, list) and isinstance(t2, list):
+            if len(t1) == len(t2):
+                # Check if we need to go deeper (nested lists)
+                return [sum_two_tables(sub1, sub2) for sub1, sub2 in zip(t1, t2)]
+            else :
+                raise ValueError(f"The two lists don't have the same length")
+        elif all(isinstance(var, (float, int)) for var in (t1,t2)):  # Base case: Add numbers
+            return t1 + t2
+        else:
+            raise TypeError(f"Not the correct types")
+
+    return sum_two_tables(tables[0], sum_tables(*tables[1:]))
