@@ -12,6 +12,12 @@ path_json_result_file = os.path.join(path_result_folder, name_result_json_file)
 path_urban_canopy_file = r"C:\Users\julius.jandl\AppData\Local\BUA\Simulation_temp"
 
 scenarios_dict = {
+        "net_metering_no_SCM": {
+            "rooftech": "mitrex_roof c-Si M390-A1F 2025",
+            "envtech": "mitrex_facades c-Si Solar Siding 350W - Dove Grey china 2025 no SCM",
+            "replacement": 10,
+            "subsidy_type": "fit_net_metering"
+        },
         "net_metering": {
             "rooftech": "mitrex_roof c-Si M390-A1F 2025",
             "envtech": "mitrex_facades c-Si Solar Siding 350W - Dove Grey china 2025",
@@ -49,7 +55,7 @@ scenarios_dict = {
             "subsidy_type": "carbon_credits"
     }
 }
-scenario_id_list = list(scenarios_dict.keys())
+scenario_id_list = list(scenarios_dict.keys())[0:1]
 
 
 # load urban canopy object from generate_sample_for_bipv

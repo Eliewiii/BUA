@@ -848,6 +848,9 @@ class SolarRadAndBipvSimulation:
     def get_bipv_hourly_energy_harvested(self, start_year:int, end_year:int, roof_or_facades:str) -> List[List[float]] | None:
         """
         obtain the hourly harvested energy for the building and write it to the dict
+        :param start_year: int: starting year of simulation
+        :param end_year: int: ending year of simulation
+        :param roof_or_facades: str
         """
         # todo: integrate checks for what happens if the simulation did not run on roofs or facades (make them none)
 
@@ -1119,6 +1122,9 @@ def from_sensorgrid_face_index_to_lb_face3d(sensorgrid_face_index, sensorgrid):
 
 
 def sum_tables(*tables):
+    """
+    function to sum up several lists or a list of lists by element
+    """
     # Base case: If there's only one table, return it
     if len(tables) == 1:
         return tables[0]

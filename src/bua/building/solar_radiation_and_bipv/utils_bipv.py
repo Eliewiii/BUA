@@ -260,6 +260,7 @@ def compute_lca_and_cost_for_gtg(nb_of_panels_installed_yearly_list, pv_tech_obj
     :param nb_of_panels_installed_yearly_list: list of int: list of the number of panels installed each year
     :param pv_tech_obj: PVPanelTechnology object
     :param roof_or_facades: string: "roof" or "facades"
+    :param discount_rate: float: discount rate for future value of money
     :return gtg_result_dict: dictionary of the gtg results
     """
     # Primary energy
@@ -272,7 +273,7 @@ def compute_lca_and_cost_for_gtg(nb_of_panels_installed_yearly_list, pv_tech_obj
                                                                 nb_of_panels_installed_yearly_list]
 
     # Economic cost
-    cost_investement_yearly_list = [(i * pv_tech_obj.cost_investment) / ((1 + discount_rate) ** year)
+    cost_investment_yearly_list = [(i * pv_tech_obj.cost_investment) / ((1 + discount_rate) ** year)
                                     for year, i in enumerate(nb_of_panels_installed_yearly_list, start=1)]
 
     # Economic revenues
@@ -289,7 +290,7 @@ def compute_lca_and_cost_for_gtg(nb_of_panels_installed_yearly_list, pv_tech_obj
         "primary_energy": primary_energy_material_extraction_and_manufacturing_yearly_list,
         "ghg": carbon_material_extraction_and_manufacturing_yearly_list,
         "cost": {
-            "investment": cost_investement_yearly_list,
+            "investment": cost_investment_yearly_list,
             "loan_payments": None,
             "revenue": {
                 "substituted_construction_material": revenue_substituted_construction_material_yearly_list}
@@ -304,6 +305,11 @@ def compute_lca_cost_and_dmfa_for_recycling(nb_of_panels_installed_yearly_list, 
     Take the results from function loop_over_the_years_for_solar_panels and use the pv_tech_obj info to transform it to data
     :param nb_of_panels_installed_yearly_list: list of int: list of the number of panels installed each year
     :param pv_tech_obj: PVPanelTechnology object
+    :param total_nb_of_panels: int: total number of panels
+    :param flag_first_year: boolean: flag to indicate if first year is reached
+    :param final_year_reached: boolean: flag to indicate if final year is reached
+    :param pv_tech_obj: PV technology object
+    :param discount_rate: float: discount rate for future value of money
     :return recycling_dict: dictionary of the recycling results
     """
     # Primary energy
@@ -374,6 +380,7 @@ def compute_lca_and_cost_for_maintenance(panel_list, start_year, current_study_d
     :param start_year: int: year when the simulation starts
     :param current_study_duration_in_years: int: duration of the study in years
     :param uc_end_year: int: year when the uc ends
+    :param discount_rate: float: discount rate for future value of money
     :return maintenance_result_dict: dictionary of the maintenance results
     """
     primary_energy_maintenance_yearly_list = []
@@ -411,6 +418,7 @@ def compute_lca_and_cost_for_transportation(nb_of_panels_installed_yearly_list, 
     :param nb_of_panels_installed_yearly_list: list of int: list of the number of panels installed each year
     :param pv_tech_obj: PVPanelTechnology object
     :param transportation_obj: BipvTransportation object
+    :param discount_rate: float: discount rate for future value of money
     :return transport_result_dict: dictionary of the transportation results
     """
     # Transportation values
@@ -516,7 +524,7 @@ def compute_lca_and_cost_for_inverter(inverter_obj, inverter_sub_capacities, sta
 
 def compute_subsidies(gate_to_gate_dict, energy_harvested_list, bipv_subsidy_obj, start_year, end_year, discount_rate, grid_ghg_intensity):
     """
-    Compute the subsidy payments for loans, carbon tax savings, and one-time investments
+    Compute the subsidy payments for loans, carbon tax savings, and one-time investments, if necessary the gate to gate dictionary is adjusted
     :param bipv_scenario_obj: BipvScenario object
     :param bipv_subsidy_obj: Subsidy object
     :param discount_rate: float: discount rate

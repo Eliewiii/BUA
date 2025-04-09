@@ -8,6 +8,8 @@ import pandas as pd
 
 from copy import deepcopy
 
+from dragonfly_energy.cli import energy
+
 from ...building.solar_radiation_and_bipv.solar_rad_and_BIPV import \
     compute_cumulative_and_total_value_bipv_result_dict
 from ...config.bua_config_structure import name_radiation_simulation_folder
@@ -286,10 +288,12 @@ class UrbanCanopyKPIs:
             self.kpi_intermediate_results_dict[sub_type][
                 "net_economical_benefit_density"]["conditioned_apartment"]["cumulative"][-1]
 
-    def compute_intermediate_sub_results_dict(self, bipv_result_dict, bipv_subsidy_obj, discount_rate, roof_or_facade):
+    def compute_intermediate_sub_results_dict(self, bipv_result_dict, discount_rate, roof_or_facade):
         """
         Compute the intermediate results of the building.
         :param bipv_result_dict: dictionary, the results of the BIPV simulation
+        :param discount_rate: discount rate to account for future value of money
+        :param roof_or_facade: is it run for roofs or facades
         """
         sub_kpi_intermediate_results_dict = deepcopy(empty_sub_kpi_intermediate_results_dict)
         # Electricity harvested density
@@ -343,27 +347,45 @@ class UrbanCanopyKPIs:
             bipv_result_dict["energy_harvested"]["yearly"]]
 
         # Net economical benefit
-
         for year in range(len(bipv_result_dict["energy_harvested"]["yearly"])):
             electricity_revenue_per_year = 0
 
-            for hour in range(8760):
+            # if analysis is done hourly to use dynamic pricing
+            if self.ubes_electricity_consumption is not None:
 
-                electricity_harvested = self.bipv_scenario.bipv_hourly_energy_harvested_dict[roof_or_facade][year][hour]
-                electricity_consumed = self.ubes_electricity_consumption_hourly[hour]
+                for hour in range(8760):
+                    electricity_harvested = self.bipv_scenario.bipv_hourly_energy_harvested_dict[roof_or_facade][year][hour]
+                    electricity_consumed = self.ubes_electricity_consumption_hourly[hour]
 
-                hourly_surplus_energy = electricity_harvested - electricity_consumed # positive if surplus
+                    hourly_surplus_energy = electricity_harvested - electricity_consumed # positive if surplus
 
-                # receive electricity selling price for hour of the day
-                fit_for_specific_hour = self.bipv_scenario.bipv_subsidy_obj.get_electricity_price_per_hour(hour)
+                    # receive electricity selling price for hour of the day
+                    fit_for_specific_hour = self.bipv_scenario.bipv_subsidy_obj.get_electricity_price_per_hour(hour)
 
-                if hourly_surplus_energy < 0:
-                    energy_revenue_per_hour = electricity_harvested * self.grid_electricity_sell_price
-                elif hourly_surplus_energy > 0:
-                    energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price + hourly_surplus_energy * fit_for_specific_hour
+                    if hourly_surplus_energy < 0:
+                        energy_revenue_per_hour = electricity_harvested * self.grid_electricity_sell_price
+                    elif hourly_surplus_energy > 0:
+                        energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price + hourly_surplus_energy * fit_for_specific_hour
+                    else:
+                        energy_revenue_per_hour = 0
 
-                # sum up revenues over all hours for the year
-                electricity_revenue_per_year += energy_revenue_per_hour
+                    # sum up revenues over all hours for the year
+                    electricity_revenue_per_year += energy_revenue_per_hour
+
+            # analysis is done yearly, with a fixed feed in tariff
+            if self.ubes_electricity_consumption is None:
+                electricity_harvested = self.bipv_scenario.bipv_results_dict[roof_or_facade]["energy_harvested"][year]
+                electricity_consumed = self.ubes_electricity_consumption[year]
+
+                surplus_energy = electricity_harvested - electricity_consumed
+
+                if surplus_energy < 0:
+                    electricity_revenue_per_year = electricity_harvested * self.grid_electricity_sell_price
+                elif surplus_energy > 0:
+                    electricity_revenue_per_year = electricity_consumed * self.grid_electricity_sell_price + surplus_energy * self.bipv_scenario.bipv_subsidy_obj.electricity_price_shoulder_hours
+                else:
+                    electricity_revenue_per_year = 0
+
 
             # discount revenue
             discounted_revenue = electricity_revenue_per_year / ((1 + discount_rate) ** year)
@@ -504,8 +526,3 @@ def flatten_kpi_dict(d, parent_key='', sep='_'):
         else:
             items.append((new_key, [value for value in v.values()]))
     return dict(items)
-
-
-
-
-

@@ -136,7 +136,13 @@ class BipvScenario:
                                             zone_area):
         """
         Set the parameters needed for the computation of the KPIs
-        todo: add the other parameters
+        :param grid_ghg_intensity: float: kgCO2/kWh: grid GHG intensity
+        :param grid_energy_intensity: float: kWh/m2: grid energy intensity
+        :param grid_electricity_sell_price: float: €/kWh: grid electricity sell price
+        :param ubes_electricity_consumption: float: kWh: electricity consumption of the buildings
+        :param ubes_electricity_consumption_hourly: float: kWh: hourly electricity consumption of the buildings
+        :param conditioned_apartment_area: float: m2: conditioned apartment area
+        :param zone_area: float: m2: area of the zone
         """
         self.urban_canopy_bipv_kpis_obj.set_parameters(bipv_scenario=self,
                                                        grid_ghg_intensity=grid_ghg_intensity,
@@ -188,6 +194,9 @@ class BipvScenario:
     def stretch_harvested_energy_list(hourly_values_table, sun_hours_list, round_up):
         """
         adjust harvested energy list from sun hours to all hours of the year
+        :param hourly_values_table: list of lists: kWh: list[year][hour] for the harvested energy
+        :param sun_hours_list: float: list with all hours in which solar irradiation is received
+        :param round_up: bool: if sun hours are rounded up to next index or down
         """
 
         full_year_irradiation_table = []  # To store results for multiple years
