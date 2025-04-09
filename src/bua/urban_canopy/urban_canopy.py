@@ -1116,7 +1116,7 @@ class UrbanCanopy:
         roof_inverter_obj = bipv_inverter_obj_dict[roof_inverter_id]
         facades_inverter_obj = bipv_inverter_obj_dict[facades_inverter_id]
         bipv_subsidy_obj = bipv_subsidy_dict[subsidy_id]
-
+        self.bipv_scenario_dict[bipv_scenario_identifier].bipv_subsidy_obj = bipv_subsidy_obj
         # Folder to store the results
         path_radiation_and_bipv_result_folder = os.path.join(path_simulation_folder,
                                                              name_radiation_simulation_folder)
@@ -1173,7 +1173,7 @@ class UrbanCanopy:
                 table_of_hourly_energy_harvested.append(
                     self.building_dict[building_obj].solar_radiation_and_bipv_simulation_obj.get_bipv_hourly_energy_harvested(
                         start_year=bipv_scenario_obj.start_year, end_year=bipv_scenario_obj.end_year, roof_or_facades=roof_or_facades))
-            hourly_energy_harvested_all_buildings_table = sum_tables(table_of_hourly_energy_harvested)
+            hourly_energy_harvested_all_buildings_table = sum_tables(*table_of_hourly_energy_harvested)
 
 
             # Retrieve the sun hours
@@ -1236,7 +1236,7 @@ class UrbanCanopy:
 
     def compute_bipv_kpis_at_urban_scale(self, path_simulation_folder, bipv_scenario_identifier,
                                          grid_ghg_intensity, grid_energy_intensity,
-                                         grid_electricity_sell_price, zone_area, subsidy_obj, discount_rate):
+                                         grid_electricity_sell_price, zone_area, subsidy_type, discount_rate):
         """
         Post-process the BIPV results at urban scale
         :param path_simulation_folder: string, path to the simulation folder
@@ -1276,7 +1276,7 @@ class UrbanCanopy:
             ubes_electricity_consumption_hourly=ubes_electricity_consumption_hourly,
             conditioned_apartment_area=conditioned_apartment_area,
             zone_area=zone_area,
-            subsidy_type = subsidy_obj,
+            subsidy_type = subsidy_type,
             discount_rate=discount_rate)
         # Write the results to CSV file
         path_radiation_and_bipv_result_folder = os.path.join(path_simulation_folder,

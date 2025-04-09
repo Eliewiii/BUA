@@ -41,7 +41,7 @@ class BipvSubsidy:
         """
         Load the json file with information about subsidies and create the Subsidy objects
         """
-
+        list_of_files = os.listdir(path_json_folder)
         for file in os.listdir(path_json_folder):
             if file.endswith(".json"):
                 with open(os.path.join(path_json_folder, file), 'r') as json_file:
@@ -98,11 +98,11 @@ class BipvSubsidy:
 
         loan_payments = []
         r = self.loan_interest_rate
-        print(gate_to_gate_dict["cost"])
         initial_investment_cost = gate_to_gate_dict["cost"]["investment"][0]
 
 
-        for year in range(end_year - start_year):
+
+        for year in range((end_year + 1) - start_year):
             if year == 0:
                 loan_payments.append(0)
             elif year < self.payback_years:

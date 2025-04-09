@@ -12,15 +12,45 @@ path_json_result_file = os.path.join(path_result_folder, name_result_json_file)
 path_urban_canopy_file = r"C:\Users\julius.jandl\AppData\Local\BUA\Simulation_temp"
 
 scenarios_dict = {
-        "baseline": {
+        "net_metering": {
             "rooftech": "mitrex_roof c-Si M390-A1F 2025",
             "envtech": "mitrex_facades c-Si Solar Siding 350W - Dove Grey china 2025",
             "replacement": 10,
-            "x_size": 0.996,
-            "y_size": 2.030
-        }}
-scenario_id = list(scenarios_dict.keys())[0]
-subsidy_type = "fit_fixed_high"
+            "subsidy_type": "fit_net_metering"
+        },
+        "fit_time_of_use": {
+            "rooftech": "mitrex_roof c-Si M390-A1F 2025",
+            "envtech": "mitrex_facades c-Si Solar Siding 350W - Dove Grey china 2025",
+            "replacement": 10,
+            "subsidy_type": "fit_time_of_use"
+        },
+        "investment_support": {
+            "rooftech": "mitrex_roof c-Si M390-A1F 2025",
+            "envtech": "mitrex_facades c-Si Solar Siding 350W - Dove Grey china 2025",
+            "replacement": 10,
+            "subsidy_type": "investment_support"
+    },
+        "loan_high": {
+            "rooftech": "mitrex_roof c-Si M390-A1F 2025",
+            "envtech": "mitrex_facades c-Si Solar Siding 350W - Dove Grey china 2025",
+            "replacement": 10,
+            "subsidy_type": "loan_high"
+    },
+        "loan_low": {
+            "rooftech": "mitrex_roof c-Si M390-A1F 2025",
+            "envtech": "mitrex_facades c-Si Solar Siding 350W - Dove Grey china 2025",
+            "replacement": 10,
+            "subsidy_type": "loan_low"
+    },
+        "carbon_credits": {
+            "rooftech": "mitrex_roof c-Si M390-A1F 2025",
+            "envtech": "mitrex_facades c-Si Solar Siding 350W - Dove Grey china 2025",
+            "replacement": 10,
+            "subsidy_type": "carbon_credits"
+    }
+}
+scenario_id_list = list(scenarios_dict.keys())
+
 
 # load urban canopy object from generate_sample_for_bipv
 json_result_dict = {}
@@ -29,43 +59,46 @@ with open(path_json_result_file, 'w') as json_file:
 
 urban_canopy_object = SimulationCommonMethods.create_or_load_urban_canopy_object(path_simulation_folder=path_urban_canopy_file)
 
-SimFunSolarRadAndBipv.run_bipv_harvesting_and_lca_simulation(
-            urban_canopy_object=urban_canopy_object,
-            building_id_list=None,
-            bipv_scenario_identifier=scenario_id,
-            roof_id_pv_tech=scenarios_dict[scenario_id]["rooftech"],
-            facades_id_pv_tech=scenarios_dict[scenario_id]["envtech"],
-            subsidy_id=subsidy_type,
-            minimum_panel_eroi=1.5,
-            minimum_economic_roi=0,
-            electricity_sell_price=0.14,
-            start_year=2025,
-            end_year=2075,
-            replacement_scenario="replace_failed_panels_every_X_years",
-            continue_simulation=False,
-            update_panel_technology=False,
-            replacement_frequency_in_years=scenarios_dict[scenario_id]["replacement"],
-            discount_rate=default_discount_rate)
+for scenario_id in scenario_id_list:
 
-##### Run KPI computation
-SimFunSolarRadAndBipv.run_kpi_simulation(urban_canopy_object=urban_canopy_object,
-                                         bipv_scenario_identifier=scenario_id,
-                                         grid_ghg_intensity=default_grid_ghg_intensity,
-                                         grid_energy_intensity=default_grid_energy_intensity,
-                                         grid_electricity_sell_price=default_grid_electricity_sell_price,
-                                         zone_area=None,
-                                         subsidy_type = subsidy_type,
-                                         discount_rate = default_discount_rate)
 
-alternative_result_dict = {
-    "scenario_id": scenario_id,
-    "start_year": 2025,
-    'end_year': 2075,
-    "bipv_and_kpi_simulation": urban_canopy_object.bipv_scenario_dict[scenario_id].to_dict(),
-    "UBES": urban_canopy_object.ubes_obj.to_dict()
-}
+    SimFunSolarRadAndBipv.run_bipv_harvesting_and_lca_simulation(
+                urban_canopy_object=urban_canopy_object,
+                building_id_list=None,
+                bipv_scenario_identifier=scenario_id,
+                roof_id_pv_tech=scenarios_dict[scenario_id]["rooftech"],
+                facades_id_pv_tech=scenarios_dict[scenario_id]["envtech"],
+                subsidy_id=scenarios_dict[scenario_id]["subsidy_type"],
+                minimum_panel_eroi=1.5,
+                minimum_economic_roi=0,
+                electricity_sell_price=0.14,
+                start_year=2025,
+                end_year=2075,
+                replacement_scenario="replace_failed_panels_every_X_years",
+                continue_simulation=False,
+                update_panel_technology=False,
+                replacement_frequency_in_years=scenarios_dict[scenario_id]["replacement"],
+                discount_rate=default_discount_rate)
 
-json_result_dict[scenario_id] = alternative_result_dict
-# Overwrite the json file
-with open(path_json_result_file, 'w') as json_file:
-    json.dump(json_result_dict, json_file)
+    ##### Run KPI computation
+    SimFunSolarRadAndBipv.run_kpi_simulation(urban_canopy_object=urban_canopy_object,
+                                             bipv_scenario_identifier=scenario_id,
+                                             grid_ghg_intensity=default_grid_ghg_intensity,
+                                             grid_energy_intensity=default_grid_energy_intensity,
+                                             grid_electricity_sell_price=default_grid_electricity_sell_price,
+                                             zone_area=None,
+                                             subsidy_type = scenarios_dict[scenario_id]["subsidy_type"],
+                                             discount_rate = default_discount_rate)
+
+    alternative_result_dict = {
+        "scenario_id": scenario_id,
+        "start_year": 2025,
+        'end_year': 2075,
+        "bipv_and_kpi_simulation": urban_canopy_object.bipv_scenario_dict[scenario_id].to_dict(),
+        "UBES": urban_canopy_object.ubes_obj.to_dict()
+    }
+
+    json_result_dict[scenario_id] = alternative_result_dict
+    # Overwrite the json file
+    with open(path_json_result_file, 'w') as json_file:
+        json.dump(json_result_dict, json_file)

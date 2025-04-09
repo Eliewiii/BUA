@@ -856,7 +856,6 @@ class SolarRadAndBipvSimulation:
 
         new_hourly_energy_harvested_table = []
 
-        print(self.hourly_energy_harvested_dict[roof_or_facades])
         # get the number of sun hour
         for roof_or_fac in ["roof", "facades"]:
             if len(self.hourly_energy_harvested_dict[roof_or_fac]) > 0:
@@ -865,11 +864,11 @@ class SolarRadAndBipvSimulation:
 
 
         if self.did_simulation_run(roof_or_facades):
-            new_hourly_energy_harvested_table.append([[0 for i in range(num_sun_hour)] for j in range(
-                self.parameter_dict[roof_or_facades]["start_year"] - start_year)])
-            new_hourly_energy_harvested_table.append(self.hourly_energy_harvested_dict[roof_or_facades])
-            new_hourly_energy_harvested_table.append([[0 for i in range(num_sun_hour)] for j in range(
-                end_year - start_year - self.parameter_dict[roof_or_facades]["study_duration_in_years"])])
+            new_hourly_energy_harvested_table.extend([0 for i in range(num_sun_hour)] for j in range(
+                self.parameter_dict[roof_or_facades]["start_year"] - start_year))
+            new_hourly_energy_harvested_table.extend(self.hourly_energy_harvested_dict[roof_or_facades])
+            new_hourly_energy_harvested_table.extend([0 for i in range(num_sun_hour)] for j in range(
+                end_year - start_year - self.parameter_dict[roof_or_facades]["study_duration_in_years"]))
         else:
             new_hourly_energy_harvested_table = [[0 for i in range(num_sun_hour)] for j in
                                                                  range(end_year - start_year)]

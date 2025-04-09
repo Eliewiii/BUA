@@ -254,7 +254,7 @@ class BuildingModeled(BuildingBasic):
         """
         return self.bes_obj.get_hourly_energy_consumption()
 
-    def get_bipv_hourly_energy_harvested(self,start_year, end_year):
+    def get_bipv_hourly_energy_harvested_from_building(self,start_year, end_year):
         """
         Return the hourly energy consumption of the building from the EnergyPlus simulation
         """

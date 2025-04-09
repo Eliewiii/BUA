@@ -167,7 +167,7 @@ class SimFunSolarRadAndBipv:
                            grid_energy_intensity=default_grid_energy_intensity,
                            grid_electricity_sell_price=default_grid_electricity_sell_price,
                            zone_area=None,
-                           subsidy_type=None,
+                           subsidy_type=default_subsidy_id,
                            discount_rate=default_discount_rate):
         """
         Compute the KPIs at the urban scale. It includes BIPV and UBES KPIs.
@@ -186,7 +186,7 @@ class SimFunSolarRadAndBipv:
                                                              grid_energy_intensity=grid_energy_intensity,
                                                              grid_electricity_sell_price=grid_electricity_sell_price,
                                                              zone_area=zone_area,
-                                                             subsidy_type = None,
+                                                             subsidy_type = subsidy_type,
                                                              discount_rate = discount_rate)
 
         user_logger.info("KPIS have been computed successfully")

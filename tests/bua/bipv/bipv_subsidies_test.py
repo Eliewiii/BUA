@@ -11,7 +11,7 @@ from bua.urban_canopy.bipv_scenario_urban_canopy import BipvScenario
 
 path_test_folder =os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-path_test_data_bipv_dir=os.path.join(path_test_folder,'test_data',"bipv")
+path_test_data_bipv_dir=r"C:\Users\julius.jandl\AppData\Local\BUA\Libraries\BIPV\user"
 
 name_json_bipv_subsidies_test= "subsidies_julius.json"
 

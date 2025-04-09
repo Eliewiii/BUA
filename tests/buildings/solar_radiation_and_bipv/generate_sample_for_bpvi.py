@@ -64,7 +64,7 @@ SimulationBuildingManipulationFunctions.make_oriented_bounding_boxes_of_building
 UrbanBuildingEnergySimulationFunctions.load_epw_and_hb_simulation_parameters_for_ubes_in_urban_canopy(
     urban_canopy_obj=urban_canopy_object,
     path_weather_file=path_epw,
-    hourly_report_frequency=False,
+    hourly_report_frequency=True,
     overwrite=True)
 
 # Load building from json
