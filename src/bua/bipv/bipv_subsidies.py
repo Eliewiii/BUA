@@ -4,6 +4,7 @@ Class of subsidies to integrate in economic assessment with different parameters
 
 import os
 import json
+from xmlrpc.client import boolean
 
 from bua.config.config_default_values_user_parameters import default_grid_ghg_intensity
 
@@ -33,6 +34,9 @@ class BipvSubsidy:
 
         #income tax
         self.income_tax = None # income tax paid on sold electricity
+
+        #remuneration
+        self.remuneration = None #boolean, is excess energy sold or is value only created for self-consumed energy
 
 
     @classmethod
@@ -68,6 +72,8 @@ class BipvSubsidy:
 
                         subsidy_obj.carbon_tax = int(value["carbon_tax_per_ton_CO2"])
                         subsidy_obj.income_tax = float(value["income_tax_reduction_on_energy_generation"])
+
+                        subsidy_obj.remuneration = str(value["remuneration"])
 
                         # Save the object in the dictionary if it does not exist
                         if subsidy_obj.identifier not in subsidy_obj_dict:
@@ -142,7 +148,7 @@ class BipvSubsidy:
         :param grid_ghg_intensity: grid ghg intensity of the regular grid, used to calculate the omitted emissions from producing green energy
         """
 
-        carbon_tax_savings = [grid_ghg_intensity * self.carbon_tax/1000000 * energy_harvested_list[year]
+        carbon_tax_savings = [grid_ghg_intensity * self.carbon_tax/1000 * energy_harvested_list[year]
                               for year in range(len(energy_harvested_list))]
 
         return carbon_tax_savings
