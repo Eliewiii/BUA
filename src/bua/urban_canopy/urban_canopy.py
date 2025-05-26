@@ -624,8 +624,8 @@ class UrbanCanopy:
                         Model.from_dict(building.merged_faces_hb_model_dict))
                 # Check if the building has a HB model
                 elif building.hb_model_obj is not None:
-                    # Make the HB model mesh
-                    hb_model_and_lb_polyface3d_list.append(building.hb_model_obj.to_pyvista_mesh())
+                    building.make_lb_polyface3d_extruded_footprint()
+                    hb_model_and_lb_polyface3d_list.append(building.lb_polyface3d_extruded_footprint)
                 else:
                     dev_logger.info(
                         f"The building {building.id} does not have a Honeybee model, it will not be included in the "
