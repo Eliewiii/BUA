@@ -307,6 +307,18 @@ def find_perimeter_offset_df_building(lb_face_footprint, core_area_ratio=0.15, t
             for i in range(len(self.DF_building.unique_stories[0].room_2ds) - nb_rooms_per_stories + 1):
                 self.DF_building.unique_stories[0].room_2ds[-i - 1].identifier = "core_" + str(i)
 
+def compute_core_area_ratio_for_offset_value(perimeter_offset, lb_face_footprint):
+    """
+
+    """
+    df_building = dragonfly.building.Building.from_footprint(identifier="temp",
+                                                             footprint=[lb_face_footprint],
+                                                             floor_to_floor_heights=[3.],  # Doesn't matter
+                                                             perimeter_offset=perimeter_offset)
+    return sum([core.floor_area for core in df_building.unique_room_2ds if core.is_core])/lb_face_footprint.area
+
+
+
 
 def room2d_is_core(room_2d):
     """ check if a room is a core or not """
