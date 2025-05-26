@@ -175,13 +175,13 @@ def ray_list_from_emitter_to_receiver(face_emitter, face_receiver, exclude_surfa
     start_point_l = convert_point3d_to_numpy_array(emitter_face3d.lower_left_corner)
     start_point_r = convert_point3d_to_numpy_array(emitter_face3d.lower_right_corner)
     start_point_c = (start_point_l + start_point_r) / 2.
-    start_point_l[2], start_point_l[2], start_point_c[
+    start_point_l[2], start_point_r[2], start_point_c[
         2] = z_emitter, z_emitter, z_emitter  # correct the z coordinate
     # end vertices, numpy arrays
     end_point_l = convert_point3d_to_numpy_array(receiver_face3d.lower_left_corner)
     end_point_r = convert_point3d_to_numpy_array(receiver_face3d.lower_right_corner)
     end_point_c = (end_point_l + end_point_r) / 2.
-    end_point_l[2], end_point_l[2], end_point_c[
+    end_point_l[2], end_point_r[2], end_point_c[
         2] = z_receiver, z_receiver, z_receiver  # correct the z coordinate
 
     # ray list

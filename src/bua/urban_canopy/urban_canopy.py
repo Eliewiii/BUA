@@ -55,6 +55,7 @@ class UrbanCanopy:
 
         # Context filtering
         self.full_context_pyvista_mesh = None  # pyvista mesh of all the buildings within the urban canopy
+        self.lwr_context_pyvista_mesh = None  # pyvista mesh of all the buildings within the urban canopy
         self.shade_manager = ShadeManager()  # Shade manager object
         # LWR
         self.lwr_context_pyvista_mesh = None  # pyvista mesh of all the buildings within the urban canopy
