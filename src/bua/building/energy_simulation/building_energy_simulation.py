@@ -6,12 +6,15 @@ import os
 import json
 import logging
 import shutil
+from packaging import version
 
 from time import time
 from copy import deepcopy
 
 from honeybee.model import Model
-from honeybee_energy.run import to_openstudio_osw, run_osw, run_idf
+from honeybee_energy.simulation.parameter import SimulationParameter
+from honeybee_energy.run import to_openstudio_osw, run_osw, run_idf, to_openstudio_sim_folder
+from honeybee_energy.config import folders as hb_folders
 from honeybee_energy.result.eui import eui_from_sql
 
 from ladybug.sql import SQLiteResult
@@ -219,8 +222,8 @@ class BuildingEnergySimulation:
         if sql_obj.reporting_frequency == "Hourly":
             self.hourly_report_frequency = True
             self.bes_results_dict["total"]["hourly"] = get_hourly_results_from_sql(sql_obj,
-                                                                                        self.cop_cooling,
-                                                                                        self.cop_heating)
+                                                                                   self.cop_cooling,
+                                                                                   self.cop_heating)
         # Get End Use intensity
         eui_dict = eui_from_sql(path_eplusout_sql)
         total_floor_area = eui_dict["total_floor_area"]
@@ -274,7 +277,8 @@ class BuildingEnergySimulation:
         Get the total energy consumption of the building.
         :return: float, total energy consumption of the building
         """
-        if not self.has_run or not self.hourly_report_frequency or not self.bes_results_dict["total"]["hourly"]:
+        if not self.has_run or not self.hourly_report_frequency or not self.bes_results_dict["total"][
+            "hourly"]:
             user_logger.warning(
                 f"The Building Energy Simulation has not been run yet for building id:{self.building_id} "
                 f"or the report frequency is not hourly.")
@@ -287,13 +291,27 @@ def from_hbjson_to_idf(dir_to_write_idf_in: str, path_hbjson_file: str, path_epw
     """
     Convert a hbjson file to an idf file (input for EnergyPlus)
     """
-    # pass the hbjson file to Openstudio to convert it to idf
-    osw = to_openstudio_osw(osw_directory=dir_to_write_idf_in,
-                            model_path=path_hbjson_file,
-                            sim_par_json_path=path_hbjson_simulation_parameters,
-                            epw_file=path_epw_file)
-    ## Run simulation in OpenStudio to generate IDF ##
-    (path_osm, path_idf) = run_osw(osw, silent=silent)
+    openstudio_version = ".".join(map(str,hb_folders.openstudio_version))
+    if version.parse(openstudio_version) < version.parse("3.9.0"):
+        osw = to_openstudio_osw(osw_directory=dir_to_write_idf_in,
+                                model_path=path_hbjson_file,
+                                sim_par_json_path=path_hbjson_simulation_parameters,
+                                epw_file=path_epw_file)
+        ## Run simulation in OpenStudio to generate IDF ##
+        (path_osm, path_idf) = run_osw(osw, silent=silent)
+    else:
+        hb_model = Model.from_hbjson(path_hbjson_file)
+        with open(path_hbjson_simulation_parameters, "r") as f:
+            data = json.load(f)
+        sim_parameter_obj = SimulationParameter.from_dict(data)
+
+        (osm, osw, idf) = to_openstudio_sim_folder(
+            model=hb_model,
+            directory=dir_to_write_idf_in,
+            epw_file=path_epw_file,
+            sim_par=sim_parameter_obj,
+            enforce_rooms=True
+        )
 
 
 def bes_result_dict_to_csv(bes_results_dict: dict, path_csv_file: str):
