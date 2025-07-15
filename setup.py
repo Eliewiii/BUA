@@ -29,7 +29,7 @@ import os
 
 
 def run_setup_script_and_get_version():
-    version_tag = "0.0.1"  # Default version tag or fetch from another source
+    version_tag = "0.0.2"  # Default version tag or fetch from another source
 
     # Check for an environment variable to skip the setup script
     if os.getenv("SKIP_SETUP_SCRIPT", "false").lower() == "true":
