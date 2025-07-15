@@ -36,7 +36,7 @@ def lb_footprint_to_hb_model(identifier:str,lb_face_footprint: Face3D, core_area
 
 def find_perimeter_offset_for_target_core_area_ratio(target_ratio: float,
                                                      lb_face_footprint: Face3D,
-                                                     lower_bound: float = 0.6,
+                                                     lower_bound: float = 0.1,
                                                      upper_bound: float = 50.0,
                                                      tol: float = 1e-6,
                                                      max_iter: int = 100) -> float:
@@ -109,7 +109,8 @@ def _compute_core_area_ratio_for_offset_value(perimeter_offset: float,
         identifier="temp",
         footprint=[lb_face_footprint],
         floor_to_floor_heights=[3.0],  # Height doesn't affect core ratio here
-        perimeter_offset=perimeter_offset
+        perimeter_offset=perimeter_offset,
+        tolerance= 0.01
     )
     # Solve the adjacency to identify the core properly
     for room in df_building.unique_room_2ds:
