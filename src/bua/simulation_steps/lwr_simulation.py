@@ -18,6 +18,25 @@ dev_logger = logging.getLogger("dev")
 class SimulationLWR:
 
     @staticmethod
+    def perform_building_selection_for_lwr_computation(urban_canopy_object: UrbanCanopy,
+                                                       min_vf_criterion=0.01,
+                                                       num_rays=9,
+                                                       convert_to_hb_model=False,
+                                                       overwrite=False):
+        """
+
+        """
+
+        urban_canopy_object.perform_building_selection_for_lwr_computation(
+            min_vf_criterion=min_vf_criterion,
+            num_rays=num_rays,
+            convert_to_hb_model=convert_to_hb_model,
+            overwrite=overwrite
+        )
+        user_logger.info("Building selection for LWR computation performed successfully")
+        dev_logger.info("Building selection for LWR computation performed successfully")
+
+    @staticmethod
     def generate_radiative_surface_manager_for_lwr_computation(urban_canopy_object: UrbanCanopy,
                                                                overwrite: bool = False,
                                                                include_windows: bool = True):
@@ -56,10 +75,8 @@ class SimulationLWR:
         dev_logger.info("View factors computed successfully")
 
     @staticmethod
-    def set_up_lwr_simulation(urban_canopy_object: UrbanCanopy,
+    def set_up_and_run_lwr_simulation(urban_canopy_object: UrbanCanopy,
                               path_energyplus_dir,
-                              path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
-                              path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
                               path_simulation_folder=default_path_simulation_folder,
                               path_hbjson_simulation_parameter_file=default_path_hbjson_simulation_parameter_file,
                               path_weather_file=default_path_weather_file,
@@ -70,15 +87,11 @@ class SimulationLWR:
         """
 
         """
-        urban_canopy_object.set_up_lwr_simulation(
+        urban_canopy_object.set_up_and_run_lwr_simulation(
             path_simulation_folder=path_simulation_folder,
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
             path_weather_file=path_weather_file,
             path_energyplus_dir=path_energyplus_dir,
-            path_vf_mtx_crs_npz=path_vf_mtx_crs_npz,
-            path_eps_mtx_crs_npz=path_eps_mtx_crs_npz,
-            path_rho_mtx_crs_npz=path_rho_mtx_crs_npz,
-            path_tau_mtx_crs_npz=path_tau_mtx_crs_npz,
             ddy_file=ddy_file,
             hourly_report_frequency=hourly_report_frequency,
             num_time_steps_per_hour=num_time_steps_per_hour,
@@ -87,13 +100,5 @@ class SimulationLWR:
         user_logger.info("LWR simulation set up successfully")
         dev_logger.info("LWR simulation set up successfully")
 
-    @staticmethod
-    def run_coupled_ubes_lwr_simulation(urban_canopy_object: UrbanCanopy):
-        """
-
-        """
-        urban_canopy_object.run_lwr_simulation()
-        user_logger.info("LWR simulation ran successfully")
-        dev_logger.info("LWR simulation ran successfully")
 
 

@@ -688,7 +688,7 @@ class UrbanCanopy:
                                                        path_weather_file, ddy_file=None,
                                                        hourly_report_frequency: bool = False,
                                                        num_time_steps_per_hour: int = None,
-                                                       add_outdoor_face_temperature:bool=False,
+                                                       add_outdoor_face_temperature: bool = False,
                                                        overwrite=False):
         """
         Load the HB simulation parameters from the json file, check if it is valid, correct it eventually and add to the
@@ -707,7 +707,8 @@ class UrbanCanopy:
         flag_re_initialize_building_bes = self.ubes_obj.load_epw_and_hb_simulation_parameters(
             path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
             path_weather_file=path_weather_file, hourly_report_frequency=hourly_report_frequency,
-            num_time_steps_per_hour=num_time_steps_per_hour,add_outdoor_face_temperature=add_outdoor_face_temperature,
+            num_time_steps_per_hour=num_time_steps_per_hour,
+            add_outdoor_face_temperature=add_outdoor_face_temperature,
             ddy_file=ddy_file, overwrite=overwrite)
 
         # Re-initialize the UBES of the whole UrbanCanopy if needed
@@ -1229,76 +1230,60 @@ class UrbanCanopy:
     # ----------------------------------------------------------
     # LWR Simulation
     # ----------------------------------------------------------
-    def perform_surface_selection_for_lwr_computation(self, min_cf_criterion,
-                                                      context_building_generation_options=None,
-                                                      overwrite=False):
-        """
-        Perform the selection of the couple of surfaces to use for for the longwave radiation computation.
-        :param min_cf_criterion: float, the minimum form factor criterion for the selection of the surfaces.
-        :param context_building_generation_options: todo option for the generation of HB models of the context buildings
-        :param overwrite: bool, if True, the existing selected surfaces will be overwritten.
+
+    def perform_building_selection_for_lwr_computation(self,
+                                                       min_vf_criterion = 0.01,
+                                                       num_rays = 9,
+                                                       convert_to_hb_model=False,
+                                                       overwrite=False):
         """
 
-        # todo @Elie: to be implemented, check the following steps,
-        building_id_list_to_convert_to_building_modeled = []
+        """
+
+        # Make oriented bounding boxes of the buildings in the urban canopy if they don't exist already
+        self.make_oriented_bounding_boxes_of_buildings(overwrite=overwrite)
+        # Perform first pass on target building to get the buildings ids that should be included
+        # in the simulation
+
+        selected_context_building_id_list = []  # Initialize the list
         uc_building_id_list = list(self.building_dict.keys())
         uc_building_bounding_box_list = [building_obj.lb_polyface3d_oriented_bounding_box for
                                          building_obj in self.building_dict.values()]
-        # Selection of the buildings to use for the LWR using the min VF criterion (the same as the first pass context selection)
-        for building_id, building_obj in self.building_dict.items():
-            if (isinstance(building_obj, BuildingModeled) and building_obj.is_target):
-                selected_building_id_list, duration = building_obj.perform_first_pass_lwr_context_filtering(
+        # Loop over the buildings
+        for i, (building_id, building_obj) in enumerate(self.building_dict.items()):
+            if (isinstance(building_obj, BuildingModeled)  and (building_obj.is_target or building_obj.to_simulate)):
+                # Perform the first pass context filtering
+                current_building_selected_context_building_id_list, _ = building_obj. \
+                    perform_lwr_first_pass_context_filtering(
                     uc_building_id_list=uc_building_id_list,
                     uc_building_bounding_box_list=uc_building_bounding_box_list,
                     min_vf_criterion=min_vf_criterion, overwrite=overwrite)
-                building_id_list_to_convert_to_building_modeled.extend(selected_building_id_list)
+                selected_context_building_id_list += current_building_selected_context_building_id_list
+        # Remove duplicates
+        selected_context_building_id_list = list(set(selected_context_building_id_list))
 
-        # Generate the HB model/convert to BuildingModeled the buildings to use for the LWR computation if they are not already and set is_simulated to True for them
-        # todo: @Elie: correct this function and make it so that it ignores buildings that are already BuildingModeled (to thus ignore duplicated building from the list)
-        self.transform_buildingbasic_into_building_model(
-            building_id_list=building_id_list_to_convert_to_building_modeled,
-            are_simulated=True, use_typology=True,
-            typology_identification=False, autozoner=True,
-            use_layout_from_typology=True,
-            use_properties_from_typology=True,
-            merge_facades_and_roof_faces_in_hb_model=False
-        )
-        # Perform this first pass context filtering for these is_simulated buildings that were just created
-        target_and_simulated_building_id_list = [building_id for building_id, building_obj in
-                                                 self.building_dict.items()
-                                                 if self.included_in_lwr_computation(building_obj)]
-        for building_id, building_obj in self.building_dict.items():
-            if self.included_in_lwr_computation(building_obj):
-                selected_building_id_list, duration = building_obj.perform_first_pass_lwr_context_filtering(
-                    uc_building_id_list=target_and_simulated_building_id_list,
-                    # No need to put the other buildings, they will not be used in the LWR computation
-                    uc_building_bounding_box_list=uc_building_bounding_box_list,
-                    min_vf_criterion=min_vf_criterion, overwrite=overwrite)
+        # perform second pass to see which building are visible for the target buildings
 
-        # Generate the Pyvista mesh including all the buildings in the urban canopy or just the one within target and simulated
-        self.make_pyvista_polydata_mesh_of_all_buildings(target_and_simulated_only=True)
+        """
+        For now no ray tracing.
+        """
 
-        # Perform an adjusted version second pass context filtering on the buildings to use for the LWR computation
-        for building_id, building_obj in self.building_dict.items():
-            if self.included_in_lwr_computation(building_obj):
-                building_obj.perform_second_pass_lwr_context(
-                    building_surfaces_dict=lwr_surfaces_dict,
-                    urban_canopy_pyvista_mesh=self.full_context_pyvista_mesh,
-                    ray_arg=None
-                )
-        # Generate surfaces objects for all outside surfaces of the buildings to use for the LWR computation (preprocess center, normal, area, and the edges)
-        for building_id, building_obj in self.building_dict.items():
-            if self.included_in_lwr_computation(building_obj):
-                building_obj.generate_radiative_surface_objects_for_lwr_computation(overwrite=overwrite)
-        # Gather akk the surfaces to use for the LWR computation
-        lwr_surfaces_list = []
-        for building_id, building_obj in self.building_dict.items():
-            if self.included_in_lwr_computation(building_obj):
-                lwr_surfaces_dict[building_id] = building_obj.lwr_surfaces_dict
+        # Potentially convert the surrounding buildings to hbjsons
+        for building_id in selected_context_building_id_list:
+            building_obj = self.building_dict[building_id]
+            if not isinstance(building_obj,BuildingModeled) and not convert_to_hb_model:
+                pass
+            elif not isinstance(building_obj, BuildingModeled) and convert_to_hb_model:
+                # Convert the building to a hbjson
+                building_obj.convert_to_hb_model(overwrite=overwrite)  # Todo: implement
+            elif building_obj.is_target:
+                pass
+            building_obj.to_simulate = True  # Set the building to be simulated
 
-        # Add special surfaces for ground and sky according the location of the urban canopy
 
-        # Make self.radiative_surface_manager
+
+
+
 
     def generate_radiative_surface_manager_for_lwr_computation(self, overwrite=False,
                                                                include_windows: bool = True):
@@ -1357,15 +1342,47 @@ class UrbanCanopy:
         # Delete the temporary files
         return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
 
-    def set_up_lwr_simulation(self, path_simulation_folder, path_hbjson_simulation_parameter_file,
-                              path_weather_file,
-                              path_energyplus_dir,
-                              path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
-                              path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
-                              ddy_file=None,
-                              hourly_report_frequency: bool = False,
-                              num_time_steps_per_hour: int = 20,
-                              **kwargs):
+    def set_up_and_run_lwr_simulation(self, path_simulation_folder, path_hbjson_simulation_parameter_file,
+                                      path_weather_file,
+                                      path_energyplus_dir,
+                                      ddy_file=None,
+                                      hourly_report_frequency: bool = False,
+                                      num_time_steps_per_hour: int = 20,
+                                      **kwargs):
+        """
+
+        """
+
+        path_lwr_result_dir = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder)
+
+        path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self.lwr_simulation_manager.get_matrices_paths(
+            path_vf_results_dir=path_lwr_result_dir
+        )
+
+        self._set_up_lwr_simulation(
+            path_simulation_folder=path_simulation_folder,
+            path_hbjson_simulation_parameter_file=path_hbjson_simulation_parameter_file,
+            path_weather_file=path_weather_file,
+            path_energyplus_dir=path_energyplus_dir,
+            path_vf_mtx_crs_npz=path_vf_mtx_crs_npz, path_eps_mtx_crs_npz=path_eps_mtx_crs_npz,
+            path_rho_mtx_crs_npz=path_rho_mtx_crs_npz, path_tau_mtx_crs_npz=path_tau_mtx_crs_npz,
+            ddy_file=ddy_file,
+            hourly_report_frequency=hourly_report_frequency,
+            num_time_steps_per_hour=num_time_steps_per_hour,
+            **kwargs
+
+        )
+        self._run_lwr_simulation()
+
+    def _set_up_lwr_simulation(self, path_simulation_folder, path_hbjson_simulation_parameter_file,
+                               path_weather_file,
+                               path_energyplus_dir,
+                               path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
+                               path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
+                               ddy_file=None,
+                               hourly_report_frequency: bool = False,
+                               num_time_steps_per_hour: int = 20,
+                               **kwargs):
 
         """
 
@@ -1398,7 +1415,7 @@ class UrbanCanopy:
             path_tau_mtx_crs_npz=path_tau_mtx_crs_npz,
             **kwargs)
 
-    def run_lwr_simulation(self):
+    def _run_lwr_simulation(self):
         """
         Run the longwave radiation simulation.
         """
@@ -1437,10 +1454,4 @@ class UrbanCanopy:
         :return: bool
         """
         return isinstance(building_obj, BuildingModeled) and (
-                building_obj.to_simulate_lwr or building_obj.is_target)
-
-    def perform_the_view_factor_computation_for_lwr(self, overwrite: bool = False):
-        """
-        Perform the view factor computation for the longwave radiation.
-        """
-        # todo: @Elie: to be implemented
+                building_obj.to_simulate or building_obj.is_target)

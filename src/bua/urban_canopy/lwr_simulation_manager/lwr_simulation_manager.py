@@ -3,6 +3,8 @@
 """
 import logging
 
+from time import time
+
 from typing import List, Dict
 
 from honeybee.model import Model
@@ -27,6 +29,9 @@ class LwrSimulationManager:
         #
         self._vf_sim_performed = False
         self._lwr_sim_performed = False
+        # Duration of the simulations
+        self._vf_comp_duration: float = None
+        self._lwr_sim_duration: float = None
 
     @property
     def is_empty(self):
@@ -42,6 +47,16 @@ class LwrSimulationManager:
     def num_surfaces(self):
         """ Number of surfaces  in the RadiativeSurfaceManager object."""
         return self._radiative_surface_manager.num_surface
+
+    @property
+    def vf_comp_duration(self):
+        """ Duration of the view factor computation."""
+        return self._vf_comp_duration
+
+    @property
+    def lwr_sim_duration(self):
+        """ Duration of the LWR simulation."""
+        return self._lwr_sim_duration
 
     def reset(self):
         """ Reset the RadiativeSurfaceManager object."""
@@ -72,18 +87,18 @@ class LwrSimulationManager:
         self._building_outdoor_surface_id_table.append(surface_id_list)
 
     def run_vf_computation(self, path_vf_computation_temp_dir: str, path_vf_results_dir: str,
-                               num_worker_cpu_bound: int = 0,
-                               num_worker_io_bound: int = 0,
-                               num_rays: int = 100000,
-                               mvfc_check: bool = True,
-                               mvfc: float = None,
-                               ray_traced_check: bool = True,
-                               ray_tracing_among_all_corners: bool = False,
-                               num_receiver_per_file: int = 40,
-                               overwrite_folders: bool = False,
-                               consider_octree: bool = True,
-                               one_octree_for_all: bool = False,
-                               save_to_pkl: bool = False):
+                           num_worker_cpu_bound: int = 0,
+                           num_worker_io_bound: int = 0,
+                           num_rays: int = 100000,
+                           mvfc_check: bool = True,
+                           mvfc: float = None,
+                           ray_traced_check: bool = True,
+                           ray_tracing_among_all_corners: bool = False,
+                           num_receiver_per_file: int = 40,
+                           overwrite_folders: bool = False,
+                           consider_octree: bool = True,
+                           one_octree_for_all: bool = False,
+                           save_to_pkl: bool = False):
         """
 
         """
@@ -95,6 +110,8 @@ class LwrSimulationManager:
             logging.warning(
                 "The view factor computation has already been performed, the computation will be skipped.")
             return
+
+        dur = time()
 
         # Run the simulation
         path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self._radiative_surface_manager.run_view_factor_computation_in_subprocess(
@@ -116,15 +133,32 @@ class LwrSimulationManager:
         # todo add a check for the simulation success
 
         self._vf_sim_performed = True
+        self._vf_comp_duration = time() - dur
 
         return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
+
+    def get_matrices_paths(self,path_vf_results_dir):
+        """
+        """
+
+        path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self._radiative_surface_manager.save_vf_eps_rho_and_tau_matrices_to_npz(
+            path_dir=path_vf_results_dir,return_path_npz_only=True
+        )
+        """ The simulation are performed in a subprocess and are not saved within the object, but the function
+         only returns the paths based on the path_dir, the simulation does not need to be run for that """
+
+        return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
+
+
+
 
     def initialize_ep_coupled_lwr_simulation(self, path_dir_lwr_sim: str, path_epw_file: str,
                                              path_energyplus_dir: str, path_idf_file_dict: Dict[str, str],
                                              path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
                                              path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
                                              tol: float = 1e-6,
-                                             maxiter: int = 150, rtol=1e-5, precondition=False, num_workers=0,to_pkl=False):
+                                             maxiter: int = 150, rtol=1e-5, precondition=False, num_workers=0,
+                                             to_pkl=False):
         """
 
 
@@ -135,32 +169,33 @@ class LwrSimulationManager:
                 "The view factor computation has not been performed yet, the LWR simulation cannot be run")
         # Generate the configuration dictionary
         config_dict = self._make_config_dict_for_ep_coupled_lwr_simulation(path_dir_lwr_sim,
-                                                                          path_epw_file,
-                                                                          path_energyplus_dir,
-                                                                          path_idf_file_dict,
-                                                                          path_vf_mtx_crs_npz,
-                                                                          path_eps_mtx_crs_npz,
-                                                                          path_rho_mtx_crs_npz,
-                                                                          path_tau_mtx_crs_npz, tol=tol,
-                                                                          maxiter=maxiter, rtol=rtol,
-                                                                          precondition=precondition,
-                                                                          num_workers=num_workers)
+                                                                           path_epw_file,
+                                                                           path_energyplus_dir,
+                                                                           path_idf_file_dict,
+                                                                           path_vf_mtx_crs_npz,
+                                                                           path_eps_mtx_crs_npz,
+                                                                           path_rho_mtx_crs_npz,
+                                                                           path_tau_mtx_crs_npz, tol=tol,
+                                                                           maxiter=maxiter, rtol=rtol,
+                                                                           precondition=precondition,
+                                                                           num_workers=num_workers)
         # Initialize the EP coupled LWR simulation manager and generartes the configuration file
         """
         This initialization includes some preprocessing, generating additional strings for IDF files to 
         include the LWR computation, and finally generating the adjusted idf files.
         """
-        self._ep_lwr_simulation_manager,_=self._ep_lwr_simulation_manager.set_up_coupled_lwr_simulation_from_config_dict(config_dict,to_pkl=to_pkl)
+        self._ep_lwr_simulation_manager, _ = self._ep_lwr_simulation_manager.set_up_coupled_lwr_simulation_from_config_dict(
+            config_dict, to_pkl=to_pkl)
 
     def _make_config_dict_for_ep_coupled_lwr_simulation(self, path_dir_lwr_sim: str,
-                                                       path_epw_file: str,
-                                                       path_energyplus_dir: str,
-                                                       path_idf_file_dict: Dict[str, str],
-                                                       path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
-                                                       path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
-                                                       tol: float = 1e-6,
-                                                       maxiter: int = 150, rtol=1e-5, precondition=False,
-                                                       num_workers=0):
+                                                        path_epw_file: str,
+                                                        path_energyplus_dir: str,
+                                                        path_idf_file_dict: Dict[str, str],
+                                                        path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
+                                                        path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
+                                                        tol: float = 1e-6,
+                                                        maxiter: int = 150, rtol=1e-5, precondition=False,
+                                                        num_workers=0):
         """
         Generate the configuration dictionary for the EP coupled LWR simulation.
         It is put in a separate function to generate the configuration dict and then debug the
@@ -202,4 +237,7 @@ class LwrSimulationManager:
         """
 
         """
+
+        dur = time()
         self._ep_lwr_simulation_manager.run_lwr_coupled_simulation_in_subprocess()
+        self._lwr_sim_duration = time() - dur

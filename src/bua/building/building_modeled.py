@@ -434,10 +434,11 @@ class BuildingModeled(BuildingBasic):
                 target_building_id=self.id,
                 uc_building_id_list=uc_building_id_list,
                 uc_building_bounding_box_list=uc_building_bounding_box_list,
-                include_target_building=True)
+                include_target_building=False)
 
         # Return the list of context buildings
         return selected_context_building_id_list, duration
+
 
     def generate_radiative_surface_objects_for_lwr_computation(self, include_windows: bool = True) -> List[
         object]:
