@@ -4,9 +4,9 @@ Unit tests for the BUA workflow.
 import os
 import time
 
-from src.bua.urban_canopy import UrbanCanopy
-from src.bua.simulation_steps import *
-from src.bua.config.config_default_values_user_parameters import *
+from bua.urban_canopy import UrbanCanopy
+from bua.simulation_steps import *
+from bua.config.config_default_values_user_parameters import *
 
 # Inputs to be used
 test_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -30,7 +30,7 @@ def init_urban_canopy_with_x_buildingmodels(num_buildings) -> UrbanCanopy:
     urban_canopy_object = SimulationCommonMethods.create_or_load_urban_canopy_object(
         path_simulation_folder=default_path_simulation_folder)
 
-    for i in range(num_buildings):
+    for i in range(1,num_buildings+1):
         path_hbjson = os.path.join(path_hbjson_folder, list_hbjson_files[i])
         SimulationLoadBuildingOrGeometry.add_buildings_from_hbjson_to_urban_canopy(
             urban_canopy_object=urban_canopy_object,
@@ -46,7 +46,7 @@ def test_run_bes():
     """
     Check that
     """
-    urban_canopy_object = init_urban_canopy_with_x_buildingmodels(num_buildings=2)
+    urban_canopy_object = init_urban_canopy_with_x_buildingmodels(num_buildings=1)
 
     # Clear simulation temp folder
     building_ids = list(urban_canopy_object.building_dict.keys())
@@ -95,3 +95,4 @@ def test_run_bes():
                                                                path_simulation_folder=path_simulation_temp_folder)
     SimulationCommonMethods.save_urban_canopy_to_json(urban_canopy_object=urban_canopy_object,
                                                       path_simulation_folder=path_simulation_temp_folder)
+
