@@ -1232,8 +1232,8 @@ class UrbanCanopy:
     # ----------------------------------------------------------
 
     def perform_building_selection_for_lwr_computation(self,
-                                                       min_vf_criterion = 0.01,
-                                                       num_rays = 9,
+                                                       min_vf_criterion=0.01,
+                                                       num_rays=9,
                                                        convert_to_hb_model=False,
                                                        overwrite=False):
         """
@@ -1251,10 +1251,11 @@ class UrbanCanopy:
                                          building_obj in self.building_dict.values()]
         # Loop over the buildings
         for i, (building_id, building_obj) in enumerate(self.building_dict.items()):
-            if (isinstance(building_obj, BuildingModeled)  and (building_obj.is_target or building_obj.to_simulate)):
+            if (isinstance(building_obj, BuildingModeled) and (
+                    building_obj.is_target or building_obj.to_simulate)):
                 # Perform the first pass context filtering
                 current_building_selected_context_building_id_list, _ = building_obj. \
-                    perform_lwr_first_pass_context_filtering(
+                    perform_lwr_context_filtering(
                     uc_building_id_list=uc_building_id_list,
                     uc_building_bounding_box_list=uc_building_bounding_box_list,
                     min_vf_criterion=min_vf_criterion, overwrite=overwrite)
@@ -1271,7 +1272,7 @@ class UrbanCanopy:
         # Potentially convert the surrounding buildings to hbjsons
         for building_id in selected_context_building_id_list:
             building_obj = self.building_dict[building_id]
-            if not isinstance(building_obj,BuildingModeled) and not convert_to_hb_model:
+            if not isinstance(building_obj, BuildingModeled) and not convert_to_hb_model:
                 pass
             elif not isinstance(building_obj, BuildingModeled) and convert_to_hb_model:
                 # Convert the building to a hbjson
@@ -1279,11 +1280,6 @@ class UrbanCanopy:
             elif building_obj.is_target:
                 pass
             building_obj.to_simulate = True  # Set the building to be simulated
-
-
-
-
-
 
     def generate_radiative_surface_manager_for_lwr_computation(self, overwrite=False,
                                                                include_windows: bool = True):
@@ -1327,18 +1323,21 @@ class UrbanCanopy:
         if os.path.exists(path_lwr_result_dir):
             if overwrite:
                 shutil.rmtree(path_lwr_result_dir)
-            elif os.listdir(path_lwr_result_dir):
+            elif os.listdir(path_lwr_result_dir) and not self.lwr_simulation_manager.vf_sim_performed:
                 raise FileExistsError(
                     "There are already resulst for the VF or LWR computation, please for the computation"
                     "with overwrite if you still want to run the simulation")
-        os.makedirs(path_lwr_result_dir)
-        # Run the simulation
-        path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self.lwr_simulation_manager.run_vf_computation(
-            path_vf_computation_temp_dir=path_vf_computation_temp_dir,
-            path_vf_results_dir=path_lwr_result_dir, **kwargs)
-        # Check if the simulation succeeded
-        if delete_temp_files:
-            shutil.rmtree(path_vf_computation_temp_dir)
+        if not self.lwr_simulation_manager.vf_sim_performed:
+            os.makedirs(path_lwr_result_dir)
+            # Run the simulation
+            _, _, _, _ = self.lwr_simulation_manager.run_vf_computation(
+                path_vf_computation_temp_dir=path_vf_computation_temp_dir,
+                path_vf_results_dir=path_lwr_result_dir, **kwargs)
+            # Check if the simulation succeeded
+            if delete_temp_files:
+                shutil.rmtree(path_vf_computation_temp_dir)
+        path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz = self.lwr_simulation_manager.get_matrices_paths(
+            path_lwr_result_dir)
         # Delete the temporary files
         return path_vf_mtx_crs_npz, path_eps_mtx_crs_npz, path_rho_mtx_crs_npz, path_tau_mtx_crs_npz
 

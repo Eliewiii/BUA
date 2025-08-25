@@ -49,6 +49,11 @@ class LwrSimulationManager:
         return self._radiative_surface_manager.num_surface
 
     @property
+    def vf_sim_performed(self):
+        """ Duration of the view factor computation."""
+        return self._vf_sim_performed
+
+    @property
     def vf_comp_duration(self):
         """ Duration of the view factor computation."""
         return self._vf_comp_duration

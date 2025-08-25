@@ -400,7 +400,7 @@ class BuildingModeled(BuildingBasic):
     # LWR Simulation
     # ----------------------------------------------------------
 
-    def perform_first_pass_lwr_context_filtering(self, uc_building_id_list: List[str],
+    def perform_lwr_context_filtering(self, uc_building_id_list: List[str],
                                                  uc_building_bounding_box_list: List[Polyface3D],
                                                  min_vf_criterion: float = 0.01, overwrite: bool = True):
         """
@@ -420,6 +420,7 @@ class BuildingModeled(BuildingBasic):
         if overwrite:
             self.lwr_context_obj.overwrite_filtering(overwrite_first_pass=True)
         # check if the first pass was already done and run it (if it was overwritten, it will be run again)
+        selected_context_building_id_list, duration = [], 0
         if not self.lwr_context_obj.first_pass_done:
             # Set the min VF criterion
             self.lwr_context_obj.set_mvfc(min_vf_criterion=min_vf_criterion)
