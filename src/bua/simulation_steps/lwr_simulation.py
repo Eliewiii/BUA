@@ -76,14 +76,15 @@ class SimulationLWR:
 
     @staticmethod
     def set_up_and_run_lwr_simulation(urban_canopy_object: UrbanCanopy,
-                              path_energyplus_dir,
-                              path_simulation_folder=default_path_simulation_folder,
-                              path_hbjson_simulation_parameter_file=default_path_hbjson_simulation_parameter_file,
-                              path_weather_file=default_path_weather_file,
-                              ddy_file=None,
-                              hourly_report_frequency: bool = False,
-                              num_time_steps_per_hour: int = 20,
-                              **kwargs):
+                                      path_energyplus_dir,
+                                      path_simulation_folder=default_path_simulation_folder,
+                                      path_hbjson_simulation_parameter_file=default_path_hbjson_simulation_parameter_file,
+                                      path_weather_file=default_path_weather_file,
+                                      ddy_file=None,
+                                      hourly_report_frequency: bool = False,
+                                      num_time_steps_per_hour: int = 20,
+                                      overwrite: bool = False,
+                                      **kwargs):
         """
 
         """
@@ -95,10 +96,8 @@ class SimulationLWR:
             ddy_file=ddy_file,
             hourly_report_frequency=hourly_report_frequency,
             num_time_steps_per_hour=num_time_steps_per_hour,
+            overwrite=overwrite,
             **kwargs
         )
         user_logger.info("LWR simulation set up successfully")
         dev_logger.info("LWR simulation set up successfully")
-
-
-

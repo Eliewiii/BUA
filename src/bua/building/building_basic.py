@@ -10,7 +10,8 @@ from ladybug_geometry.geometry3d.pointvector import Vector3D
 from ladybug_geometry.geometry3d.polyface import Polyface3D
 from honeybee.room import Room
 
-from .utils_buildings.lbt_obj_methods.lb_face_addons import make_LB_polyface3D_oriented_bounding_box_from_LB_face3D_footprint, \
+from .utils_buildings.lbt_obj_methods.lb_face_addons import \
+    make_LB_polyface3D_oriented_bounding_box_from_LB_face3D_footprint, \
     LB_face_footprint_to_lB_polyface3D_extruded_footprint
 from .utils_buildings.lbt_obj_methods.hb_rooms_addons import RoomsAddons
 from .utils_buildings.lbt_obj_methods.function_for_gis_extraction_to_sort import polygon_to_LB_footprint, \
@@ -18,8 +19,8 @@ from .utils_buildings.lbt_obj_methods.function_for_gis_extraction_to_sort import
 
 from .geometry.prepare_lb_polyface3d import LBPolyface3dAddons
 
-user_logger = logging.getLogger("user")  
-dev_logger = logging.getLogger("dev")  
+user_logger = logging.getLogger("user")
+dev_logger = logging.getLogger("dev")
 
 default_gis_attribute_key_dict = {
     "name": ["name", "full_name_"],
@@ -61,6 +62,9 @@ class BuildingBasic:
         # Position
         self.moved_to_origin = False  # boolean to know if the building has been moved
 
+        self.is_target = False
+        self.to_simulate = False
+
     def load_HB_attributes(self):
         """ Load the attributes that cannot be pickled from equivalent attribute dict. """
         # for BuildingBasic not relevant yet, so nothing to do
@@ -88,7 +92,8 @@ class BuildingBasic:
             return None
 
     @classmethod
-    def make_buildingbasic_from_GIS(cls, urban_canopy, GIS_file, building_index_in_gis, building_id_key_gis, unit):
+    def make_buildingbasic_from_GIS(cls, urban_canopy, GIS_file, building_index_in_gis, building_id_key_gis,
+                                    unit):
         """
             Generate a building from a shp file.
             Can Eventually return multiple buildings if the footprint is a multipolygon.
@@ -125,7 +130,8 @@ class BuildingBasic:
                     f"The footprint of the building id {building_id} in the GIS file could not be converted"
                     " to a Ladybug footprint. Check the unit of the GIS, it could lead to this error. The building will be ignored.")
             else:
-                building_obj = cls.make_buildingbasic_from_shapely_polygon(polygon=footprint, identifier=building_id,
+                building_obj = cls.make_buildingbasic_from_shapely_polygon(polygon=footprint,
+                                                                           identifier=building_id,
                                                                            unit=unit,
                                                                            urban_canopy=urban_canopy,
                                                                            building_index_in_gis=building_index_in_gis)
@@ -278,7 +284,8 @@ class BuildingBasic:
             self.floor_height = 3.
         # no valid height but valid number of floor
         elif ((type(self.height) != int or type(self.height) != float) or (
-                self.height < 3)) and type(self.num_floor) == int and self.num_floor > 0:  # assume 3m floor height
+                self.height < 3)) and type(
+            self.num_floor) == int and self.num_floor > 0:  # assume 3m floor height
             self.height = 3. * self.num_floor
             self.floor_height = 3.
         # no number of floor but valid height
@@ -321,7 +328,8 @@ class BuildingBasic:
             # extract the elevation and height of the building
             elevation, height = LBPolyface3dAddons.elevation_and_height_from_polyface3d(lb_polyface3d)
             # extract the footprint of the building
-            lb_face_footprint = LBPolyface3dAddons.make_lb_face3d_footprint_from_polyface3d(lb_polyface3d, elevation)
+            lb_face_footprint = LBPolyface3dAddons.make_lb_face3d_footprint_from_polyface3d(lb_polyface3d,
+                                                                                            elevation)
             # make the building
             building_obj = cls(identifier, lb_face_footprint)
             # assign the properties of the building
@@ -386,7 +394,8 @@ class BuildingBasic:
             elevation=self.elevation)
         return HB_room_envelop
 
-    def to_HB_model(self, layout_from_typology=False, automatic_subdivision=True, properties_from_typology=True):
+    def to_HB_model(self, layout_from_typology=False, automatic_subdivision=True,
+                    properties_from_typology=True):
         """ Convert the building to HB model
         :param properties_from_typology: If True, the properties of the building will be assigned based on the typology
         :param layout_from_typology: If True, the layout of the building will be assigned based on the typology

@@ -1319,16 +1319,15 @@ class UrbanCanopy:
         if os.path.exists(path_vf_computation_temp_dir):
             shutil.rmtree(path_vf_computation_temp_dir)
         os.makedirs(path_vf_computation_temp_dir)
+        if overwrite:
+            self.lwr_simulation_manager.reset()
         # make the result folder if it does not exist
         if os.path.exists(path_lwr_result_dir):
-            if overwrite:
+            if overwrite or (
+                    os.listdir(path_lwr_result_dir) and not self.lwr_simulation_manager.vf_sim_performed):
                 shutil.rmtree(path_lwr_result_dir)
-            elif os.listdir(path_lwr_result_dir) and not self.lwr_simulation_manager.vf_sim_performed:
-                raise FileExistsError(
-                    "There are already resulst for the VF or LWR computation, please for the computation"
-                    "with overwrite if you still want to run the simulation")
         if not self.lwr_simulation_manager.vf_sim_performed:
-            os.makedirs(path_lwr_result_dir)
+            os.makedirs(path_lwr_result_dir, exist_ok=True)
             # Run the simulation
             _, _, _, _ = self.lwr_simulation_manager.run_vf_computation(
                 path_vf_computation_temp_dir=path_vf_computation_temp_dir,
@@ -1347,10 +1346,18 @@ class UrbanCanopy:
                                       ddy_file=None,
                                       hourly_report_frequency: bool = False,
                                       num_time_steps_per_hour: int = 20,
+                                      overwrite: bool = False,
+                                      keep_target_results_only = True,
                                       **kwargs):
         """
 
         """
+        if overwrite:
+            self.lwr_simulation_manager.reset(lwr_only=True)
+        elif self.lwr_simulation_manager.lwr_sim_performed:
+            logging.info("The longwave radiation simulation has already been performed, "
+                         "if you want to run it again, please set overwrite to True.")
+            return
 
         path_lwr_result_dir = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder)
 
@@ -1368,10 +1375,14 @@ class UrbanCanopy:
             ddy_file=ddy_file,
             hourly_report_frequency=hourly_report_frequency,
             num_time_steps_per_hour=num_time_steps_per_hour,
+            overwrite=overwrite,
             **kwargs
 
         )
         self._run_lwr_simulation()
+
+        if keep_target_results_only:
+            self._clean_lwr_folder_from_non_target_buildings(path_lwr_simulation_folder=path_lwr_result_dir)
 
     def _set_up_lwr_simulation(self, path_simulation_folder, path_hbjson_simulation_parameter_file,
                                path_weather_file,
@@ -1381,6 +1392,7 @@ class UrbanCanopy:
                                ddy_file=None,
                                hourly_report_frequency: bool = False,
                                num_time_steps_per_hour: int = 20,
+                               overwrite=True,
                                **kwargs):
 
         """
@@ -1399,10 +1411,12 @@ class UrbanCanopy:
         # Create folder for LWR simulation
         path_lwr_simulation_folder = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder,
                                                   name_dir_lwr_ep_sim)
+
         if os.path.exists(path_lwr_simulation_folder):
             shutil.rmtree(path_lwr_simulation_folder)
         os.makedirs(path_lwr_simulation_folder)
         # Generate the config file for the EpLwrSimulationManager
+        time_step = 1. / float(num_time_steps_per_hour)
         self.lwr_simulation_manager.initialize_ep_coupled_lwr_simulation(
             path_dir_lwr_sim=path_lwr_simulation_folder,
             path_epw_file=path_epw_file,
@@ -1412,6 +1426,7 @@ class UrbanCanopy:
             path_eps_mtx_crs_npz=path_eps_mtx_crs_npz,
             path_rho_mtx_crs_npz=path_rho_mtx_crs_npz,
             path_tau_mtx_crs_npz=path_tau_mtx_crs_npz,
+            time_step=time_step,
             **kwargs)
 
     def _run_lwr_simulation(self):
@@ -1421,6 +1436,19 @@ class UrbanCanopy:
 
         # Run the simulation
         self.lwr_simulation_manager.run_ep_coupled_lwr_simulation()
+
+    def _clean_lwr_folder_from_non_target_buildings(self,path_lwr_simulation_folder):
+        """
+        Remove the non target buildings from the lwr simulation folder to save space.
+        """
+        for building_id in os.listdir(path_lwr_simulation_folder):
+            try:
+                building_obj = self.building_dict[building_id]
+            except KeyError:
+                raise KeyError(f"The building id {building_id} is not in the urban canopy")
+            if isinstance(building_obj, BuildingModeled) and not building_obj.is_target:
+                shutil.rmtree(os.path.join(path_lwr_simulation_folder, building_id))
+
 
     def _generate_epw_hbjson_sim_parameters_and_idfs_files_for_lwr_simulation(self,
                                                                               path_simulation_folder,

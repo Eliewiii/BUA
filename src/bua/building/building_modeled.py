@@ -57,6 +57,8 @@ class BuildingModeled(BuildingBasic):
         self.panels = {"roof": None, "facades": None}
         self.results_panels = {"roof": None, "facades": None, "Total": None}
 
+
+
     def load_HB_attributes(self):
         """
         Load the attributes that cannot be pickled from equivalent attribute dict.

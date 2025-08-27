@@ -54,6 +54,11 @@ class LwrSimulationManager:
         return self._vf_sim_performed
 
     @property
+    def lwr_sim_performed(self):
+        """ Duration of the view factor computation."""
+        return self._lwr_sim_performed
+
+    @property
     def vf_comp_duration(self):
         """ Duration of the view factor computation."""
         return self._vf_comp_duration
@@ -63,14 +68,18 @@ class LwrSimulationManager:
         """ Duration of the LWR simulation."""
         return self._lwr_sim_duration
 
-    def reset(self):
+    def reset(self,lwr_only=False):
         """ Reset the RadiativeSurfaceManager object."""
         self.init_radiative_surface_manager()
-        self.init_ep_lwr_simulation_manager()
         self._building_id_list = []
         self._building_outdoor_surface_id_table = []
         self._vf_sim_performed = False
-        self._lwr_sim_performed = False
+        self._vf_comp_duration = None
+
+        if lwr_only:
+            self.init_ep_lwr_simulation_manager()
+            self._lwr_sim_performed = False
+            self._lwr_sim_duration = None
 
     def init_radiative_surface_manager(self):
         """ Reinitialize the RadiativeSurfaceManager object if needed. """
@@ -161,6 +170,7 @@ class LwrSimulationManager:
                                              path_energyplus_dir: str, path_idf_file_dict: Dict[str, str],
                                              path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
                                              path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
+                                             time_step: float,
                                              tol: float = 1e-6,
                                              maxiter: int = 150, rtol=1e-5, precondition=False, num_workers=0,
                                              to_pkl=False):
@@ -180,7 +190,9 @@ class LwrSimulationManager:
                                                                            path_vf_mtx_crs_npz,
                                                                            path_eps_mtx_crs_npz,
                                                                            path_rho_mtx_crs_npz,
-                                                                           path_tau_mtx_crs_npz, tol=tol,
+                                                                           path_tau_mtx_crs_npz,
+                                                                           time_step=time_step,
+                                                                           tol=tol,
                                                                            maxiter=maxiter, rtol=rtol,
                                                                            precondition=precondition,
                                                                            num_workers=num_workers)
@@ -198,6 +210,7 @@ class LwrSimulationManager:
                                                         path_idf_file_dict: Dict[str, str],
                                                         path_vf_mtx_crs_npz: str, path_eps_mtx_crs_npz: str,
                                                         path_rho_mtx_crs_npz: str, path_tau_mtx_crs_npz: str,
+                                                        time_step:float,
                                                         tol: float = 1e-6,
                                                         maxiter: int = 150, rtol=1e-5, precondition=False,
                                                         num_workers=0):
@@ -206,11 +219,14 @@ class LwrSimulationManager:
         It is put in a separate function to generate the configuration dict and then debug the
         EpLwrSimulationManager separately.
         :param path_dir_lwr_sim: str, path to the directory where the LWR simulation will be run
+        :param path_epw_file: str, path to the weather file in EPW format
+        :param path_energyplus_dir: str, path to the EnergyPlus installation directory
         :param path_idf_file_dict: dict, dictionary of building_id: path_to_idf_file
          :param path_vf_mtx_crs_npz: Path to the view factor matrix in compressed sparse format.
         :param path_eps_mtx_crs_npz: Path to the emissivity matrix in compressed sparse format.
         :param path_rho_mtx_crs_npz: Path to the reflectivity matrix in compressed sparse format.
         :param path_tau_mtx_crs_npz: Path to the transmissivity matrix in compressed sparse format.
+        :param time_step: int, time step in hours for the LWR simulation (e.g., 1/20 for 20 timesteps per hour)
         :param : Optional parameters for the GMRES-based matrix inversion method.
             - **tol** (float, optional): Overall inverse tolerance (default: 1e-5, valid range: 1e-10 to 1e-2).
             - **maxiter** (int, optional): Maximum number of iterations (default: 150, valid range: 1 to 1000).
@@ -231,6 +247,7 @@ class LwrSimulationManager:
             path_eps_mtx_crs_npz=path_eps_mtx_crs_npz,
             path_rho_mtx_crs_npz=path_rho_mtx_crs_npz,
             path_tau_mtx_crs_npz=path_tau_mtx_crs_npz,
+            time_step=time_step,
             tol=tol,
             maxiter=maxiter, rtol=rtol,
             precondition=precondition,
@@ -245,4 +262,5 @@ class LwrSimulationManager:
 
         dur = time()
         self._ep_lwr_simulation_manager.run_lwr_coupled_simulation_in_subprocess()
+        self._lwr_sim_performed = True
         self._lwr_sim_duration = time() - dur
