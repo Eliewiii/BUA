@@ -50,6 +50,7 @@ class BuildingModeled(BuildingBasic):
         self.lwr_context_obj = BuildingLWRContextFilter()
         # Building Energy Simulation
         self.bes_obj = BuildingEnergySimulation(self.id)
+        self.lwr_bes_obj = BuildingEnergySimulation(self.id)  # for LWR simulation
         # Solar and panel radiation
         self.solar_radiation_and_bipv_simulation_obj = SolarRadAndBipvSimulation(self.id)
 
@@ -443,6 +444,8 @@ class BuildingModeled(BuildingBasic):
         return selected_context_building_id_list, duration
 
 
+
+
     def generate_radiative_surface_objects_for_lwr_computation(self, include_windows: bool = True) -> List[
         object]:
         """
@@ -484,6 +487,25 @@ class BuildingModeled(BuildingBasic):
             nb_context_faces, duration = self.shading_context_obj.select_non_obstructed_context_faces_with_ray_tracing(
                 building_surfaces_dict=building_surfaces_dict,
                 urban_canopy_pyvista_mesh=urban_canopy_pyvista_mesh)
+
+    def extract_lwr_bes_results(self, path_lwr_ubes_sim_result_folder, cop_heating, cop_cooling):
+        """
+        Extract the BES result files and export them to CSV files.
+        NOTE: for now only the annual energy uses are extracted for the computed period, monthly results will ba added
+        later.
+        :param path_ubes_sim_result_folder: str: path to the result simulation folder
+        :param cop_heating: float: coefficient of performance for heating
+        :param cop_cooling: float: coefficient of performance for cooling
+        :return: dict: dictionary of the BES results
+        """
+        self.lwr_bes_obj.has_run = True
+        self.lwr_bes_obj.set_cop(cop_heating=cop_heating, cop_cooling=cop_cooling)
+        self.lwr_bes_obj.extract_total_energy_use(path_ubes_sim_result_folder=path_lwr_ubes_sim_result_folder)
+        # todo : add the monthly results later
+
+        return
+
+
 
     ####################################################################################################################
     # Solar radiation and BIPV methods

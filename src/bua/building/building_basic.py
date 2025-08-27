@@ -53,7 +53,7 @@ class BuildingBasic:
         self.elevation = 0  # elevation of the building in meter
         self.floor_height = None  # height of the floors in meter
         # Geometry
-        """ The footprint of teh buildiong is not elevated, it is at z=0."""
+        """ The footprint of the building is not elevated, it is at z=0."""
         self.lb_face_footprint = lb_face_footprint  # footprint of the building, including the holes in the LB geometry
         # face format
         # Context filter algorithm

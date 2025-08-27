@@ -1437,10 +1437,12 @@ class UrbanCanopy:
         # Run the simulation
         self.lwr_simulation_manager.run_ep_coupled_lwr_simulation()
 
-    def _clean_lwr_folder_from_non_target_buildings(self,path_lwr_simulation_folder):
+    def _clean_lwr_folder_from_non_target_buildings(self,path_simulation_folder):
         """
         Remove the non target buildings from the lwr simulation folder to save space.
         """
+        path_lwr_simulation_folder = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder,
+                                                  name_dir_lwr_ep_sim)
         for building_id in os.listdir(path_lwr_simulation_folder):
             try:
                 building_obj = self.building_dict[building_id]
@@ -1448,6 +1450,43 @@ class UrbanCanopy:
                 raise KeyError(f"The building id {building_id} is not in the urban canopy")
             if isinstance(building_obj, BuildingModeled) and not building_obj.is_target:
                 shutil.rmtree(os.path.join(path_lwr_simulation_folder, building_id))
+
+
+    def extract_lwr_ubes_results(self, path_simulation_folder, cop_heating, cop_cooling):
+        """
+        Read the UBES result files for the buildings in the urban canopy.
+        :param path_simulation_folder: string, path to the simulation folder
+        :param cop_heating: float, coefficient of performance for heating
+        :param cop_cooling: float, coefficient of performance for cooling
+        """
+        if not self.ubes_obj.has_run:
+            user_logger.warning("The UBES simulation has not been run yet, the result cannot be extracted")
+            return
+        path_lwr_simulation_folder = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder,
+                                                  name_dir_lwr_ep_sim)
+        lwr_bes_result_dict_list = []
+        # Extract the UBES results for the buildings
+        for building_obj in self.building_dict.values():
+            if isinstance(building_obj,
+                          BuildingModeled):  # no need for more checking, the building themselves
+                # will check if they have been simulated
+                bes_result_dict = building_obj.extract_lwr_bes_results(
+                    path_ubes_sim_result_folder=path_lwr_simulation_folder, cop_heating=cop_heating,
+                    cop_cooling=cop_cooling)
+                if bes_result_dict is not None:
+                    lwr_bes_result_dict_list.append(bes_result_dict)
+        # # Compute the results at the urban canopy level
+        # self.ubes_obj.compute_ubes_results(
+        #     bes_result_dict_list=bes_result_dict_list)  # todo @Elie: to be implemented
+        # # Export the results to csv
+        # """ The export is made at the end to make sure none of the buildings have failed to extract the results before
+        # exporting the results at the urban canopy level."""
+        # self.ubes_obj.to_csv(path_ubes_sim_result_folder=path_ubes_sim_result_folder)
+        # for building_obj in self.building_dict.values():
+        #     if isinstance(building_obj, BuildingModeled):
+        #         building_obj.export_bes_results_to_csv(
+        #             path_ubes_sim_result_folder=path_ubes_sim_result_folder)
+
 
 
     def _generate_epw_hbjson_sim_parameters_and_idfs_files_for_lwr_simulation(self,
