@@ -9,6 +9,8 @@ import shutil
 import subprocess
 import sys
 
+from typing import Dict
+
 from datetime import datetime
 
 from honeybee.model import Model
@@ -1382,7 +1384,7 @@ class UrbanCanopy:
         self._run_lwr_simulation()
 
         if keep_target_results_only:
-            self._clean_lwr_folder_from_non_target_buildings(path_lwr_simulation_folder=path_lwr_result_dir)
+            self._clean_lwr_folder_from_non_target_buildings(path_simulation_folder=path_simulation_folder)
 
     def _set_up_lwr_simulation(self, path_simulation_folder, path_hbjson_simulation_parameter_file,
                                path_weather_file,
@@ -1444,12 +1446,13 @@ class UrbanCanopy:
         path_lwr_simulation_folder = os.path.join(path_simulation_folder, name_lwr_simulation_result_folder,
                                                   name_dir_lwr_ep_sim)
         for building_id in os.listdir(path_lwr_simulation_folder):
-            try:
-                building_obj = self.building_dict[building_id]
-            except KeyError:
-                raise KeyError(f"The building id {building_id} is not in the urban canopy")
-            if isinstance(building_obj, BuildingModeled) and not building_obj.is_target:
-                shutil.rmtree(os.path.join(path_lwr_simulation_folder, building_id))
+            if os.path.isdir(os.path.join(path_lwr_simulation_folder,building_id)):
+                try:
+                    building_obj = self.building_dict[building_id]
+                except KeyError:
+                    raise KeyError(f"The building id {building_id} is not in the urban canopy")
+                if isinstance(building_obj, BuildingModeled) and not building_obj.is_target:
+                    shutil.rmtree(os.path.join(path_lwr_simulation_folder, building_id))
 
 
     def extract_lwr_ubes_results(self, path_simulation_folder, cop_heating, cop_cooling):

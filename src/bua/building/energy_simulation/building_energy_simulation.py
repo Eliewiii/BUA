@@ -222,12 +222,12 @@ class BuildingEnergySimulation:
         self.bes_results_dict = deepcopy(empty_bes_results_dict)
 
         # Get hourly results if the reporting frequency is hourly
-        sql_obj = SQLiteResult(path_eplusout_sql)
-        if sql_obj.reporting_frequency == "Hourly":
-            self.hourly_report_frequency = True
-            self.bes_results_dict["total"]["hourly"] = get_hourly_results_from_sql(sql_obj,
-                                                                                   self.cop_cooling,
-                                                                                   self.cop_heating)
+        # sql_obj = SQLiteResult(path_eplusout_sql)
+        # if sql_obj.reporting_frequency == "Hourly":
+        #     self.hourly_report_frequency = True
+        #     self.bes_results_dict["total"]["hourly"] = get_hourly_results_from_sql(sql_obj,
+        #                                                                            self.cop_cooling,
+        #                                                                            self.cop_heating)
         # Get End Use intensity
         eui_dict = eui_from_sql(path_eplusout_sql)
         total_floor_area = eui_dict["total_floor_area"]
