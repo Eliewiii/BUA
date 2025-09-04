@@ -1291,6 +1291,9 @@ class UrbanCanopy:
         if overwrite or self.lwr_simulation_manager.is_empty:
             self.lwr_simulation_manager.reset()
 
+        if self.lwr_simulation_manager.vf_sim_performed:
+            return
+
         for building_id, building_obj in self.building_dict.items():
             if self._included_in_lwr_computation(building_obj):
                 self.lwr_simulation_manager.add_building(building_id=building_id,
