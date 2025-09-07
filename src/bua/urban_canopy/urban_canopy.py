@@ -1254,7 +1254,7 @@ class UrbanCanopy:
         # Loop over the buildings
         for i, (building_id, building_obj) in enumerate(self.building_dict.items()):
             if (isinstance(building_obj, BuildingModeled) and (
-                    building_obj.is_target or building_obj.to_simulate)):
+                    building_obj.is_target)):
                 # Perform the first pass context filtering
                 current_building_selected_context_building_id_list, _ = building_obj. \
                     perform_lwr_context_filtering(
@@ -1325,7 +1325,7 @@ class UrbanCanopy:
             shutil.rmtree(path_vf_computation_temp_dir)
         os.makedirs(path_vf_computation_temp_dir)
         if overwrite:
-            self.lwr_simulation_manager.reset()
+            self.lwr_simulation_manager.reset(vf_comp_only=True)
         # make the result folder if it does not exist
         if os.path.exists(path_lwr_result_dir):
             if overwrite or (

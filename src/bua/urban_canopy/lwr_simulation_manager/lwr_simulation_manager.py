@@ -68,18 +68,20 @@ class LwrSimulationManager:
         """ Duration of the LWR simulation."""
         return self._lwr_sim_duration
 
-    def reset(self,lwr_only=False):
+    def reset(self,vf_comp_only=False,lwr_only=False):
         """ Reset the RadiativeSurfaceManager object."""
-        self.init_radiative_surface_manager()
-        self._building_id_list = []
-        self._building_outdoor_surface_id_table = []
-        self._vf_sim_performed = False
-        self._vf_comp_duration = None
 
-        if lwr_only:
-            self.init_ep_lwr_simulation_manager()
-            self._lwr_sim_performed = False
-            self._lwr_sim_duration = None
+        if not vf_comp_only and not lwr_only:
+            self.init_radiative_surface_manager()
+            self._building_id_list = []
+            self._building_outdoor_surface_id_table = []
+        if not lwr_only:
+            self._vf_sim_performed = False
+            self._vf_comp_duration = None
+
+        self.init_ep_lwr_simulation_manager()
+        self._lwr_sim_performed = False
+        self._lwr_sim_duration = None
 
     def init_radiative_surface_manager(self):
         """ Reinitialize the RadiativeSurfaceManager object if needed. """
