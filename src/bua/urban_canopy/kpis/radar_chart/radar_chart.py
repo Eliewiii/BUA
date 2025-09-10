@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 
 
 class RadarChart:
-    DEFAULT_NUM_TICK = 5
+    DEFAULT_NUM_TICK = 6
 
     DEFAULT_POSITION_LABEL = 1.15
     DEFAULT_POSITION_OUTER_TICK = 1.01
+    DEFAULT_TICK_LENGTH = 0.1
 
     def __init__(self, title=""):
         self.title = title
@@ -72,6 +73,10 @@ class RadarChart:
         # Create angles for each axis
         angles = [(np.pi / 2. + 2 * np.pi / num_vars * i) % (2 * np.pi) for i in range(num_vars)]
 
+        plt.rcParams.update({
+            "font.family": "Arial",  # e.g. "sans-serif", "serif", "monospace"
+        })
+
         # Create figure and axis
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi, subplot_kw=dict(polar=True))
         ax.axis("off")
@@ -94,17 +99,17 @@ class RadarChart:
 
                 if order == "ascending":
                     # Normalizing for ascending axis
-                    normalized_value = (value - min_value) / (max_value - min_value)  # Normalize to [0, 1]
+                    normalized_value = (value - min_value) / (max_value - min_value) *(1-1/(self._num_ticks-1)) + 1/(self._num_ticks-1) # Normalize to [0, 1]
                 else:
                     # Normalizing for descending axis (flip the scale)
-                    normalized_value = (max_value - value) / (max_value - min_value)  # Inverted scale
+                    normalized_value = (max_value - value) / (max_value - min_value)*(1-1/(self._num_ticks-1))+ 1/(self._num_ticks-1)  # Inverted scale
 
                 normalized_values.append(normalized_value)
             normalized_values.append(normalized_values[0])  # Close the shape by repeating the first value
 
             # Plot each dataset (fill and outline)
             # ax.fill(angles_for_data, normalized_values, color=data["color"], alpha=0.3)
-            ax.plot(angles_for_data, normalized_values, color=data["color"], linewidth=1.5, label=data["label"],
+            ax.plot(angles_for_data, normalized_values, color=data["color"], linewidth=2, label=data["label"],
                     linestyle=data["style"])
 
         # # Set category labels
@@ -114,7 +119,7 @@ class RadarChart:
 
         # Add axis labels and custom grid lines/ticks in a single loop
         for i, axis in enumerate(self.axes):
-            ticks = np.linspace(axis['min_value'], axis['max_value'], self._num_ticks)
+            ticks = np.linspace(axis['min_value'], axis['max_value'], self._num_ticks-1)
             ticks_labels = [f"{t:.1f}" for t in ticks]
 
             # Compute text alignment based on angle
@@ -135,44 +140,69 @@ class RadarChart:
             else:
                 va = "bottom"  # Align
 
-            # Add axis label (category name)
-            label_text = f"{axis['name']}" if axis['unit'] is None else f"{axis['name']}\n[{axis['unit']}]"
-            ax.text(label_angle, self.DEFAULT_POSITION_LABEL, label_text,
-                    horizontalalignment=ha, size=12, color='black', verticalalignment=va)
+            # # # Add axis label (category name)
+            # label_text = f"{axis['name']}" if axis['unit'] is None else f"{axis['name']}\n[{axis['unit']}]"
+            # ax.text(label_angle, self.DEFAULT_POSITION_LABEL, label_text,
+            #         horizontalalignment=ha, size=12, color='black', verticalalignment=va)
 
             # Process both grid lines and tick labels
             for j, (tick, tick_label) in enumerate(zip(ticks, ticks_labels)):
                 # Compute radial position for each tick mark (scaled value)
                 if axis['order'] == "descending":
-                    radial_position = (axis['max_value'] - tick) / (axis['max_value'] - axis['min_value'])
+                    radial_position = (axis['max_value'] - tick) / (axis['max_value'] - axis['min_value'])*(1-1/(self._num_ticks-1)) + 1/(self._num_ticks-1)
                 else:
-                    radial_position = (tick - axis['min_value']) / (axis['max_value'] - axis['min_value'])
+                    radial_position = (tick - axis['min_value']) / (axis['max_value'] - axis['min_value'])*(1-1/(self._num_ticks-1)) + 1/(self._num_ticks-1)
+
 
                 # Draw grid line for this tick
-                ax.plot([angles[i], angles[i]], [0, 1], color='gray', linewidth=1,
+                ax.plot([angles[i], angles[i]], [1/(self._num_ticks-1), 1], color='gray', linewidth=0.8,
                         linestyle='--')
 
+                # ax.plot([angles[i], angles[i]], [0, 1], color='gray', linewidth=1,
+                #         linestyle='--')
+
                 # Skip the first tick label for better spacing (if needed)
-                if (axis['order'] == "descending" and j == self._num_ticks - 1) or (
-                        axis['order'] == "ascending" and j == 0):
+                if (axis['order'] == "descending" and j == self._num_ticks - 1):
                     continue  # Skip unwanted tick labels
 
                 if (axis['order'] == "descending" and j == 0) or (
                         axis['order'] == "ascending" and j == self._num_ticks - 1):
-                    # Add tick labels with correct alignment
-                    ax.text(angles[i], radial_position * self.DEFAULT_POSITION_OUTER_TICK,
-                            tick_label,
-                            horizontalalignment=ha, size=10, color='black', verticalalignment=va)
+
+                    # # Add tick labels with correct alignment
+                    # ax.text(angles[i], radial_position * self.DEFAULT_POSITION_OUTER_TICK,
+                    #         tick_label,
+                    #         horizontalalignment=ha, size=10, color='black', verticalalignment=va)
+                    None
+
                 else:
-                    # Add tick labels with correct alignment
-                    ax.text(angles[i], radial_position, tick_label,
-                            horizontalalignment='center',
-                            size=10, color='black')
+                    if (self._num_ticks%2==0 and j%2 == 0) or (self._num_ticks%2!=0 and j%2 != 0):
+
+                        # # Add tick labels with correct alignment
+                        # ax.text(angles[i], radial_position, tick_label,
+                        #         horizontalalignment='center',
+                        #         size=10, color='black')
+                        None
+
+                    if axis['order'] == "ascending" and j == self._num_ticks - 2:
+                        continue
+                    # === NEW CODE: draw perpendicular tick marks in polar coords ===
+                    theta = angles[i]
+
+                    # Small angular offset for tick mark (controls tick length)
+                    delta_theta = 0.02  # adjust for longer/shorter ticks
+
+
+                    ax.plot(
+                        [(theta - delta_theta / radial_position), (theta + delta_theta / radial_position)],
+                        [radial_position, radial_position],
+                        color="black", linewidth=1.2)
+
+
 
         # Draw the polygonal boundary (close the shape)
         polygon_values = [1] * num_vars
         polygon_values.append(polygon_values[0])  # Close the polygon by repeating the first value
-        ax.plot(angles + [angles[0]], polygon_values, color="black", linewidth=2, linestyle="solid")
+        ax.plot(angles + [angles[0]], polygon_values, color="black", linewidth=1.5, linestyle="solid")
 
         # Set radial limits
         ax.set_ylim(0, y_lim)  # Set the radial limits to cover the normalized range of data
@@ -195,51 +225,143 @@ class RadarChart:
 
 # Example usage:
 radar = RadarChart()
-radar.add_axis("EROI", None, 2.5, 7, "value", order="ascending")
-radar.add_axis("GHGEI", "gCO2eq/kWh", 20, 120, "value", order="descending")
+radar.add_axis("EROI", None, 2, 10, "value", order="ascending")
+radar.add_axis("GHGEI", "gCO2eq/kWh", 20, 130, "value", order="descending")
 radar.add_axis("BCR", None, 1, 2, "value", order="ascending")
 radar.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="ascending")
-radar.add_axis("Harvested Electricity", "MWh/m2", 2, 4, "value", order="ascending")
-radar.add_axis("Payback Time", "year", 30, 45, "value", order="descending")
+radar.add_axis("Harvested Electricity", "MWh/m2", 1.5, 6, "value", order="ascending")
+radar.add_axis("Net profit density", "usd/m2", 70, 200, "value", order="ascending")
+radar.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
+radar.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
+radar.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
 
-# # Add data
-# radar.add_data([3.56, 74.9, 1.66, 58, 2.36, 32], color="blue", label="Sustainable Low")
-# radar.add_data([3.49, 77.0, 1.65, 32.1, 2.57, 33], color="green", label="Sustainable Medium")
-# radar.add_data([3.19, 85.5, 1.55, 27.9, 3.33, 35], color="red", label="Sustainable High")
-#
-#
-#
-# # Balanced
-# radar.add_data([3.43, 78.5, 1.64, 63, 2.54, 35], color="cornflowerblue", label="Balanced Low")
-# radar.add_data([3.34, 81.1, 1.62, 35, 2.80, 35], color="mediumseagreen", label="Balanced Medium")
-# radar.add_data([3.08, 89.3, 1.53, 30.3, 3.62, 37], color="lightcoral", label="Balanced High")
+
+
+
+
+#Sustanainble
+radar.add_data([4.40 , 64.0 , 1.83 , 52.8, 2.13, 136 , 3.94 , 4.89 , 29.0], color="blue", label="Sustainable Low")
+radar.add_data([4.20 , 67.3 , 1.79 , 28.8 , 2.31 , 143 , 4.70 , 4.97 , 30.0], color="green", label="Sustainable Medium")
+radar.add_data([4.12 , 68.6 , 1.79 , 21.2 , 2.53 , 156 , 4.72 , 5.74 , 30.0], color="red", label="Sustainable High")
+
+# Balanced
+radar.add_data([3.59 , 79 , 1.64 , 72.4 , 2.92 , 159 , 4.99 , 6.80 , 34.9], color="cornflowerblue", label="Balanced Low")
+radar.add_data([3.35 , 85 , 1.56 , 41.8 , 3.35 , 169 , 5.83 , 6.90 , 36.0], color="mediumseagreen", label="Balanced Medium")
+radar.add_data([3.15 , 90.5 , 1.51 , 35.2 , 4.20 , 199 , 5.92 , 7.81 , 37.9], color="lightcoral", label="Balanced High")
 #
 #
 # # Production
-# radar.add_data([2.81, 98.7, 1.43, 68, 2.75, 41], color="cyan", label="Production Low")
-# radar.add_data([2.73, 102, 1.41, 37, 3.02, 42], color="limegreen", label="Production Medium")
-# radar.add_data([2.51, 112, 1.34, 32.9, 3.92, 44], color="magenta", label="Production High")
-
-
-#Sustanainble CIGS
-radar.add_data([6.55, 25.3, 1.76, 51.8, 2.09, 31], color="blue", label="Sustainable Low")
-radar.add_data([6.09, 27.3, 1.65, 33.4, 2.52, 33], color="green", label="Sustainable Medium")
-radar.add_data([5.95,  28.3, 1.60, 28.0, 3.35, 34], color="red", label="Sustainable High")
-
-# Balanced
-radar.add_data([6.56, 25.4, 1.77, 54.0, 2.19, 32], color="cornflowerblue", label="Balanced Low")
-radar.add_data([6.07, 27.7, 1.65, 33.1, 2.66, 35], color="mediumseagreen", label="Balanced Medium")
-radar.add_data([5.94, 28.6, 1.64, 29.5, 3.51, 35], color="lightcoral", label="Balanced High")
-
-
-# Production
-radar.add_data([5.64, 30.5, 1.54, 58.6, 2.36, 38], color="cyan", label="Production Low")
-radar.add_data([5.22, 33.2, 1.43, 35.7, 2.86, 41], color="limegreen", label="Production Medium")
-radar.add_data([5.05, 34.5, 1.39, 31.8, 3.79, 42], color="magenta", label="Production High")
-
+radar.add_data([2.82 , 101 , 1.41 , 80.0 , 3.23 , 130 , 6.98 , 8.93 , 41.9], color="cyan", label="Production Low")
+radar.add_data([2.52 , 113 , 1.30 , 48.8 , 3.91 , 128 , 7.95 , 9.95 , 44.9], color="limegreen", label="Production Medium")
+radar.add_data([2.33 , 123 , 1.24 , 42.6 , 5.07 , 138 , 8.91 , 10.9 , 46.9], color="magenta", label="Production High")
 
 # Optionally, auto set boundaries
 # radar.auto_set_boundaries()
 
 # Plot or save the radar chart
-radar.plot(filename="test", figsize=(8, 8), dpi=800,y_lim=1.5)
+radar.plot(filename="C_SI_no_lable", figsize=(8, 8), dpi=300,y_lim=1.5)
+
+
+# Example usage:
+radar_cigs = RadarChart()
+radar_cigs.add_axis("EROI", None, 2, 10, "value", order="ascending")
+radar_cigs.add_axis("GHGEI", "gCO2eq/kWh", 20, 130, "value", order="descending")
+radar_cigs.add_axis("BCR", None, 1, 2, "value", order="ascending")
+radar_cigs.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="ascending")
+radar_cigs.add_axis("Harvested Electricity", "MWh/m2", 1.5, 6, "value", order="ascending")
+radar_cigs.add_axis("Net profit density", "usd/m2", 70, 200, "value", order="ascending")
+radar_cigs.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
+radar_cigs.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
+radar_cigs.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
+
+
+#Sustanainble CIGS
+radar_cigs.add_data([8.69 , 23.3 , 1.56 , 48.5 , 1.96 , 98.8 , 1.94 , 1.76 , 34.0], color="blue", label="Sustainable Low")
+radar_cigs.add_data([8.37 , 24.3 , 1.53 , 25.4 , 2.04 , 98.5 , 2.55 , 1.81 , 35.9], color="green", label="Sustainable Medium")
+radar_cigs.add_data([7.99 , 25.3 , 1.51 , 22.6 , 2.70 , 128 , 2.58 , 1.87 , 35.9], color="red", label="Sustainable High")
+
+# Balanced
+radar_cigs.add_data([8.18 , 24.7 , 1.50 , 56.4 , 2.27 , 107 , 2.61 , 1.90 , 37.9], color="cornflowerblue", label="Balanced Low")
+radar_cigs.add_data([7.60 , 26.6 , 1.44 , 33.0 , 2.65 , 114 , 2.68 , 2.56 , 39.9], color="mediumseagreen", label="Balanced Medium")
+radar_cigs.add_data([7.35 , 27.4 , 1.43 , 28.7 , 3.42 , 144 , 2.71 , 2.58 , 40.0], color="lightcoral", label="Balanced High")
+#
+#
+# # Production
+radar_cigs.add_data([6.69 , 30.1 , 1.29 , 61.5 , 2.48 , 78.4 , 2.94 , 2.77 , 45.0], color="cyan", label="Production Low")
+radar_cigs.add_data([5.85 , 34.3 , 1.19 , 39.3 , 3.15 , 70.5 , 3.76 , 2.92 , 48.9], color="limegreen", label="Production Medium")
+radar_cigs.add_data([5.62 , 35.7 , 1.18 , 34.6 , 4.12 , 86.5 , 3.80 , 2.97 , 49.8], color="magenta", label="Production High")
+
+
+
+# Plot or save the radar chart
+radar_cigs.plot(filename="CIGS_no_label", figsize=(8, 8), dpi=300,y_lim=1.5)
+
+
+
+
+# Low
+radar_low = RadarChart()
+radar_low.add_axis("EROI", None, 2, 10, "value", order="ascending")
+radar_low.add_axis("GHGEI", "gCO2eq/kWh", 20, 130, "value", order="descending")
+radar_low.add_axis("BCR", None, 1, 2, "value", order="ascending")
+radar_low.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="ascending")
+radar_low.add_axis("Harvested Electricity", "MWh/m2", 1.5, 6, "value", order="ascending")
+radar_low.add_axis("Net profit density", "usd/m2", 70, 200, "value", order="ascending")
+radar_low.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
+radar_low.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
+radar_low.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
+
+radar_low.add_data([4.40 , 64.0 , 1.83 , 52.8, 2.13, 136 , 3.94 , 4.89 , 29.0], color="black", style="-", label="Sustainable c-Si Low")
+radar_low.add_data([3.59 , 79 , 1.64 , 72.4 , 2.92 , 159 , 4.99 , 6.80 , 34.9], color="darkgray",style="-", label="Balanced c-Si Low")
+radar_low.add_data([2.82 , 101 , 1.41 , 80.0 , 3.23 , 130 , 6.98 , 8.93 , 41.9], color="lightgrey",style="-", label="Production c-Si Low")
+
+radar_low.add_data([8.69 , 23.3 , 1.56 , 48.5 , 1.96 , 98.8 , 1.94 , 1.76 , 34.0], color="black", style="--", label="Sustainable CIGS Low")
+radar_low.add_data([8.18 , 24.7 , 1.50 , 56.4 , 2.27 , 107 , 2.61 , 1.90 , 37.9], color="darkgray",style="--", label="Balanced CIGS Low")
+radar_low.add_data([6.69 , 30.1 , 1.29 , 61.5 , 2.48 , 78.4 , 2.94 , 2.77 , 45.0], color="lightgrey",style="--", label="Production Low")
+
+radar_low.plot(filename="low_no_label", figsize=(8, 8), dpi=300,y_lim=1.5)
+
+
+# Medium
+radar_medium = RadarChart()
+radar_medium.add_axis("EROI", None, 2, 10, "value", order="ascending")
+radar_medium.add_axis("GHGEI", "gCO2eq/kWh", 20, 130, "value", order="descending")
+radar_medium.add_axis("BCR", None, 1, 2, "value", order="ascending")
+radar_medium.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="ascending")
+radar_medium.add_axis("Harvested Electricity", "MWh/m2", 1.5, 6, "value", order="ascending")
+radar_medium.add_axis("Net profit density", "usd/m2", 70, 200, "value", order="ascending")
+radar_medium.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
+radar_medium.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
+radar_medium.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
+
+radar_medium.add_data([4.20 , 67.3 , 1.79 , 28.8 , 2.31 , 143 , 4.70 , 4.97 , 30.0], color="black", style="-", label="Sustainable c-Si medium")
+radar_medium.add_data([3.35 , 85 , 1.56 , 41.8 , 3.35 , 169 , 5.83 , 6.90 , 36.0], color="darkgray",style="-", label="Balanced c-Si medium")
+radar_medium.add_data([2.52 , 113 , 1.30 , 48.8 , 3.91 , 128 , 7.95 , 9.95 , 44.9], color="lightgrey",style="-", label="Production c-Si medium")
+
+radar_medium.add_data([8.37 , 24.3 , 1.53 , 25.4 , 2.04 , 98.5 , 2.55 , 1.81 , 35.9], color="black", style="--", label="Sustainable CIGS medium")
+radar_medium.add_data([7.60 , 26.6 , 1.44 , 33.0 , 2.65 , 114 , 2.68 , 2.56 , 39.9], color="darkgray",style="--", label="Balanced CIGS medium")
+radar_medium.add_data([5.85 , 34.3 , 1.19 , 39.3 , 3.15 , 70.5 , 3.76 , 2.92 , 48.9], color="lightgrey",style="--", label="Production medium")
+radar_medium.plot(filename="medium_no_label", figsize=(8, 8), dpi=300,y_lim=1.5)
+
+
+# High
+radar_high = RadarChart()
+radar_high.add_axis("EROI", None, 2, 10, "value", order="ascending")
+radar_high.add_axis("GHGEI", "gCO2eq/kWh", 20, 130, "value", order="descending")
+radar_high.add_axis("BCR", None, 1, 2, "value", order="ascending")
+radar_high.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="ascending")
+radar_high.add_axis("Harvested Electricity", "MWh/m2", 1.5, 6, "value", order="ascending")
+radar_high.add_axis("Net profit density", "usd/m2", 70, 200, "value", order="ascending")
+radar_high.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
+radar_high.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
+radar_high.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
+
+radar_high.add_data([4.20 , 67.3 , 1.79 , 28.8 , 2.31 , 143 , 4.70 , 4.97 , 30.0], color="black", style="-", label="Sustainable c-Si high")
+radar_high.add_data([3.35 , 85 , 1.56 , 41.8 , 3.35 , 169 , 5.83 , 6.90 , 36.0], color="darkgray",style="-", label="Balanced c-Si high")
+radar_high.add_data([2.52 , 113 , 1.30 , 48.8 , 3.91 , 128 , 7.95 , 9.95 , 44.9], color="lightgrey",style="-", label="Production c-Si high")
+
+radar_high.add_data([8.37 , 24.3 , 1.53 , 25.4 , 2.04 , 98.5 , 2.55 , 1.81 , 35.9], color="black", style="--", label="Sustainable CIGS high")
+radar_high.add_data([7.60 , 26.6 , 1.44 , 33.0 , 2.65 , 114 , 2.68 , 2.56 , 39.9], color="darkgray",style="--", label="Balanced CIGS high")
+radar_high.add_data([5.85 , 34.3 , 1.19 , 39.3 , 3.15 , 70.5 , 3.76 , 2.92 , 48.9], color="lightgrey",style="--", label="Production high")
+radar_high.plot(filename="high_no_label", figsize=(8, 8), dpi=300,y_lim=1.5)
+
