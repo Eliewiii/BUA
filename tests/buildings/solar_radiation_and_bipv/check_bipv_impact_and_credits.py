@@ -12,21 +12,6 @@ path_json_result_file = os.path.join(path_result_folder, name_result_json_file)
 path_urban_canopy_file = r"C:\Users\julius.jandl\AppData\Local\BUA\Simulation_temp"
 
 scenarios_dict = {
-        "net_metering_0_csi_test": {
-            "rooftech": "mitrex_roof c-Si M390-A1F 2025",
-            "envtech": "mitrex_facades c-Si Solar Siding 350W - Dove Grey china 2025",
-            "replacement": 10,
-            "subsidy_type": "nm_0"
-        },
-        "net_metering_0_cigs_test": {
-            "rooftech": "cigs eterbright CIGS-3650A1 roof 2025",
-            "envtech": "cigs eterbright CIGS-3650A1 facade 2025",
-            "replacement": 10,
-            "subsidy_type": "nm_0"
-        },
-}
-"""
-scenarios_dict = {
         "net_metering_0_cdte": {
             "rooftech": "cdte firstsolar FS-6445 roof 2025",
             "envtech": "cdte firstsolar FS-6445 facade 2025",
@@ -376,7 +361,6 @@ scenarios_dict = {
             "subsidy_type": "loan_6"
         }
     }
-"""
 scenario_id_list = list(scenarios_dict.keys())
 
 

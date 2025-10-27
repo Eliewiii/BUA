@@ -6,7 +6,8 @@ import logging
 from ..urban_canopy import UrbanCanopy
 
 from ..config.config_default_values_user_parameters import default_path_simulation_folder, \
-    default_path_weather_file, default_discount_rate, default_subsidy_id
+    default_path_weather_file, default_discount_rate, default_subsidy_id, default_electricity_escalation_rate, \
+    default_income_tax
 
 from ..config.config_default_values_user_parameters import default_roof_grid_size_x, default_facades_grid_size_x, \
     default_roof_grid_size_y, default_facades_grid_size_y, default_offset_dist
@@ -108,6 +109,8 @@ class SimFunSolarRadAndBipv:
                                                replacement_scenario=default_replacement_scenario,
                                                continue_simulation=False,
                                                discount_rate=default_discount_rate,
+                                               inflation_rate=default_inflation_rate,
+                                               fuel_escalation_rate=default_fuel_escalation_rate,
                                                **kwargs):
         """
         Make oriented bounding boxes of buildings in the urban canopy
@@ -154,7 +157,10 @@ class SimFunSolarRadAndBipv:
             final_year = final_year,
             replacement_scenario=replacement_scenario,
             continue_simulation=continue_simulation,
-            discount_rate=discount_rate, **kwargs)
+            discount_rate=discount_rate,
+            inflation_rate=inflation_rate,
+            fuel_escalation_rate=fuel_escalation_rate,
+            **kwargs)
 
         user_logger.info("The BIPV simulation have been performed successfully")
         dev_logger.info("The BIPV simulation have been performed successfully")
@@ -168,7 +174,9 @@ class SimFunSolarRadAndBipv:
                            grid_electricity_sell_price=default_grid_electricity_sell_price,
                            zone_area=None,
                            subsidy_type=default_subsidy_id,
-                           discount_rate=default_discount_rate):
+                           discount_rate=default_discount_rate,
+                           electricity_escalation_rate = default_electricity_escalation_rate,
+                           income_tax = default_income_tax):
         """
         Compute the KPIs at the urban scale. It includes BIPV and UBES KPIs.
         :param urban_canopy_object: UrbanCanopy: urban canopy object
@@ -187,7 +195,9 @@ class SimFunSolarRadAndBipv:
                                                              grid_electricity_sell_price=grid_electricity_sell_price,
                                                              zone_area=zone_area,
                                                              subsidy_type = subsidy_type,
-                                                             discount_rate = discount_rate)
+                                                             discount_rate = discount_rate,
+                                                             electricity_escalation_rate = electricity_escalation_rate,
+                                                             income_tax=income_tax)
 
         user_logger.info("KPIS have been computed successfully")
         dev_logger.info("KPIS have been computed successfully")

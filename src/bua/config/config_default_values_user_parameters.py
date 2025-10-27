@@ -74,6 +74,11 @@ default_replacement_scenario = "replace_failed_panels_every_X_years"
 default_replacement_frequency_in_years = 20
 default_bipv_scenario_identifier = "new_uc_scenario"
 default_discount_rate = 0.05
+default_electricity_escalation_rate = 0.035
+default_inflation_rate = 0.022
+default_fuel_escalation_rate = 0.03
+default_vat_tax = 0.18
+default_income_tax = 0.23
 
 # Default values for panel simulation - LCA
 default_country_ghe_cost = 0.57874  # todo: value used on old files

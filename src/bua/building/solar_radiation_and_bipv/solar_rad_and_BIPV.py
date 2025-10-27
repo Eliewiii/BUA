@@ -28,7 +28,8 @@ from .utils_bipv import init_bipv_on_sensor_grid, \
     compute_lca_and_cost_for_inverter, compute_lca_and_cost_for_maintenance, compute_subsidies
 
 from ...config.bua_config_structure import name_temporary_files_folder, name_radiation_simulation_folder
-from ...config.config_default_values_user_parameters import default_grid_ghg_intensity
+from ...config.config_default_values_user_parameters import default_grid_ghg_intensity, default_discount_rate, \
+    default_inflation_rate, default_fuel_escalation_rate, default_vat_tax, default_income_tax
 
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")
@@ -444,7 +445,12 @@ class SolarRadAndBipvSimulation:
                                   minimum_panel_eroi=1.2,
                                   minimum_economic_roi=0, electricity_sell_price=0.14,
                                   replacement_scenario="replace_failed_panels_every_X_years",
-                                  continue_simulation=False, discount_rate=0.05, **kwargs):
+                                  continue_simulation=False, discount_rate=0.05,
+                                  inflation_rate=default_inflation_rate,
+                                  fuel_escalation_rate=default_fuel_escalation_rate,
+                                  vat_tax=default_vat_tax,
+                                  income_tax=default_income_tax,
+                                  **kwargs):
         """
 
         """
@@ -470,7 +476,12 @@ class SolarRadAndBipvSimulation:
                                                                              continue_simulation=continue_simulation,
                                                                              minimum_economic_roi=minimum_economic_roi,
                                                                              electricity_sell_price=electricity_sell_price,
-                                                                             discount_rate=discount_rate, **kwargs)
+                                                                             discount_rate=discount_rate,
+                                                                             inflation_rate = inflation_rate,
+                                                                             fuel_escalation_rate = fuel_escalation_rate,
+                                                                             vat_tax = vat_tax,
+                                                                             income_tax = income_tax,
+                                                                             **kwargs)
 
         run_bipv_on_facades = self.run_bipv_panel_simulation_on_roof_or_facades(roof_or_facades="facades",
                                                                                 on_roof_or_facades=self.on_facades,
@@ -493,7 +504,10 @@ class SolarRadAndBipvSimulation:
                                                                                 continue_simulation=continue_simulation,
                                                                                 minimum_economic_roi=minimum_economic_roi,
                                                                                 electricity_sell_price=electricity_sell_price,
-                                                                                discount_rate=discount_rate, **kwargs)
+                                                                                discount_rate=discount_rate,
+                                                                                vat_tax = vat_tax,
+                                                                                income_tax = income_tax,
+                                                                                **kwargs)
 
         # Total results
         if run_bipv_on_roof and run_bipv_on_facades:
@@ -533,7 +547,11 @@ class SolarRadAndBipvSimulation:
                                                      minimum_panel_eroi,
                                                      replacement_scenario, continue_simulation=False,
                                                      minimum_economic_roi=0, electricity_sell_price=0.14,
-                                                     discount_rate=0.05, **kwargs):
+                                                     discount_rate=default_discount_rate,
+                                                     inflation_rate= default_inflation_rate,
+                                                     fuel_escalation_rate = default_fuel_escalation_rate,
+                                                     vat_tax = default_vat_tax,
+                                                     income_tax = default_income_tax, **kwargs):
         """
 
         """
@@ -653,7 +671,7 @@ class SolarRadAndBipvSimulation:
             # LCA and economic for the gate to gate processes for the panels except transportation
             gtg_result_dict = compute_lca_and_cost_for_gtg(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list, pv_tech_obj=pv_tech_obj,
-                roof_or_facades=roof_or_facades, discount_rate=discount_rate)
+                roof_or_facades=roof_or_facades, discount_rate=discount_rate, inflation_rate=inflation_rate)
             # LCA and economic for transportation
             transport_result_dict = compute_lca_and_cost_for_transportation(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,
@@ -662,7 +680,9 @@ class SolarRadAndBipvSimulation:
                 final_year_reached=flag_last_year,
                 pv_tech_obj=pv_tech_obj,
                 transportation_obj=transport_obj,
-                discount_rate=discount_rate)
+                discount_rate=discount_rate,
+                inflation_rate = inflation_rate,
+                fuel_escalation_rate=fuel_escalation_rate)
             # LCA and economic for maintenance
             maintenance_result_dict = compute_lca_and_cost_for_maintenance(
                 panel_list=panel_list,
@@ -670,7 +690,8 @@ class SolarRadAndBipvSimulation:
                 current_study_duration_in_years=self.parameter_dict[roof_or_facades][
                     "study_duration_in_years"],
                 uc_end_year=uc_end_year,
-                discount_rate=discount_rate)
+                discount_rate=discount_rate,
+                inflation_rate=inflation_rate)
             # LCA and economic for recycling
             recycling_result_dict = compute_lca_cost_and_dmfa_for_recycling(
                 nb_of_panels_installed_yearly_list=nb_of_panels_installed_yearly_list,
@@ -678,7 +699,10 @@ class SolarRadAndBipvSimulation:
                 flag_first_year=flag_first_year,
                 final_year_reached=flag_last_year,
                 pv_tech_obj=pv_tech_obj,
-                discount_rate=discount_rate)
+                discount_rate=discount_rate,
+                inflation_rate = inflation_rate,
+                vat_tax = vat_tax,
+                income_tax=income_tax)
             # LCA and economic for the inverter
             inverter_result_dict = compute_lca_and_cost_for_inverter(
                 inverter_obj=self.parameter_dict[roof_or_facades]["inverter"]["technology"],
@@ -688,7 +712,9 @@ class SolarRadAndBipvSimulation:
                     "study_duration_in_years"],
                 uc_end_year=uc_end_year,
                 final_year_reached=flag_last_year,
-                discount_rate=discount_rate)
+                discount_rate=discount_rate,
+                inflation_rate=inflation_rate,
+                vat_tax=vat_tax)
             # Subsidy calculation
             subsidy_result_dict, gtg_result_dict = compute_subsidies(
                 gate_to_gate_dict=gtg_result_dict,

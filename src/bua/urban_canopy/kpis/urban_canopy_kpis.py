@@ -187,28 +187,32 @@ class UrbanCanopyKPIs:
         df.insert(0, '', ["roof", "facades", "total"])
         df.to_csv(file_path, index=False)
 
-    def compute_intermediate_results_dict(self, bipv_results_dict, subsidy_type, discount_rate):
+    def compute_intermediate_results_dict(self, bipv_results_dict, subsidy_type, discount_rate, electricity_escalation_rate, income_tax):
         """
         Compute the intermediate results of the building.
         :param bipv_results_dict: dictionary, the results of the BIPV simulation
         """
         self.kpi_intermediate_results_dict["roof"] = self.compute_intermediate_sub_results_dict(
-            bipv_result_dict=bipv_results_dict["roof"], bipv_subsidy_obj=subsidy_type, discount_rate=discount_rate, roof_or_facade="roof")
+            bipv_result_dict=bipv_results_dict["roof"], bipv_subsidy_obj=subsidy_type, discount_rate=discount_rate,
+            electricity_escalation_rate = electricity_escalation_rate, income_tax=income_tax, roof_or_facade="roof")
         self.kpi_intermediate_results_dict["facades"] = self.compute_intermediate_sub_results_dict(
-            bipv_result_dict=bipv_results_dict["facades"], bipv_subsidy_obj=subsidy_type, discount_rate=discount_rate, roof_or_facade="facades")
+            bipv_result_dict=bipv_results_dict["facades"], bipv_subsidy_obj=subsidy_type, discount_rate=discount_rate,
+            electricity_escalation_rate = electricity_escalation_rate, income_tax=income_tax, roof_or_facade="facades")
         self.kpi_intermediate_results_dict["total"] = self.compute_intermediate_sub_results_dict(
-            bipv_result_dict=bipv_results_dict["total"], bipv_subsidy_obj=subsidy_type, discount_rate=discount_rate, roof_or_facade="total")
+            bipv_result_dict=bipv_results_dict["total"], bipv_subsidy_obj=subsidy_type, discount_rate=discount_rate,
+            electricity_escalation_rate = electricity_escalation_rate, income_tax=income_tax, roof_or_facade="total")
 
         self.kpi_intermediate_results_dict = compute_cumulative_and_total_value_bipv_result_dict(
             bipv_results_dict=self.kpi_intermediate_results_dict)
 
-    def compute_kpis(self, bipv_results_dict, subsidy_type, discount_rate):
+    def compute_kpis(self, bipv_results_dict, subsidy_type, discount_rate, electricity_escalation_rate,  income_tax):
         """
         Compute the KPIs of the building.
         :param bipv_results_dict: dictionary, the results of the BIPV simulation
         """
         # compute the intermediate results
-        self.compute_intermediate_results_dict(bipv_results_dict=bipv_results_dict, subsidy_type=subsidy_type, discount_rate=discount_rate)
+        self.compute_intermediate_results_dict(bipv_results_dict=bipv_results_dict, subsidy_type=subsidy_type, discount_rate=discount_rate,
+                                               electricity_escalation_rate = electricity_escalation_rate, income_tax=income_tax)
         # Roof
         self.compute_sub_kpis(bipv_result_dict=bipv_results_dict["roof"], sub_type="roof")
         # Facades
@@ -288,7 +292,7 @@ class UrbanCanopyKPIs:
             self.kpi_intermediate_results_dict[sub_type][
                 "net_economical_benefit_density"]["conditioned_apartment"]["cumulative"][-1]
 
-    def compute_intermediate_sub_results_dict(self, bipv_result_dict, bipv_subsidy_obj, discount_rate, roof_or_facade):
+    def compute_intermediate_sub_results_dict(self, bipv_result_dict, bipv_subsidy_obj, discount_rate, electricity_escalation_rate, income_tax, roof_or_facade):
         """
         Compute the intermediate results of the building.
         :param bipv_result_dict: dictionary, the results of the BIPV simulation
@@ -366,9 +370,10 @@ class UrbanCanopyKPIs:
                         energy_revenue_per_hour = electricity_harvested * self.grid_electricity_sell_price
                     elif hourly_surplus_energy > 0:
                         if self.bipv_scenario.bipv_subsidy_obj.remuneration == "yes":
-                            energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price + hourly_surplus_energy * fit_for_specific_hour
+                            energy_revenue_per_hour = (electricity_consumed * self.grid_electricity_sell_price * (1 + electricity_escalation_rate * year)
+                                                       + (hourly_surplus_energy * fit_for_specific_hour * (1 - income_tax)))
                         elif self.bipv_scenario.bipv_subsidy_obj.remuneration == "no": #surplus energy is not sold, no extra value is created
-                            energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price
+                            energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price * (1 + electricity_escalation_rate * year)
                     else:
                         energy_revenue_per_hour = 0
 

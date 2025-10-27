@@ -38,7 +38,7 @@ from ..config.bua_config_structure import name_urban_canopy_export_file_pkl, \
     path_folder_user_bipv_parameters
 from ..config.config_constants import TOLERANCE_LBT
 
-from ..config.config_default_values_user_parameters import default_path_weather_file
+from ..config.config_default_values_user_parameters import default_path_weather_file, default_inflation_rate, default_fuel_escalation_rate
 
 dev_logger = logging.getLogger("dev")
 user_logger = logging.getLogger("user")
@@ -1017,7 +1017,8 @@ class UrbanCanopy:
                                                continue_simulation: bool = False,
                                                final_year: int = datetime.now().year + 50,
                                                discount_rate=0.05,
-                                               **kwargs):
+                                               inflation_rate=default_inflation_rate,
+                                               fuel_escalation_rate= default_fuel_escalation_rate, **kwargs):
         """
         Run the panels simulation on the urban canopy
         :param path_simulation_folder: path to the simulation folder
@@ -1149,6 +1150,8 @@ class UrbanCanopy:
                                                                 continue_simulation=continue_simulation,
                                                                 path_radiation_and_bipv_result_folder=path_radiation_and_bipv_result_folder,
                                                                 discount_rate=discount_rate,
+                                                                inflation_rate=inflation_rate,
+                                                                fuel_escalation_rate=fuel_escalation_rate,
                                                                 **kwargs)
                 solar_rad_and_bipv_obj_list.append(building_obj.solar_radiation_and_bipv_simulation_obj)
 
@@ -1236,7 +1239,7 @@ class UrbanCanopy:
 
     def compute_bipv_kpis_at_urban_scale(self, path_simulation_folder, bipv_scenario_identifier,
                                          grid_ghg_intensity, grid_energy_intensity,
-                                         grid_electricity_sell_price, zone_area, subsidy_type, discount_rate):
+                                         grid_electricity_sell_price, zone_area, subsidy_type, discount_rate, electricity_escalation_rate, income_tax):
         """
         Post-process the BIPV results at urban scale
         :param path_simulation_folder: string, path to the simulation folder
@@ -1277,7 +1280,9 @@ class UrbanCanopy:
             conditioned_apartment_area=conditioned_apartment_area,
             zone_area=zone_area,
             subsidy_type = subsidy_type,
-            discount_rate=discount_rate)
+            discount_rate=discount_rate,
+            electricity_escalation_rate = electricity_escalation_rate,
+            income_tax = income_tax)
         # Write the results to CSV file
         path_radiation_and_bipv_result_folder = os.path.join(path_simulation_folder,
                                                              name_radiation_simulation_folder)

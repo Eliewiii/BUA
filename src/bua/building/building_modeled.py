@@ -23,6 +23,7 @@ from .energy_simulation.building_energy_simulation import BuildingEnergySimulati
 from .solar_radiation_and_bipv.solar_rad_and_BIPV import SolarRadAndBipvSimulation
 
 from .utils_buildings.lbt_obj_methods.hb_model_addons import HbAddons
+from ..config.config_default_values_user_parameters import default_inflation_rate, default_fuel_escalation_rate
 
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")
@@ -63,6 +64,7 @@ class BuildingModeled(BuildingBasic):
         Load the attributes that cannot be pickled from equivalent attribute dict.
         """
         # Convert the hb_model_dict to hb_model_obj
+        self.hb_model_obj = Model.from_dict(self.hb_model_dict)  # todo: tests if it works
         self.hb_model_obj = Model.from_dict(self.hb_model_dict)  # todo: tests if it works
         self.hb_model_dict = None
         # Load attributes in the context filter object after pickling
@@ -701,11 +703,13 @@ class BuildingModeled(BuildingBasic):
                                            facades_inverter_sizing_ratio,
                                            uc_start_year,
                                            uc_current_year, uc_end_year, final_year, efficiency_computation_method="yearly",
-                                           minimum_panel_eroi=1.2,
+                                           minimum_panel_eroi=1.5,
                                            minimum_economic_roi=0, electricity_sell_price=0.14,
                                            replacement_scenario="replace_failed_panels_every_X_years",
                                            continue_simulation=False,
                                            discount_rate=0.05,
+                                           inflation_rate=default_inflation_rate,
+                                           fuel_escalation_rate=default_fuel_escalation_rate,
                                            **kwargs):
         """
         Run the BIPV simulation for the building on the roof and/or on the facades of the buildings.
@@ -751,7 +755,10 @@ class BuildingModeled(BuildingBasic):
             electricity_sell_price=electricity_sell_price,
             replacement_scenario=replacement_scenario,
             continue_simulation=continue_simulation,
-            discount_rate=discount_rate, **kwargs)
+            discount_rate=discount_rate,
+            inflation_rate=inflation_rate,
+            fuel_escalation_rate=fuel_escalation_rate,
+            **kwargs)
         # Write the results in a csv file
         if "no_csv" not in kwargs or not kwargs["no_csv"]:
             self.solar_radiation_and_bipv_simulation_obj.write_building_bipv_results_to_csv(
