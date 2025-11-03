@@ -336,6 +336,7 @@ class BuildingBasic:
             building_obj.height = height
             building_obj.elevation = elevation
             building_obj.typology = typology
+            building_obj.lb_polyface3d_extruded_footprint = lb_polyface3d
             # Do not set the number of floor and floor height as Brep might not represent buildings. When
             # needed the number of floor and floor height will be deduced
 

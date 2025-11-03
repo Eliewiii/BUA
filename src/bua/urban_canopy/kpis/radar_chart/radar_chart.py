@@ -212,7 +212,7 @@ class RadarChart:
         plt.tight_layout(pad=2.0)  # Ensure enough space around the plot
 
         # Add legend
-        ax.legend(loc="upper right", bbox_to_anchor=(1.1, 1.1))
+        ax.legend(loc="upper right", bbox_to_anchor=(1, 1))
 
         # Set title and show plot
         if self.title != "":
@@ -223,79 +223,79 @@ class RadarChart:
             plt.show()
 
 
-# Example usage:
-radar = RadarChart()
-radar.add_axis("EROI", None, 2, 10, "value", order="ascending")
-radar.add_axis("GHGEI", "gCO2eq/kWh", 20, 130, "value", order="descending")
-radar.add_axis("BCR", None, 1, 2, "value", order="ascending")
-radar.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="ascending")
-radar.add_axis("Harvested Electricity", "MWh/m2", 1.5, 6, "value", order="ascending")
-radar.add_axis("Net profit density", "usd/m2", 70, 200, "value", order="ascending")
-radar.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
-radar.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
-radar.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
-
-
-
-
-
-#Sustanainble
-radar.add_data([4.40 , 64.0 , 1.83 , 52.8, 2.13, 136 , 3.94 , 4.89 , 29.0], color="blue", label="Sustainable Low")
-radar.add_data([4.20 , 67.3 , 1.79 , 28.8 , 2.31 , 143 , 4.70 , 4.97 , 30.0], color="green", label="Sustainable Medium")
-radar.add_data([4.12 , 68.6 , 1.79 , 21.2 , 2.53 , 156 , 4.72 , 5.74 , 30.0], color="red", label="Sustainable High")
-
-# Balanced
-radar.add_data([3.59 , 79 , 1.64 , 72.4 , 2.92 , 159 , 4.99 , 6.80 , 34.9], color="cornflowerblue", label="Balanced Low")
-radar.add_data([3.35 , 85 , 1.56 , 41.8 , 3.35 , 169 , 5.83 , 6.90 , 36.0], color="mediumseagreen", label="Balanced Medium")
-radar.add_data([3.15 , 90.5 , 1.51 , 35.2 , 4.20 , 199 , 5.92 , 7.81 , 37.9], color="lightcoral", label="Balanced High")
+# # Example usage:
+# radar = RadarChart()
+# radar.add_axis("EROI", None, 2, 10, "value", order="ascending")
+# radar.add_axis("GHGEI", "gCO2eq/kWh", 20, 130, "value", order="descending")
+# radar.add_axis("BCR", None, 1, 2, "value", order="ascending")
+# radar.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="ascending")
+# radar.add_axis("Harvested Electricity", "MWh/m2", 1.5, 6, "value", order="ascending")
+# radar.add_axis("Net profit density", "usd/m2", 70, 200, "value", order="ascending")
+# radar.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
+# radar.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
+# radar.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
 #
 #
-# # Production
-radar.add_data([2.82 , 101 , 1.41 , 80.0 , 3.23 , 130 , 6.98 , 8.93 , 41.9], color="cyan", label="Production Low")
-radar.add_data([2.52 , 113 , 1.30 , 48.8 , 3.91 , 128 , 7.95 , 9.95 , 44.9], color="limegreen", label="Production Medium")
-radar.add_data([2.33 , 123 , 1.24 , 42.6 , 5.07 , 138 , 8.91 , 10.9 , 46.9], color="magenta", label="Production High")
-
-# Optionally, auto set boundaries
-# radar.auto_set_boundaries()
-
-# Plot or save the radar chart
-radar.plot(filename="C_SI_no_lable", figsize=(8, 8), dpi=300,y_lim=1.5)
-
-
-# Example usage:
-radar_cigs = RadarChart()
-radar_cigs.add_axis("EROI", None, 2, 10, "value", order="ascending")
-radar_cigs.add_axis("GHGEI", "gCO2eq/kWh", 20, 130, "value", order="descending")
-radar_cigs.add_axis("BCR", None, 1, 2, "value", order="ascending")
-radar_cigs.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="ascending")
-radar_cigs.add_axis("Harvested Electricity", "MWh/m2", 1.5, 6, "value", order="ascending")
-radar_cigs.add_axis("Net profit density", "usd/m2", 70, 200, "value", order="ascending")
-radar_cigs.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
-radar_cigs.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
-radar_cigs.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
-
-
-#Sustanainble CIGS
-radar_cigs.add_data([8.69 , 23.3 , 1.56 , 48.5 , 1.96 , 98.8 , 1.94 , 1.76 , 34.0], color="blue", label="Sustainable Low")
-radar_cigs.add_data([8.37 , 24.3 , 1.53 , 25.4 , 2.04 , 98.5 , 2.55 , 1.81 , 35.9], color="green", label="Sustainable Medium")
-radar_cigs.add_data([7.99 , 25.3 , 1.51 , 22.6 , 2.70 , 128 , 2.58 , 1.87 , 35.9], color="red", label="Sustainable High")
-
-# Balanced
-radar_cigs.add_data([8.18 , 24.7 , 1.50 , 56.4 , 2.27 , 107 , 2.61 , 1.90 , 37.9], color="cornflowerblue", label="Balanced Low")
-radar_cigs.add_data([7.60 , 26.6 , 1.44 , 33.0 , 2.65 , 114 , 2.68 , 2.56 , 39.9], color="mediumseagreen", label="Balanced Medium")
-radar_cigs.add_data([7.35 , 27.4 , 1.43 , 28.7 , 3.42 , 144 , 2.71 , 2.58 , 40.0], color="lightcoral", label="Balanced High")
 #
 #
-# # Production
-radar_cigs.add_data([6.69 , 30.1 , 1.29 , 61.5 , 2.48 , 78.4 , 2.94 , 2.77 , 45.0], color="cyan", label="Production Low")
-radar_cigs.add_data([5.85 , 34.3 , 1.19 , 39.3 , 3.15 , 70.5 , 3.76 , 2.92 , 48.9], color="limegreen", label="Production Medium")
-radar_cigs.add_data([5.62 , 35.7 , 1.18 , 34.6 , 4.12 , 86.5 , 3.80 , 2.97 , 49.8], color="magenta", label="Production High")
-
-
-
-# Plot or save the radar chart
-radar_cigs.plot(filename="CIGS_no_label", figsize=(8, 8), dpi=300,y_lim=1.5)
-
+#
+# #Sustanainble
+# radar.add_data([4.40 , 64.0 , 1.83 , 52.8, 2.13, 136 , 3.94 , 4.89 , 29.0], color="blue", label="Sustainable Low")
+# radar.add_data([4.20 , 67.3 , 1.79 , 28.8 , 2.31 , 143 , 4.70 , 4.97 , 30.0], color="green", label="Sustainable Medium")
+# radar.add_data([4.12 , 68.6 , 1.79 , 21.2 , 2.53 , 156 , 4.72 , 5.74 , 30.0], color="red", label="Sustainable High")
+#
+# # Balanced
+# radar.add_data([3.59 , 79 , 1.64 , 72.4 , 2.92 , 159 , 4.99 , 6.80 , 34.9], color="cornflowerblue", label="Balanced Low")
+# radar.add_data([3.35 , 85 , 1.56 , 41.8 , 3.35 , 169 , 5.83 , 6.90 , 36.0], color="mediumseagreen", label="Balanced Medium")
+# radar.add_data([3.15 , 90.5 , 1.51 , 35.2 , 4.20 , 199 , 5.92 , 7.81 , 37.9], color="lightcoral", label="Balanced High")
+# #
+# #
+# # # Production
+# radar.add_data([2.82 , 101 , 1.41 , 80.0 , 3.23 , 130 , 6.98 , 8.93 , 41.9], color="cyan", label="Production Low")
+# radar.add_data([2.52 , 113 , 1.30 , 48.8 , 3.91 , 128 , 7.95 , 9.95 , 44.9], color="limegreen", label="Production Medium")
+# radar.add_data([2.33 , 123 , 1.24 , 42.6 , 5.07 , 138 , 8.91 , 10.9 , 46.9], color="magenta", label="Production High")
+#
+# # Optionally, auto set boundaries
+# # radar.auto_set_boundaries()
+#
+# # Plot or save the radar chart
+# radar.plot(filename="C_SI_no_lable", figsize=(8, 8), dpi=300,y_lim=1.5)
+#
+#
+# # Example usage:
+# radar_cigs = RadarChart()
+# radar_cigs.add_axis("EROI", None, 2, 10, "value", order="ascending")
+# radar_cigs.add_axis("GHGEI", "gCO2eq/kWh", 20, 130, "value", order="descending")
+# radar_cigs.add_axis("BCR", None, 1, 2, "value", order="ascending")
+# radar_cigs.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="ascending")
+# radar_cigs.add_axis("Harvested Electricity", "MWh/m2", 1.5, 6, "value", order="ascending")
+# radar_cigs.add_axis("Net profit density", "usd/m2", 70, 200, "value", order="ascending")
+# radar_cigs.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
+# radar_cigs.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
+# radar_cigs.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
+#
+#
+# #Sustanainble CIGS
+# radar_cigs.add_data([8.69 , 23.3 , 1.56 , 48.5 , 1.96 , 98.8 , 1.94 , 1.76 , 34.0], color="blue", label="Sustainable Low")
+# radar_cigs.add_data([8.37 , 24.3 , 1.53 , 25.4 , 2.04 , 98.5 , 2.55 , 1.81 , 35.9], color="green", label="Sustainable Medium")
+# radar_cigs.add_data([7.99 , 25.3 , 1.51 , 22.6 , 2.70 , 128 , 2.58 , 1.87 , 35.9], color="red", label="Sustainable High")
+#
+# # Balanced
+# radar_cigs.add_data([8.18 , 24.7 , 1.50 , 56.4 , 2.27 , 107 , 2.61 , 1.90 , 37.9], color="cornflowerblue", label="Balanced Low")
+# radar_cigs.add_data([7.60 , 26.6 , 1.44 , 33.0 , 2.65 , 114 , 2.68 , 2.56 , 39.9], color="mediumseagreen", label="Balanced Medium")
+# radar_cigs.add_data([7.35 , 27.4 , 1.43 , 28.7 , 3.42 , 144 , 2.71 , 2.58 , 40.0], color="lightcoral", label="Balanced High")
+# #
+# #
+# # # Production
+# radar_cigs.add_data([6.69 , 30.1 , 1.29 , 61.5 , 2.48 , 78.4 , 2.94 , 2.77 , 45.0], color="cyan", label="Production Low")
+# radar_cigs.add_data([5.85 , 34.3 , 1.19 , 39.3 , 3.15 , 70.5 , 3.76 , 2.92 , 48.9], color="limegreen", label="Production Medium")
+# radar_cigs.add_data([5.62 , 35.7 , 1.18 , 34.6 , 4.12 , 86.5 , 3.80 , 2.97 , 49.8], color="magenta", label="Production High")
+#
+#
+#
+# # Plot or save the radar chart
+# radar_cigs.plot(filename="CIGS_no_label", figsize=(8, 8), dpi=300,y_lim=1.5)
+#
 
 
 
@@ -319,7 +319,7 @@ radar_low.add_data([8.69 , 23.3 , 1.56 , 48.5 , 1.96 , 98.8 , 1.94 , 1.76 , 34.0
 radar_low.add_data([8.18 , 24.7 , 1.50 , 56.4 , 2.27 , 107 , 2.61 , 1.90 , 37.9], color="darkgray",style="--", label="Balanced CIGS Low")
 radar_low.add_data([6.69 , 30.1 , 1.29 , 61.5 , 2.48 , 78.4 , 2.94 , 2.77 , 45.0], color="lightgrey",style="--", label="Production Low")
 
-radar_low.plot(filename="low_no_label", figsize=(8, 8), dpi=300,y_lim=1.5)
+radar_low.plot(filename="low_no_label", figsize=(8, 8), dpi=600,y_lim=1.5)
 
 
 # Medium
@@ -341,7 +341,7 @@ radar_medium.add_data([2.52 , 113 , 1.30 , 48.8 , 3.91 , 128 , 7.95 , 9.95 , 44.
 radar_medium.add_data([8.37 , 24.3 , 1.53 , 25.4 , 2.04 , 98.5 , 2.55 , 1.81 , 35.9], color="black", style="--", label="Sustainable CIGS medium")
 radar_medium.add_data([7.60 , 26.6 , 1.44 , 33.0 , 2.65 , 114 , 2.68 , 2.56 , 39.9], color="darkgray",style="--", label="Balanced CIGS medium")
 radar_medium.add_data([5.85 , 34.3 , 1.19 , 39.3 , 3.15 , 70.5 , 3.76 , 2.92 , 48.9], color="lightgrey",style="--", label="Production medium")
-radar_medium.plot(filename="medium_no_label", figsize=(8, 8), dpi=300,y_lim=1.5)
+radar_medium.plot(filename="medium_no_label", figsize=(8, 8), dpi=600,y_lim=1.5)
 
 
 # High
@@ -356,12 +356,32 @@ radar_high.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
 radar_high.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
 radar_high.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
 
-radar_high.add_data([4.20 , 67.3 , 1.79 , 28.8 , 2.31 , 143 , 4.70 , 4.97 , 30.0], color="black", style="-", label="Sustainable c-Si high")
-radar_high.add_data([3.35 , 85 , 1.56 , 41.8 , 3.35 , 169 , 5.83 , 6.90 , 36.0], color="darkgray",style="-", label="Balanced c-Si high")
-radar_high.add_data([2.52 , 113 , 1.30 , 48.8 , 3.91 , 128 , 7.95 , 9.95 , 44.9], color="lightgrey",style="-", label="Production c-Si high")
+radar_high.add_data([4.12 , 68.6 , 1.79 , 21.2 , 2.53 , 156 , 4.72 , 5.74 , 30.0], color="black", style="-", label="Sustainable c-Si high")
+radar_high.add_data([3.15 , 90.5 , 1.51 , 35.2 , 4.20 , 199 , 5.92 , 7.81 , 37.9], color="darkgray",style="-", label="Balanced c-Si high")
+radar_high.add_data([2.33 , 123 , 1.24 , 42.6 , 5.07 , 138 , 8.91 , 10.9 , 46.9], color="lightgrey",style="-", label="Production c-Si high")
 
-radar_high.add_data([8.37 , 24.3 , 1.53 , 25.4 , 2.04 , 98.5 , 2.55 , 1.81 , 35.9], color="black", style="--", label="Sustainable CIGS high")
-radar_high.add_data([7.60 , 26.6 , 1.44 , 33.0 , 2.65 , 114 , 2.68 , 2.56 , 39.9], color="darkgray",style="--", label="Balanced CIGS high")
-radar_high.add_data([5.85 , 34.3 , 1.19 , 39.3 , 3.15 , 70.5 , 3.76 , 2.92 , 48.9], color="lightgrey",style="--", label="Production high")
-radar_high.plot(filename="high_no_label", figsize=(8, 8), dpi=300,y_lim=1.5)
+radar_high.add_data([7.99 , 25.3 , 1.51 , 22.6 , 2.70 , 128 , 2.58 , 1.87 , 35.9], color="black", style="--", label="Sustainable CIGS high")
+radar_high.add_data([7.35 , 27.4 , 1.43 , 28.7 , 3.42 , 144 , 2.71 , 2.58 , 40.0], color="darkgray",style="--", label="Balanced CIGS high")
+radar_high.add_data([5.62 , 35.7 , 1.18 , 34.6 , 4.12 , 86.5 , 3.80 , 2.97 , 49.8], color="lightgrey",style="--", label="Production high")
+radar_high.plot(filename="high_no_label", figsize=(8, 8), dpi=600,y_lim=1.5)
 
+# High
+radar_high = RadarChart()
+radar_high.add_axis("EROI", None, 2, 10, "value", order="ascending")
+radar_high.add_axis("GHGEI", "gCO2eq/kWh", 20, 130, "value", order="descending")
+radar_high.add_axis("BCR", None, 1, 2, "value", order="ascending")
+radar_high.add_axis("Net Energy Compensation", "%", 0, 100, "percentage", order="ascending")
+radar_high.add_axis("Harvested Electricity", "MWh/m2", 1.5, 6, "value", order="ascending")
+radar_high.add_axis("Net profit density", "usd/m2", 70, 200, "value", order="ascending")
+radar_high.add_axis("Payback Time", "year", 0, 15, "value", order="descending")
+radar_high.add_axis("Payback Time 2", "year", 0, 15, "value", order="descending")
+radar_high.add_axis("Payback Time 3", "year", 25, 50, "value", order="descending")
+
+radar_high.add_data([4.12 , 68.6 , 1.79 , 21.2 , 2.53 , 156 , 4.72 , 5.74 , 30.0], color="black", style="-", label="Sustainable c-Si")
+radar_high.add_data([3.15 , 90.5 , 1.51 , 35.2 , 4.20 , 199 , 5.92 , 7.81 , 37.9], color="darkgray",style="-", label="Balanced c-Si")
+radar_high.add_data([2.33 , 123 , 1.24 , 42.6 , 5.07 , 138 , 8.91 , 10.9 , 46.9], color="lightgrey",style="-", label="Production c-Si")
+
+radar_high.add_data([7.99 , 25.3 , 1.51 , 22.6 , 2.70 , 128 , 2.58 , 1.87 , 35.9], color="black", style="--", label="Sustainable CIGS")
+radar_high.add_data([7.35 , 27.4 , 1.43 , 28.7 , 3.42 , 144 , 2.71 , 2.58 , 40.0], color="darkgray",style="--", label="Balanced CIGS")
+radar_high.add_data([5.62 , 35.7 , 1.18 , 34.6 , 4.12 , 86.5 , 3.80 , 2.97 , 49.8], color="lightgrey",style="--", label="Production CIGS")
+radar_high.plot(filename="legend only", figsize=(8, 8), dpi=600,y_lim=1.5)

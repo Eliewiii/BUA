@@ -132,3 +132,12 @@ class HbAddons:
                 for face in room.faces:
                 # get the length of the surface => projection of the face on the XY plane
                     pt_a , pt_b = room.min, room.max # extreme points of the
+
+
+    @staticmethod
+    def lb_polyface3d_envelop_from_hb_model(hb_model):
+        """
+        Create a ladybug polyface3d envelope from a honeybee model
+        """
+        # Get all the hb faces from the honeybee model with out boundary condition
+        lb_faces = [hb_face.geometry for hb_face in hb_model.faces if hb_face.boundary_condition.boundary_condition != "Outdoors"]

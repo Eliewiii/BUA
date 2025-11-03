@@ -164,6 +164,33 @@ class BuildingModeled(BuildingBasic):
             raise AttributeError(err_message)
         # todo @Elie : finish the function (and check if it works)
         building_modeled_obj.moved_to_origin = True  # we assumed that the HB model is already in the proper place within the urban canopy
+        # def envelop_from_model(hb_model):
+        #     faces = []
+        #     for room in hb_model.rooms:
+        #         for face in room.faces:
+        #             bc = face.boundary_condition.name.lower()
+        #             if bc in ("outdoors", "ground"):
+        #                 faces.append(face.geometry)
+        #     from ladybug_geometry.geometry3d import Polyface3D
+        #     return Polyface3D.from_faces(faces, tolerance=1e-6)
+
+        def envelop_from_model(hb_model):
+            roof_faces= []
+            for room in hb_model.rooms:
+                for face in room.faces:
+                    if face.type.name.lower() == "roofceiling" and face.boundary_condition.name.lower() in ("outdoors"):
+                        roof_faces.append(face.geometry)
+            from ladybug_geometry.geometry3d import Polyface3D
+            # get the heigh of each roof
+            roof_heights = [max([v.z for v in face.vertices])-building_modeled_obj.elevation for face in roof_faces]
+            #move the roof faces to the base of the building
+            roof_faces= [face.move(Vector3D(0,0,-h)) for face,h in zip(roof_faces,roof_heights)]
+
+            extruded_roof_list = [Polyface3D.from_offset_face(face=face, offset=h) for face,h in zip(roof_faces,roof_heights)]
+            return Polyface3D.from_faces([face for extruded_roof in extruded_roof_list for face in extruded_roof.faces], tolerance=1e-6)
+
+
+        building_modeled_obj.lb_polyface3d_extruded_footprint = envelop_from_model(hb_model)
 
         return building_modeled_obj, identifier
 
