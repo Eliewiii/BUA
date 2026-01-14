@@ -19,7 +19,7 @@
 
 ### 1. Pipeline
 * **Data Ingestion:** Imports raw geometric data from common GIS, Brep, and EnergyPlus formats.
-* **Automated Modeling and Simulation:** Automated modeling and simulation of selected target buildings.
+* **Automated Modeling and Simulation:** Automated modeling and simulation of for the selected target buildings.
 * **Standard Outputs:** Standard building energy simulation outputs for seemless integration in existing worflow.
 
 ### 2. Application
@@ -33,8 +33,8 @@
 
 
 ### 4. Integration
-* **Ladybug Tools (LBT):** Features deep integration with the Ladybug Tools ecosystem, using the Ladybug, Honeybee and Dragonfly objects as a fundation of the .
-* **
+* **Ladybug Tools (LBT):** Features deep integration with the Ladybug Tools ecosystem, using the Ladybug, Honeybee and Dragonfly objects as a fundation of the new classes.
+* **EnergyPlus:** For building simulatio. The coupled dynamic LWR simulation uses EnergyPlus API pyenergyplus to synchronize the simulation of each building and share the surfaces temperatures.
 
 ---
 
