@@ -27,6 +27,8 @@ empty_sub_kpi_intermediate_results_dict = {
     "ghg_emissions_offset_from_the_grid": {"yearly": [], "cumulative": [], "total": 0.0},
     "primary_energy_offset_from_the_grid": {"yearly": [], "cumulative": [], "total": 0.0},
     "net_building_electricity_compensation": {"yearly": [], "cumulative": [], "total": 0.0},
+    "self_consumed_energy_kWh": {"yearly": [], "cumulative": [], "total": 0.0},
+    "electricity_consumption_by_buildings": {"yearly": [], "cumulative": [], "total": 0.0},
     "net_economical_income_energy_only": {"yearly": [], "cumulative": [], "total": 0.0},
     "net_economical_income": {"yearly": [], "cumulative": [], "total": 0.0},
     "net_economical_benefit": {"yearly": [], "cumulative": [], "total": 0.0},
@@ -353,6 +355,8 @@ class UrbanCanopyKPIs:
         # Net economical benefit
         for year in range(len(bipv_result_dict["energy_harvested"]["yearly"])):
             electricity_revenue_per_year = 0
+            self_consumed_electricity_per_year = 0
+            electricity_consumed_by_buildings_per_year = 0
 
             # if analysis is done hourly to use dynamic pricing
             if self.ubes_electricity_consumption is not None:
@@ -367,18 +371,24 @@ class UrbanCanopyKPIs:
                     fit_for_specific_hour = self.bipv_scenario.bipv_subsidy_obj.get_electricity_price_per_hour(hour)
 
                     if hourly_surplus_energy < 0:
-                        energy_revenue_per_hour = electricity_harvested * self.grid_electricity_sell_price
+                        energy_revenue_per_hour = electricity_harvested * self.grid_electricity_sell_price * ((1 + electricity_escalation_rate) ** year)
+                        self_consumed_electricity_per_hour = electricity_harvested
                     elif hourly_surplus_energy > 0:
+                        self_consumed_electricity_per_hour = electricity_consumed
                         if self.bipv_scenario.bipv_subsidy_obj.remuneration == "yes":
-                            energy_revenue_per_hour = (electricity_consumed * self.grid_electricity_sell_price * (1 + electricity_escalation_rate * year)
+                            energy_revenue_per_hour = (electricity_consumed * self.grid_electricity_sell_price * ((1 + electricity_escalation_rate) ** year)
                                                        + (hourly_surplus_energy * fit_for_specific_hour * (1 - income_tax)))
                         elif self.bipv_scenario.bipv_subsidy_obj.remuneration == "no": #surplus energy is not sold, no extra value is created
-                            energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price * (1 + electricity_escalation_rate * year)
+                            energy_revenue_per_hour = electricity_consumed * self.grid_electricity_sell_price * ((1 + electricity_escalation_rate) ** year)
                     else:
                         energy_revenue_per_hour = 0
+                        electricity_consumed = 0
 
                     # sum up revenues over all hours for the year
                     electricity_revenue_per_year += energy_revenue_per_hour
+                    self_consumed_electricity_per_year += self_consumed_electricity_per_hour
+                    electricity_consumed_by_buildings_per_year += electricity_consumed
+
 
             # analysis is done yearly, with a fixed feed in tariff
             if self.ubes_electricity_consumption is None:
@@ -408,6 +418,8 @@ class UrbanCanopyKPIs:
                                                                                         bipv_result_dict["cost"]["revenue"]["total"]["yearly"][year] +
                                                                                         bipv_result_dict["cost"]["subsidies"]["total"]["yearly"][year])
             sub_kpi_intermediate_results_dict["net_economical_benefit"]["yearly"].append(discounted_revenue - bipv_result_dict["cost"]["net_profit"]["yearly"][year])
+            sub_kpi_intermediate_results_dict["self_consumed_energy_kWh"]["yearly"].append(self_consumed_electricity_per_year)
+            sub_kpi_intermediate_results_dict["electricity_consumption_by_buildings"]["yearly"].append(electricity_consumed_by_buildings_per_year)
 
         if self.zone_area is not None:
             sub_kpi_intermediate_results_dict["net_economical_benefit_density"]["zone"]["yearly"] = [
@@ -437,8 +449,11 @@ class UrbanCanopyKPIs:
             previous_year_offset = cumulative_annual_cost_list[year - 1] if year > 0 else 0
             if cumulative_annual_offset_list[year] >= cumulative_annual_cost_list[-1]:
                 # Using Thales theorem, assuming a linear increase of the offset between two years
-                payback_time = year + (cumulative_annual_cost_list[-1] - previous_year_offset) / (
+                try:
+                    payback_time = year + (cumulative_annual_cost_list[-1] - previous_year_offset) / (
                         cumulative_annual_offset_list[year] - previous_year_offset)
+                except:
+                    payback_time = len(cumulative_annual_cost_list)
                 return payback_time
         # If the payback time is not found it means the values were compensated at the beginning
         return 0

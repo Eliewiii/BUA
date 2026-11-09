@@ -6,6 +6,7 @@ import os
 import logging
 import shutil
 import csv
+from email.policy import default
 
 from typing import List, Dict
 
@@ -29,7 +30,8 @@ from .utils_bipv import init_bipv_on_sensor_grid, \
 
 from ...config.bua_config_structure import name_temporary_files_folder, name_radiation_simulation_folder
 from ...config.config_default_values_user_parameters import default_grid_ghg_intensity, default_discount_rate, \
-    default_inflation_rate, default_fuel_escalation_rate, default_vat_tax, default_income_tax
+    default_inflation_rate, default_fuel_escalation_rate, default_vat_tax, default_income_tax, \
+    default_carbon_tax_escalation_rate
 
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")
@@ -445,11 +447,12 @@ class SolarRadAndBipvSimulation:
                                   minimum_panel_eroi=1.2,
                                   minimum_economic_roi=0, electricity_sell_price=0.14,
                                   replacement_scenario="replace_failed_panels_every_X_years",
-                                  continue_simulation=False, discount_rate=0.05,
+                                  continue_simulation=False, discount_rate=default_discount_rate,
                                   inflation_rate=default_inflation_rate,
                                   fuel_escalation_rate=default_fuel_escalation_rate,
                                   vat_tax=default_vat_tax,
                                   income_tax=default_income_tax,
+                                  carbon_tax_escalation_rate=default_carbon_tax_escalation_rate,
                                   **kwargs):
         """
 
@@ -481,6 +484,7 @@ class SolarRadAndBipvSimulation:
                                                                              fuel_escalation_rate = fuel_escalation_rate,
                                                                              vat_tax = vat_tax,
                                                                              income_tax = income_tax,
+                                                                             carbon_tax_escalation_rate= carbon_tax_escalation_rate,
                                                                              **kwargs)
 
         run_bipv_on_facades = self.run_bipv_panel_simulation_on_roof_or_facades(roof_or_facades="facades",
@@ -505,8 +509,11 @@ class SolarRadAndBipvSimulation:
                                                                                 minimum_economic_roi=minimum_economic_roi,
                                                                                 electricity_sell_price=electricity_sell_price,
                                                                                 discount_rate=discount_rate,
+                                                                                inflation_rate=inflation_rate,
+                                                                                fuel_escalation_rate=fuel_escalation_rate,
                                                                                 vat_tax = vat_tax,
                                                                                 income_tax = income_tax,
+                                                                                carbon_tax_escalation_rate=carbon_tax_escalation_rate,
                                                                                 **kwargs)
 
         # Total results
@@ -551,6 +558,8 @@ class SolarRadAndBipvSimulation:
                                                      inflation_rate= default_inflation_rate,
                                                      fuel_escalation_rate = default_fuel_escalation_rate,
                                                      vat_tax = default_vat_tax,
+                                                     carbon_tax_escalation_rate = default_carbon_tax_escalation_rate,
+                                                     grid_ghg_intensity=default_grid_ghg_intensity,
                                                      income_tax = default_income_tax, **kwargs):
         """
 
@@ -723,7 +732,8 @@ class SolarRadAndBipvSimulation:
                 start_year=self.parameter_dict[roof_or_facades]["start_year"],
                 end_year=uc_end_year,
                 discount_rate=discount_rate,
-                grid_ghg_intensity=default_grid_ghg_intensity)
+                grid_ghg_intensity=grid_ghg_intensity,
+                carbon_tax_escalation_rate=carbon_tax_escalation_rate)
 
             # Add results to the global results dictionary
             self.bipv_results_dict[roof_or_facades] = self.add_results_to_global_results_dict(

@@ -6,7 +6,7 @@ import os
 import json
 from xmlrpc.client import boolean
 
-from bua.config.config_default_values_user_parameters import default_grid_ghg_intensity
+from bua.config.config_default_values_user_parameters import default_grid_ghg_intensity, default_carbon_tax_escalation_rate
 
 
 class BipvSubsidy:
@@ -124,14 +124,15 @@ class BipvSubsidy:
         r = self.loan_interest_rate
         initial_investment_cost = gate_to_gate_dict["cost"]["investment"][0] # investment costs in the first year
 
-        # construct yearly list of loan payments
-        for year in range((end_year + 1) - start_year):
-            if year == 0:
-                loan_payments.append(0)
-            elif year < self.payback_years:
-                loan_payments.append((initial_investment_cost*(1-self.equity_ratio) * r) / (1 - (1 + r) ** - self.payback_years))
-            elif year > self.payback_years:
-                loan_payments.append(0)
+        # construct yearly list of loan payments: one annuity in each year 1 .. payback_years, 0 otherwise
+        n_years = end_year - start_year
+        annuity = 0.
+        if self.payback_years > 0 and self.equity_ratio < 1:
+            debt = initial_investment_cost * (1 - self.equity_ratio)
+            annuity = debt / self.payback_years if r == 0 else debt * r / (1 - (1 + r) ** -self.payback_years)
+        loan_payments = [annuity if 1 <= year <= self.payback_years else 0. for year in range(n_years)]
+        if self.payback_years >= n_years:
+            dev_logger.warning("Loan payback period longer than the study period: payments after the last year are ignored")
 
         # correct investment cost in year 0
         gate_to_gate_dict["cost"]["investment"][0] = initial_investment_cost*self.equity_ratio
@@ -141,14 +142,14 @@ class BipvSubsidy:
 
         return gate_to_gate_dict
 
-    def calculate_carbon_tax_savings_list(self, energy_harvested_list, grid_ghg_intensity = default_grid_ghg_intensity):
+    def calculate_carbon_tax_savings_list(self, energy_harvested_list, grid_ghg_intensity = default_grid_ghg_intensity, carbon_tax_escalation_rate = default_carbon_tax_escalation_rate):
         """
         calculate the revenue created from omitting carbon emissions
         :param energy_harvested_list: list with yearly values of energy harvesting
         :param grid_ghg_intensity: grid ghg intensity of the regular grid, used to calculate the omitted emissions from producing green energy
         """
 
-        carbon_tax_savings = [grid_ghg_intensity * self.carbon_tax/1000 * energy_harvested_list[year]
+        carbon_tax_savings = [grid_ghg_intensity * self.carbon_tax/1000 * energy_harvested_list[year] * ((1 + carbon_tax_escalation_rate) ** year)
                               for year in range(len(energy_harvested_list))]
 
         return carbon_tax_savings

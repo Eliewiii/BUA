@@ -273,17 +273,17 @@ def compute_lca_and_cost_for_gtg(nb_of_panels_installed_yearly_list, pv_tech_obj
                                                                 nb_of_panels_installed_yearly_list]
 
     # Economic cost
-    cost_investment_yearly_list = [(i * pv_tech_obj.cost_investment * ((1 + inflation_rate) ** (year - 1))) / ((1 + discount_rate) ** year)
+    cost_investment_yearly_list = [(i * pv_tech_obj.cost_investment * ((1 + inflation_rate) ** (year - 1))) / ((1 + discount_rate) ** (year - 1))
                                     for year, i in enumerate(nb_of_panels_installed_yearly_list, start=1)]
 
     # Economic revenues
     if roof_or_facades == "roof":
         revenue_substituted_construction_material_yearly_list = [
-            (i * pv_tech_obj.revenue_substituted_construction_material_roof * ((1 + inflation_rate) ** (year - 1))) / ((1 + discount_rate) ** year)
+            (i * pv_tech_obj.revenue_substituted_construction_material_roof * ((1 + inflation_rate) ** (year - 1))) / ((1 + discount_rate) ** (year - 1))
             for year, i in enumerate(nb_of_panels_installed_yearly_list, start=1)]
     else:
         revenue_substituted_construction_material_yearly_list = [
-            (i * pv_tech_obj.revenue_substituted_construction_material_facades * ((1 + inflation_rate) ** (year - 1)))/((1 + discount_rate) ** year)
+            (i * pv_tech_obj.revenue_substituted_construction_material_facades * ((1 + inflation_rate) ** (year - 1)))/((1 + discount_rate) ** (year - 1))
             for year, i in enumerate(nb_of_panels_installed_yearly_list, start=1)]
 
     gtg_result_dict = {
@@ -299,67 +299,53 @@ def compute_lca_and_cost_for_gtg(nb_of_panels_installed_yearly_list, pv_tech_obj
 
     return gtg_result_dict
 
+def _final_year_eol(per_panel_value, total_nb_of_panels, n_years, escalation_rate, discount_rate):
+    """End of life of the whole panel stock in the last simulated year (year index n_years - 1)."""
+    t = n_years - 1
+    return per_panel_value * total_nb_of_panels * (1 + escalation_rate) ** t / (1 + discount_rate) ** t
 
 def compute_lca_cost_and_dmfa_for_recycling(nb_of_panels_installed_yearly_list, total_nb_of_panels, flag_first_year,
-                                            final_year_reached, pv_tech_obj, discount_rate, inflation_rate, vat_tax, income_tax):
+                                            final_year_reached, pv_tech_obj, discount_rate, inflation_rate, vat_tax,
+                                            income_tax):
     """
-    Take the results from function loop_over_the_years_for_solar_panels and use the pv_tech_obj info to transform it to data
-    :param nb_of_panels_installed_yearly_list: list of int: list of the number of panels installed each year
-    :param pv_tech_obj: PVPanelTechnology object
-    :param total_nb_of_panels: int: total number of panels
-    :param flag_first_year: boolean: flag to indicate if first year is reached
-    :param final_year_reached: boolean: flag to indicate if final year is reached
-    :param pv_tech_obj: PV technology object
-    :param discount_rate: float: discount rate for future value of money
-    :return recycling_dict: dictionary of the recycling results
+    Recycling flows. Each year, the panels replaced that year are recycled (number = panels installed that year,
+    none in the first year). In the last simulated year, the whole panel stock (all panel positions) is recycled
+    IN ADDITION to the panels replaced in that year.
     """
+    n_years = len(nb_of_panels_installed_yearly_list)
     # Primary energy
     primary_energy_recycling_yearly_list = [i * pv_tech_obj.primary_energy_recycling for i in
                                             nb_of_panels_installed_yearly_list]
     # Carbon footprint
-    carbon_recycling_yearly_list = [i * pv_tech_obj.ghg_recycling for i in
-                                    nb_of_panels_installed_yearly_list]
-    # Compute DMFA waste in kg for each year
-    dmfa_waste_yearly_list = [i * pv_tech_obj.weight for i in
-                              nb_of_panels_installed_yearly_list]
+    carbon_recycling_yearly_list = [i * pv_tech_obj.ghg_recycling for i in nb_of_panels_installed_yearly_list]
+    # DMFA waste in kg
+    dmfa_waste_yearly_list = [i * pv_tech_obj.weight for i in nb_of_panels_installed_yearly_list]
+    # Economic cost and revenue (year index t = 0 for the first year)
+    cost_recycling_yearly_list = [i * pv_tech_obj.cost_recycling * (1 + vat_tax) * (1 + inflation_rate) ** t
+                                  / (1 + discount_rate) ** t
+                                  for t, i in enumerate(nb_of_panels_installed_yearly_list)]
+    revenue_material_recovery_yearly_list = [i * pv_tech_obj.revenue_material_recovery * (1 - income_tax)
+                                             * (1 + inflation_rate) ** t / (1 + discount_rate) ** t
+                                             for t, i in enumerate(nb_of_panels_installed_yearly_list)]
 
-    # Economic cost
-    cost_recycling_yearly_list = [(i * pv_tech_obj.cost_recycling) * (1 + vat_tax) * ((1 + inflation_rate) ** (year - 1)) / ((1 + discount_rate) ** year)
-                                  for year, i in enumerate(nb_of_panels_installed_yearly_list, start=1)]
-    # Economic revenues
-    revenue_material_recovery_yearly_list = [(i * pv_tech_obj.revenue_material_recovery) * (1 - income_tax) * ((1 + inflation_rate) ** (year - 1)) / ((1 + discount_rate) ** year)
-                                             for year, i in enumerate(nb_of_panels_installed_yearly_list, start=1)]
-
-    # if the simulation is in the first year, correct flows to recycling (none in first year)
-    if flag_first_year == True:
-        # Primary energy
+    # no recycling in the first year (the panels installed in year 0 are new)
+    if flag_first_year:
         primary_energy_recycling_yearly_list[0] = 0
-        # Carbon footprint
         carbon_recycling_yearly_list[0] = 0
-        # Compute DMFA waste in kg for each year
         dmfa_waste_yearly_list[0] = 0
-        # Economic cost
         cost_recycling_yearly_list[0] = 0
-        # Economic revenues
         revenue_material_recovery_yearly_list[0] = 0
 
-    # correct values in last year, so that the simulation accounts for demolition of building and recycling of all panels
-    if final_year_reached == True:
-
-        # Primary energy
-        primary_energy_recycling_yearly_list[-1] = pv_tech_obj.primary_energy_recycling * total_nb_of_panels
-        # Carbon footprint
-        carbon_recycling_yearly_list[-1] = pv_tech_obj.ghg_recycling * total_nb_of_panels
-        # Compute DMFA waste in kg for each year
-        dmfa_waste_yearly_list[-1] = pv_tech_obj.weight * total_nb_of_panels
-        # Economic cost (discounted to last year)
-        cost_recycling_yearly_list[-1] = ((pv_tech_obj.cost_recycling * total_nb_of_panels) * (1 + vat_tax) * ((1 + inflation_rate) ** len(cost_recycling_yearly_list))
-                                          / ((1 + discount_rate) ** len(cost_recycling_yearly_list)))
-        # Economic revenues (discounted to last year)
-        revenue_material_recovery_yearly_list[-1] = ((pv_tech_obj.revenue_material_recovery * total_nb_of_panels) * (1 - income_tax)
-                                                     * ((1 + inflation_rate) ** len(cost_recycling_yearly_list))
-                                                     / ((1 + discount_rate) ** len(revenue_material_recovery_yearly_list)))
-
+    # last year: end of life of the whole panel stock, added to the panels replaced in that year
+    if final_year_reached:
+        primary_energy_recycling_yearly_list[-1] += pv_tech_obj.primary_energy_recycling * total_nb_of_panels
+        carbon_recycling_yearly_list[-1] += pv_tech_obj.ghg_recycling * total_nb_of_panels
+        dmfa_waste_yearly_list[-1] += pv_tech_obj.weight * total_nb_of_panels
+        cost_recycling_yearly_list[-1] += _final_year_eol(pv_tech_obj.cost_recycling * (1 + vat_tax),
+                                                          total_nb_of_panels, n_years, inflation_rate, discount_rate)
+        revenue_material_recovery_yearly_list[-1] += _final_year_eol(
+            pv_tech_obj.revenue_material_recovery * (1 - income_tax),
+            total_nb_of_panels, n_years, inflation_rate, discount_rate)
 
     recycling_dict = {
         "primary_energy": primary_energy_recycling_yearly_list,
@@ -370,7 +356,6 @@ def compute_lca_cost_and_dmfa_for_recycling(nb_of_panels_installed_yearly_list, 
         },
         "dmfa": dmfa_waste_yearly_list
     }
-
     return recycling_dict
 
 
@@ -388,7 +373,7 @@ def compute_lca_and_cost_for_maintenance(panel_list, start_year, current_study_d
     primary_energy_maintenance_yearly_list = []
     ghg_maintenance_yearly_list = []
     cost_maintenance_yearly_list = []
-    # Loop over the years
+
     iteration_start_year = start_year + current_study_duration_in_years
     if iteration_start_year < uc_end_year:
         for year_index, year in enumerate(range(iteration_start_year, uc_end_year), start=1):
@@ -398,10 +383,11 @@ def compute_lca_and_cost_for_maintenance(panel_list, start_year, current_study_d
             ghg_maintenance_yearly_list.append(
                 sum([panel_obj.panel_technology_object.ghg_annual_maintenance for panel_obj in panel_list])
             )
-            # discounting cash flows in the future
+            maintenance_annual_cost = sum(
+                [panel_obj.panel_technology_object.cost_annual_maintenance for panel_obj in panel_list])
+            # *** Only one value per year ***
             cost_maintenance_yearly_list.append(
-                sum([panel_obj.panel_technology_object.cost_annual_maintenance * ((1 + inflation_rate) ** (year_index - 1)) for panel_obj in panel_list]) / (
-                            (1 + discount_rate) ** year_index)
+                maintenance_annual_cost * (1 + inflation_rate) ** (year_index - 1) / (1 + discount_rate) ** (year_index -1)
             )
 
     maintenance_result_dict = {
@@ -413,17 +399,14 @@ def compute_lca_and_cost_for_maintenance(panel_list, start_year, current_study_d
     return maintenance_result_dict
 
 
-def compute_lca_and_cost_for_transportation(nb_of_panels_installed_yearly_list, total_nb_of_panels, flag_first_year, final_year_reached, pv_tech_obj,
-                                            transportation_obj, discount_rate, inflation_rate, fuel_escalation_rate):
+def compute_lca_and_cost_for_transportation(nb_of_panels_installed_yearly_list, total_nb_of_panels, flag_first_year,
+                                            final_year_reached, pv_tech_obj, transportation_obj, discount_rate,
+                                            inflation_rate, fuel_escalation_rate):
     """
-    Take the results from function loop_over_the_years_for_solar_panels and use the pv_tech_obj info to transform it to data
-    :param nb_of_panels_installed_yearly_list: list of int: list of the number of panels installed each year
-    :param pv_tech_obj: PVPanelTechnology object
-    :param transportation_obj: BipvTransportation object
-    :param discount_rate: float: discount rate for future value of money
-    :return transport_result_dict: dictionary of the transportation results
+    Transport to site (panels installed each year) and to recycling (panels replaced each year; in the last year
+    additionally the whole panel stock).
     """
-    # Transportation values
+    n_years = len(nb_of_panels_installed_yearly_list)
     gtg_transportation_dict, recycling_dict = pv_tech_obj.compute_transportation_lca_and_cost(
         bipv_transportation_obj=transportation_obj)
     # Primary energy
@@ -432,54 +415,36 @@ def compute_lca_and_cost_for_transportation(nb_of_panels_installed_yearly_list, 
     primary_energy_transport_recycling_yearly_list = [i * recycling_dict["primary_energy"] for i in
                                                       nb_of_panels_installed_yearly_list]
     # Carbon footprint
-    carbon_transport_gtg_yearly_list = [i * gtg_transportation_dict["ghg"] for i in
-                                        nb_of_panels_installed_yearly_list]
-    carbon_transport_recycling_yearly_list = [i * recycling_dict["ghg"] for i in
-                                              nb_of_panels_installed_yearly_list]
-    # Economic cost
-    cost_transport_gtg_yearly_list = [(i * gtg_transportation_dict["cost"] * ((1 + fuel_escalation_rate) ** (year -1))) / ((1 + discount_rate) ** year)
-                                      for year, i in enumerate(nb_of_panels_installed_yearly_list, start=1)]
-    cost_transport_recycling_yearly_list = [(i * recycling_dict["cost"] * ((1 + fuel_escalation_rate) ** (year -1))) / ((1 + discount_rate) ** year)
-                                            for year, i in enumerate(nb_of_panels_installed_yearly_list, start=1)]
+    carbon_transport_gtg_yearly_list = [i * gtg_transportation_dict["ghg"] for i in nb_of_panels_installed_yearly_list]
+    carbon_transport_recycling_yearly_list = [i * recycling_dict["ghg"] for i in nb_of_panels_installed_yearly_list]
+    # Economic cost (year index t = 0 for the first year)
+    cost_transport_gtg_yearly_list = [i * gtg_transportation_dict["cost"] * (1 + fuel_escalation_rate) ** t
+                                      / (1 + discount_rate) ** t
+                                      for t, i in enumerate(nb_of_panels_installed_yearly_list)]
+    cost_transport_recycling_yearly_list = [i * recycling_dict["cost"] * (1 + fuel_escalation_rate) ** t
+                                            / (1 + discount_rate) ** t
+                                            for t, i in enumerate(nb_of_panels_installed_yearly_list)]
 
-    # account for transporting and recycling of ALL panels in the last year of simulation
-    if final_year_reached == True:
-
-        # Primary energy
-        primary_energy_transport_recycling_yearly_list[-1] = recycling_dict["primary_energy"] * total_nb_of_panels
-        # Carbon footprint
-        carbon_transport_recycling_yearly_list[-1] = recycling_dict["ghg"] * total_nb_of_panels
-        # Economic cost
-        cost_transport_recycling_yearly_list[-1] = ((recycling_dict["cost"] * ((1 + inflation_rate) ** len(cost_transport_recycling_yearly_list)) * total_nb_of_panels)
-                                                    / ((1 + discount_rate) ** len(cost_transport_recycling_yearly_list)))
-
-    # if the simulation is in the first year, correct flows to recycling (none in first year)
-    if flag_first_year == True:
-
-        # Primary energy
+    # no transport to recycling in the first year
+    if flag_first_year:
         primary_energy_transport_recycling_yearly_list[0] = 0
-        # Carbon footprint
         carbon_transport_recycling_yearly_list[0] = 0
-        # Economic cost
         cost_transport_recycling_yearly_list[0] = 0
 
+    # last year: transport of the whole panel stock to recycling, added to the panels replaced in that year
+    if final_year_reached:
+        primary_energy_transport_recycling_yearly_list[-1] += recycling_dict["primary_energy"] * total_nb_of_panels
+        carbon_transport_recycling_yearly_list[-1] += recycling_dict["ghg"] * total_nb_of_panels
+        cost_transport_recycling_yearly_list[-1] += _final_year_eol(recycling_dict["cost"], total_nb_of_panels,
+                                                                    n_years, fuel_escalation_rate, discount_rate)
+
     transport_result_dict = {
-        "primary_energy": {
-            "gtg": primary_energy_transport_gtg_yearly_list,
-            "recycling": primary_energy_transport_recycling_yearly_list
-        },
-        "ghg": {
-            "gtg": carbon_transport_gtg_yearly_list,
-            "recycling": carbon_transport_recycling_yearly_list
-        },
-        "cost": {
-            "gtg": cost_transport_gtg_yearly_list,
-            "recycling": cost_transport_recycling_yearly_list
-        }
+        "primary_energy": {"gtg": primary_energy_transport_gtg_yearly_list,
+                           "recycling": primary_energy_transport_recycling_yearly_list},
+        "ghg": {"gtg": carbon_transport_gtg_yearly_list, "recycling": carbon_transport_recycling_yearly_list},
+        "cost": {"gtg": cost_transport_gtg_yearly_list, "recycling": cost_transport_recycling_yearly_list}
     }
-
     return transport_result_dict
-
 
 def compute_lca_and_cost_for_inverter(inverter_obj, inverter_sub_capacities, start_year,
                                       current_study_duration_in_years, uc_end_year, final_year_reached, discount_rate, inflation_rate, vat_tax):
@@ -505,7 +470,8 @@ def compute_lca_and_cost_for_inverter(inverter_obj, inverter_sub_capacities, sta
                     inverter_sub_capacities)
                 inverter_primary_energy_yearly_list.append(primary_energy_list)
                 inverter_ghg_yearly_list.append(ghg_emission_list)
-                inverter_cost_yearly_list.append(cost_list * (1 + vat_tax) * (1 + inflation_rate ** (year - start_year)) / ((1 + discount_rate) ** (year - start_year)))
+                inverter_cost_yearly_list.append((cost_list * (1 + vat_tax) * ((1 + inflation_rate) ** (year - start_year))) / ((1 + discount_rate) ** (year - start_year))
+)
             else:
                 inverter_primary_energy_yearly_list.append(0.)
                 inverter_ghg_yearly_list.append(0.)
@@ -515,7 +481,8 @@ def compute_lca_and_cost_for_inverter(inverter_obj, inverter_sub_capacities, sta
             inverter_sub_capacities)
         inverter_primary_energy_yearly_list[-1] = primary_energy_list
         inverter_ghg_yearly_list[-1] = ghg_emission_list
-        inverter_cost_yearly_list[-1] = (cost_list * (1 + vat_tax) * (1 + inflation_rate ** (uc_end_year - start_year)) / ((1 + discount_rate) ** (uc_end_year - start_year)))
+        inverter_cost_yearly_list[-1] = (cost_list * (1 + vat_tax) * ((1 + inflation_rate) ** (uc_end_year - start_year))
+                                        /((1 + discount_rate) ** (uc_end_year - start_year)))
     inverter_result_dict = {
         "primary_energy": inverter_primary_energy_yearly_list,
         "ghg": inverter_ghg_yearly_list,
@@ -524,7 +491,7 @@ def compute_lca_and_cost_for_inverter(inverter_obj, inverter_sub_capacities, sta
 
     return inverter_result_dict
 
-def compute_subsidies(gate_to_gate_dict, energy_harvested_list, bipv_subsidy_obj, start_year, end_year, discount_rate, grid_ghg_intensity):
+def compute_subsidies(gate_to_gate_dict, energy_harvested_list, bipv_subsidy_obj, start_year, end_year, discount_rate, grid_ghg_intensity, carbon_tax_escalation_rate):
     """
     Compute the subsidy payments for loans, carbon tax savings, and one-time investments, if necessary the gate to gate dictionary is adjusted
     :param bipv_scenario_obj: BipvScenario object
@@ -533,7 +500,7 @@ def compute_subsidies(gate_to_gate_dict, energy_harvested_list, bipv_subsidy_obj
     """
 
     investment_support_yearly_list = bipv_subsidy_obj.calculate_investment_subsidy(start_year, end_year, gate_to_gate_dict)
-    carbon_tax_yearly_list = bipv_subsidy_obj.calculate_carbon_tax_savings_list(energy_harvested_list, grid_ghg_intensity)
+    carbon_tax_yearly_list = bipv_subsidy_obj.calculate_carbon_tax_savings_list(energy_harvested_list, grid_ghg_intensity, carbon_tax_escalation_rate)
     gate_to_gate_dict = bipv_subsidy_obj.calculate_loan_payment_list(start_year, end_year, gate_to_gate_dict)
 
     # discount cash flows
@@ -556,5 +523,5 @@ def discount_list_of_cashflows(cashflows, discount_rate):
     :param discount_rate: Discount rate as a decimal (e.g., 0.05 for 5%)
     :return: List of discounted cash flows
     """
-    discounted = [cf / ((1 + discount_rate) ** t) for t, cf in enumerate(cashflows, start=1)]
+    discounted = [cf / ((1 + discount_rate) ** t) for t, cf in enumerate(cashflows, start=0)]
     return discounted

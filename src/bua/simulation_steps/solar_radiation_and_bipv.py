@@ -7,7 +7,7 @@ from ..urban_canopy import UrbanCanopy
 
 from ..config.config_default_values_user_parameters import default_path_simulation_folder, \
     default_path_weather_file, default_discount_rate, default_subsidy_id, default_electricity_escalation_rate, \
-    default_income_tax
+    default_income_tax, default_inflation_rate, default_fuel_escalation_rate
 
 from ..config.config_default_values_user_parameters import default_roof_grid_size_x, default_facades_grid_size_x, \
     default_roof_grid_size_y, default_facades_grid_size_y, default_offset_dist
@@ -18,7 +18,7 @@ from ..config.config_default_values_user_parameters import default_id_pv_tech_ro
     default_facades_inverter_sizing_ratio, default_minimum_panel_eroi, default_start_year, default_end_year, \
     default_efficiency_computation_method, default_replacement_scenario, \
     default_bipv_scenario_identifier, default_grid_ghg_intensity, default_grid_energy_intensity, \
-    default_grid_electricity_sell_price, default_final_year
+    default_grid_electricity_sell_price, default_final_year, default_carbon_tax_escalation_rate
 
 dev_logger = logging.getLogger("dev")
 user_logger = logging.getLogger("user")
@@ -111,6 +111,7 @@ class SimFunSolarRadAndBipv:
                                                discount_rate=default_discount_rate,
                                                inflation_rate=default_inflation_rate,
                                                fuel_escalation_rate=default_fuel_escalation_rate,
+                                               carbon_tax_escalation_rate=default_carbon_tax_escalation_rate,
                                                **kwargs):
         """
         Make oriented bounding boxes of buildings in the urban canopy
@@ -132,7 +133,7 @@ class SimFunSolarRadAndBipv:
         :param end_year: int: default=start_year+50: year when the scenario ends
         :param replacement_scenario: str: default="replace_failed_panels_every_X_years": scenario for the replacement
         :param continue_simulation: bool: default=False: if True, continue the simulation
-        :param discount_rate: float: default=0.05: discount rate of the cash flows
+        :param discount_rate: float:: discount rate of the cash flows
         :param kwargs: dict: other parameters
         """
 
@@ -160,6 +161,7 @@ class SimFunSolarRadAndBipv:
             discount_rate=discount_rate,
             inflation_rate=inflation_rate,
             fuel_escalation_rate=fuel_escalation_rate,
+            carbon_tax_escalation_rate=carbon_tax_escalation_rate,
             **kwargs)
 
         user_logger.info("The BIPV simulation have been performed successfully")

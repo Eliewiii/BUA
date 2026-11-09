@@ -8,7 +8,7 @@ import logging
 import shutil
 from typing import List
 
-
+from bua.config.config_default_values_user_parameters import default_discount_rate
 from ladybug_geometry.geometry3d import Vector3D, Polyface3D
 from honeybee.model import Model
 from honeybee.room import Room
@@ -23,7 +23,7 @@ from .energy_simulation.building_energy_simulation import BuildingEnergySimulati
 from .solar_radiation_and_bipv.solar_rad_and_BIPV import SolarRadAndBipvSimulation
 
 from .utils_buildings.lbt_obj_methods.hb_model_addons import HbAddons
-from ..config.config_default_values_user_parameters import default_inflation_rate, default_fuel_escalation_rate
+from ..config.config_default_values_user_parameters import default_inflation_rate, default_fuel_escalation_rate, default_carbon_tax_escalation_rate
 
 user_logger = logging.getLogger("user")
 dev_logger = logging.getLogger("dev")
@@ -703,13 +703,14 @@ class BuildingModeled(BuildingBasic):
                                            facades_inverter_sizing_ratio,
                                            uc_start_year,
                                            uc_current_year, uc_end_year, final_year, efficiency_computation_method="yearly",
-                                           minimum_panel_eroi=1.5,
+                                           minimum_panel_eroi=1.2,
                                            minimum_economic_roi=0, electricity_sell_price=0.14,
                                            replacement_scenario="replace_failed_panels_every_X_years",
                                            continue_simulation=False,
-                                           discount_rate=0.05,
+                                           discount_rate=default_discount_rate,
                                            inflation_rate=default_inflation_rate,
                                            fuel_escalation_rate=default_fuel_escalation_rate,
+                                           carbon_tax_escalation_rate=default_carbon_tax_escalation_rate,
                                            **kwargs):
         """
         Run the BIPV simulation for the building on the roof and/or on the facades of the buildings.
@@ -758,6 +759,7 @@ class BuildingModeled(BuildingBasic):
             discount_rate=discount_rate,
             inflation_rate=inflation_rate,
             fuel_escalation_rate=fuel_escalation_rate,
+            carbon_tax_escalation_rate=carbon_tax_escalation_rate,
             **kwargs)
         # Write the results in a csv file
         if "no_csv" not in kwargs or not kwargs["no_csv"]:

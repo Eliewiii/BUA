@@ -83,7 +83,7 @@ class BipvPanel:
         """
         if self.is_panel_working():
             self.age += 1
-            if self.age is self.life_expectancy:
+            if self.age == self.life_expectancy:
                 self.panel_failed()
                 return False
             return True

@@ -38,7 +38,7 @@ from ..config.bua_config_structure import name_urban_canopy_export_file_pkl, \
     path_folder_user_bipv_parameters
 from ..config.config_constants import TOLERANCE_LBT
 
-from ..config.config_default_values_user_parameters import default_path_weather_file, default_inflation_rate, default_fuel_escalation_rate
+from ..config.config_default_values_user_parameters import default_path_weather_file, default_inflation_rate, default_fuel_escalation_rate, default_carbon_tax_escalation_rate
 
 dev_logger = logging.getLogger("dev")
 user_logger = logging.getLogger("user")
@@ -1018,7 +1018,8 @@ class UrbanCanopy:
                                                final_year: int = datetime.now().year + 50,
                                                discount_rate=0.05,
                                                inflation_rate=default_inflation_rate,
-                                               fuel_escalation_rate= default_fuel_escalation_rate, **kwargs):
+                                               fuel_escalation_rate= default_fuel_escalation_rate,
+                                               carbon_tax_escalation_rate=default_carbon_tax_escalation_rate, **kwargs):
         """
         Run the panels simulation on the urban canopy
         :param path_simulation_folder: path to the simulation folder
@@ -1152,6 +1153,7 @@ class UrbanCanopy:
                                                                 discount_rate=discount_rate,
                                                                 inflation_rate=inflation_rate,
                                                                 fuel_escalation_rate=fuel_escalation_rate,
+                                                                carbon_tax_escalation_rate=carbon_tax_escalation_rate,
                                                                 **kwargs)
                 solar_rad_and_bipv_obj_list.append(building_obj.solar_radiation_and_bipv_simulation_obj)
 

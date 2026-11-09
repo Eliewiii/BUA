@@ -269,36 +269,28 @@ class BuildingBasic:
         self.check_and_correct_property()
 
     def check_and_correct_property(self):
-        """ Check if the information about the building and adjust the properties if needed."""
-        # no valid height and no valid number of floor
-        if ((type(self.height) != int and type(self.height) != float) or (
-                self.height < 3)) and (type(self.num_floor) != int or self.num_floor < 1):
+        """ Check the height and number of floors of the building and assign default values if needed."""
+        valid_height = isinstance(self.height, (int, float)) and not isinstance(self.height, bool) \
+                       and self.height >= 3
+        valid_num_floor = isinstance(self.num_floor, int) and not isinstance(self.num_floor, bool) \
+                          and self.num_floor >= 1
+        if not valid_height and not valid_num_floor:
             self.height = 3.
             self.num_floor = 1
             self.floor_height = 3.
-        # no valid height but valid number of floor
-        elif ((type(self.height) != int or type(self.height) != float) or (
-                self.height < 3)) and type(self.num_floor) == int and self.num_floor > 0:  # assume 3m floor height
+        elif not valid_height:  # valid number of floors: assume a 3 m floor height
             self.height = 3. * self.num_floor
             self.floor_height = 3.
-        # no number of floor but valid height
-        elif (type(self.num_floor) != int or self.num_floor < 1) and (
-                type(self.height) == int or type(self.height) == float) and self.height >= 3:
-            # assume approximately 3m floor height
-            self.num_floor = self.height // 3.
+        elif not valid_num_floor:  # valid height: assume about 3 m floor height
+            self.num_floor = max(1, int(self.height // 3.))
             self.floor_height = self.height / float(self.num_floor)
-        # both height and number of floor
-        elif (type(self.height) == int or type(self.height) == float) and (type(
-                self.num_floor) == int and self.num_floor > 0):  # both height and number of floor
-            if 5. <= self.height / float(self.num_floor) <= 2.5:  # then ok
+        else:  # both valid: keep them if the floor height is plausible, otherwise trust the height
+            floor_height = self.height / float(self.num_floor)
+            if 2.5 <= floor_height <= 5.:
+                self.floor_height = floor_height
+            else:
+                self.num_floor = max(1, int(self.height // 3.))
                 self.floor_height = self.height / float(self.num_floor)
-            else:  # prioritize the height
-                self.num_floor = self.height // 3.
-                self.floor_height = self.height / float(self.num_floor)
-        else:  # not the proper format
-            self.height = 9.
-            self.num_floor = 3
-            self.floor_height = 3.
 
     @classmethod
     def make_buildingbasic_from_lb_polyface3d_json_dict(cls, identifier, lb_polyface3d_dict, typology=None,
